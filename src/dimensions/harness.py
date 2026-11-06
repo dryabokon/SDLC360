@@ -13,12 +13,13 @@ from ._util import broken_refs, freshness_score, headings, instruction_files
 def assess(repo: Repo):
     c = Checks()
     inst = instruction_files(repo)
-    root_inst = [f for f in inst if "/" not in f or f.startswith(".github/")]
+    shared = [f for f in inst if not f.endswith("CLAUDE.local.md")]  # personal file: does not count as project instructions
+    root_inst = [f for f in shared if "/" not in f or f.startswith(".github/")]
     c.add(
         "ai.instructions",
         "Agent instruction file (CLAUDE.md / AGENTS.md / copilot-instructions)",
         4,
-        1.0 if root_inst else (0.5 if inst else 0.0),
+        1.0 if root_inst else (0.5 if shared else 0.0),
         short(inst) if inst else "none found",
         "Add a root CLAUDE.md (or AGENTS.md, symlinked/imported by CLAUDE.md) describing build/test commands, "
         "layout, conventions and do/don't rules for agents.",

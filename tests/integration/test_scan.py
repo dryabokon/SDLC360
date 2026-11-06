@@ -103,16 +103,16 @@ def test_mature_scores_higher_and_bare_is_gated(mature, bare):
 
 def test_every_aspect_reports_without_errors(mature):
     assert [d["id"] for d in mature["dimensions"]] == [
-        "security",
+        "architecture",
+        "docs",
         "harness",
         "skills",
-        "docs",
-        "architecture",
-        "tests",
-        "cicd",
-        "runs",
-        "cost",
         "hygiene",
+        "tests",
+        "security",
+        "reproducibility",
+        "cicd",
+        "cost",
     ]
     assert not [c["id"] for d in mature["dimensions"] for c in d["checks"] if c["id"].endswith(".error")]
 

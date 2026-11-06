@@ -5,7 +5,7 @@ It answers one question per aspect: **does this project meet the expectations we
 AI-assisted codebase?**, and shows the answer as a checklist with evidence, a radar and a bar chart.
 
 Ten aspects are assessed: Security & Secrets · AI Harness · Skills · Documentation · Architecture ·
-Tests · CI/CD · Runs & Reproducibility · Cost Management · Code Hygiene.
+Tests · CI/CD · Reproducibility · Cost Management · Code Hygiene.
 
 The assessment is **analytical, not LLM-based**: every expectation is checked by a deterministic scanner rule
 over the files and git history at one commit. The same commit always gives the same verdict.
@@ -43,6 +43,10 @@ python sdlc.py render runs/<run-id> --review review.json     # re-apply checklis
 5. **Write a run folder** (see below) and render a self-contained HTML report.
 
 ## Runs and reproducibility
+
+This is how SDLC360 *itself* keeps its results reproducible. It is our convention, and the assessment does not
+expect other repositories to have a `runs/` folder: the Reproducibility aspect checks lockfiles, pinned toolchains,
+entry points, documentation and provenance instead.
 
 Every scan writes `runs/<UTC yyyymmdd-HHMMSS>_<name>/`:
 

@@ -25,3 +25,6 @@ htmlcov/
 .claude/settings.local.json
 .idea/
 .vscode/
+
+# downloaded sources that are not committed (licence / size): python docs/sources/fetch.py
+docs/sources/*/local/

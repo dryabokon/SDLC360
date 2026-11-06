@@ -15,17 +15,22 @@ Priorities:
 Delete a line to drop an expectation. Override per project by committing `.sdlc360/expectations.md`
 to the assessed repository, or pass `--checklist <file>` to `python sdlc.py scan`.
 
-## security
-- [sec.no_secrets] critical: No secrets or API keys are hard-coded in tracked files.
-- [sec.no_sensitive_files] critical: No credential files (.env, private keys, tfstate) are committed.
-- [sec.ci_scanning] important: CI scans code, dependencies and secrets on every change.
-- [sec.dep_updates] important: Dependency updates are automated (Dependabot / Renovate).
-- [sec.gitignore] important: .gitignore keeps env files and keys out of git.
-- [sec.workflow_permissions] important: CI workflows run with least-privilege tokens.
-- [sec.env_template] nice: Required configuration is documented in an .env.example template.
-- [sec.precommit_secrets] nice: A pre-commit hook blocks secrets before they are committed.
-- [sec.policy] nice: A SECURITY.md explains how to report vulnerabilities.
-- [sec.codeowners] nice: CODEOWNERS assigns reviewers for sensitive paths.
+## architecture
+- [arch.doc] critical: An architecture document describes components, data flow and boundaries.
+- [arch.diagrams] important: Architecture diagrams are kept as code (Mermaid / PlantUML / C4).
+- [arch.adr] important: Significant decisions are recorded as ADRs.
+- [arch.structure] important: Source code is organised into modules, not a flat root.
+- [arch.fresh] important: The architecture document is maintained alongside the code.
+- [arch.boundaries] nice: Module boundaries are explicit and enforced by tooling.
+
+## docs
+- [doc.readme] critical: The README explains what the project is and how to start.
+- [doc.readme_sections] important: The README covers setup, usage, testing, configuration and overview.
+- [doc.links] important: Docs reference files that actually exist.
+- [doc.freshness] important: Docs are updated together with the code.
+- [doc.docs_dir] nice: Deeper documentation lives in a docs/ folder.
+- [doc.standard_files] nice: LICENSE, CONTRIBUTING and CHANGELOG are present.
+- [doc.inline] nice: Public code is documented inline (docstrings / doc comments).
 
 ## harness
 - [ai.instructions] critical: The repo has an agent instruction file (CLAUDE.md / AGENTS.md).
@@ -47,22 +52,14 @@ to the assessed repository, or pass `--checklist <file>` to `python sdlc.py scan
 - [sk.size] nice: Skills stay concise and push detail into references.
 - [sk.layout] nice: Skills follow one layout and kebab-case naming.
 
-## docs
-- [doc.readme] critical: The README explains what the project is and how to start.
-- [doc.readme_sections] important: The README covers setup, usage, testing, configuration and overview.
-- [doc.links] important: Docs reference files that actually exist.
-- [doc.freshness] important: Docs are updated together with the code.
-- [doc.docs_dir] nice: Deeper documentation lives in a docs/ folder.
-- [doc.standard_files] nice: LICENSE, CONTRIBUTING and CHANGELOG are present.
-- [doc.inline] nice: Public code is documented inline (docstrings / doc comments).
-
-## architecture
-- [arch.doc] critical: An architecture document describes components, data flow and boundaries.
-- [arch.diagrams] important: Architecture diagrams are kept as code (Mermaid / PlantUML / C4).
-- [arch.adr] important: Significant decisions are recorded as ADRs.
-- [arch.structure] important: Source code is organised into modules, not a flat root.
-- [arch.fresh] important: The architecture document is maintained alongside the code.
-- [arch.boundaries] nice: Module boundaries are explicit and enforced by tooling.
+## hygiene
+- [hyg.lint] critical: A linter is configured.
+- [hyg.format] important: An auto-formatter is configured.
+- [hyg.types] important: Static typing is enforced.
+- [hyg.precommit] important: Pre-commit hooks run format and lint locally.
+- [hyg.file_size] nice: No oversized source files.
+- [hyg.editor] nice: .editorconfig / .gitattributes keep formatting consistent.
+- [hyg.templates] nice: PR and issue templates guide contributors.
 
 ## tests
 - [test.present] critical: The project has an automated test suite.
@@ -71,6 +68,26 @@ to the assessed repository, or pass `--checklist <file>` to `python sdlc.py scan
 - [test.coverage] important: Coverage is measured and a minimum is enforced.
 - [test.framework] nice: The test runner is configured explicitly.
 - [test.layers] nice: Beyond unit tests there are integration / e2e / property tests.
+
+## security
+- [sec.no_secrets] critical: No secrets or API keys are hard-coded in tracked files.
+- [sec.no_sensitive_files] critical: No credential files (.env, private keys, tfstate) are committed.
+- [sec.ci_scanning] important: CI scans code, dependencies and secrets on every change.
+- [sec.dep_updates] important: Dependency updates are automated (Dependabot / Renovate).
+- [sec.gitignore] important: .gitignore keeps env files and keys out of git.
+- [sec.workflow_permissions] important: CI workflows run with least-privilege tokens.
+- [sec.env_template] nice: Required configuration is documented in an .env.example template.
+- [sec.precommit_secrets] nice: A pre-commit hook blocks secrets before they are committed.
+- [sec.policy] nice: A SECURITY.md explains how to report vulnerabilities.
+- [sec.codeowners] nice: CODEOWNERS assigns reviewers for sensitive paths.
+
+## reproducibility
+- [rep.lockfile] critical: Dependencies are locked to exact versions.
+- [rep.environment] important: Runtime and toolchain versions are pinned (version files / container).
+- [rep.entrypoints] important: One command sets up, builds and tests the project.
+- [rep.documented] important: How to get the same result from a clean checkout is documented.
+- [rep.provenance] nice: Results record the code version and configuration that produced them.
+- [rep.seeds] nice: Randomness is seeded where results depend on it.
 
 ## cicd
 - [ci.present] critical: CI runs on GitHub Actions.
@@ -81,16 +98,6 @@ to the assessed repository, or pass `--checklist <file>` to `python sdlc.py scan
 - [ci.pinning] nice: Third-party actions are pinned to commit SHAs.
 - [ci.speed] nice: CI is fast: caching, cancel-in-progress and path filters.
 
-## runs
-- [run.folder] critical: Each execution writes its outputs to a runs/ folder.
-- [run.manifest] important: Every run records its config and git SHA (traceable).
-- [run.lockfile] important: Dependencies are locked.
-- [run.documented] important: How to reproduce a run is documented.
-- [run.environment] important: The runtime environment is pinned (container / version files).
-- [run.tracking] nice: Experiments are tracked (MLflow / W&B / DVC / manifests).
-- [run.entrypoints] nice: One-command entry points exist (Makefile / just / scripts).
-- [run.seeds] nice: Randomness is seeded where results depend on it.
-
 ## cost
 - [cost.llm_tracking] critical: LLM token usage and cost are tracked per call / run.
 - [cost.llm_limits] important: LLM calls are bounded by max_tokens, budgets and retries.
@@ -98,12 +105,3 @@ to the assessed repository, or pass `--checklist <file>` to `python sdlc.py scan
 - [cost.llm_efficiency] nice: Prompt caching and a central model config keep spend down.
 - [cost.ci] nice: CI minutes are controlled (timeouts, cancel-in-progress, path filters).
 - [cost.documented] nice: Expected costs and budgets are documented.
-
-## hygiene
-- [hyg.lint] critical: A linter is configured.
-- [hyg.format] important: An auto-formatter is configured.
-- [hyg.types] important: Static typing is enforced.
-- [hyg.precommit] important: Pre-commit hooks run format and lint locally.
-- [hyg.file_size] nice: No oversized source files.
-- [hyg.editor] nice: .editorconfig / .gitattributes keep formatting consistent.
-- [hyg.templates] nice: PR and issue templates guide contributors.

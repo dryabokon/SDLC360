@@ -52,10 +52,10 @@ def test_instruction_files_match_exact_basenames(make_repo):
 
 
 def test_root_start_script_is_an_entry_point(make_repo):
-    from src.dimensions.runs import assess
+    from src.dimensions.reproducibility import assess
 
     checks = {c.id: c for c in assess(Repo(make_repo({"start.sh": "#!/usr/bin/env bash\n", "app.py": ""})))}
-    assert checks["run.entrypoints"].score == 1.0
+    assert checks["rep.entrypoints"].score == 1.0
 
 
 def test_tag_trigger_in_flow_and_block_style(make_repo):
@@ -68,7 +68,49 @@ def test_tag_trigger_in_flow_and_block_style(make_repo):
 
 
 def test_pinned_requirements_variant_counts_as_lockfile(make_repo):
-    from src.dimensions.runs import assess
+    from src.dimensions.reproducibility import assess
 
     checks = {c.id: c for c in assess(Repo(make_repo({"requirements-dev.txt": "pytest==9.2.0\n", "app.py": ""})))}
-    assert checks["run.lockfile"].score == 1.0
+    assert checks["rep.lockfile"].score == 1.0
+
+
+def test_reproducibility_does_not_depend_on_folder_names(make_repo):
+    """A runs/ folder is a team convention; it must neither be required nor rewarded."""
+    from src.dimensions.reproducibility import assess
+
+    base = {"app.py": "", "uv.lock": "x", ".python-version": "3.12", "Dockerfile": "FROM python:3.12"}
+    with_runs = {c.id: c.score for c in assess(Repo(make_repo({**base, "runs/r1/manifest.json": "{}"}, name="a")))}
+    without = {c.id: c.score for c in assess(Repo(make_repo(base, name="b")))}
+    assert with_runs == without
+
+
+def test_unpinned_requirements_are_not_a_lockfile(make_repo):
+    from src.dimensions.reproducibility import assess
+
+    checks = {c.id: c for c in assess(Repo(make_repo({"requirements.txt": "requests>=2\npytest==9.2.0\n", "app.py": ""})))}
+    assert checks["rep.lockfile"].score == 0.4
+
+
+def test_provenance_and_seeds_only_apply_to_experiment_code(make_repo):
+    from src.dimensions.reproducibility import assess
+
+    plain = {c.id: c.score for c in assess(Repo(make_repo({"app.py": "print(1)\n"}, name="plain")))}
+    assert plain["rep.provenance"] is None and plain["rep.seeds"] is None
+    ml = {c.id: c.score for c in assess(Repo(make_repo({"train.py": "import torch\ntorch.manual_seed(0)\nimport mlflow\n"}, name="ml")))}
+    assert ml["rep.provenance"] == 1.0 and ml["rep.seeds"] == 1.0
+
+
+def test_one_workflow_is_enough_and_all_pr_trigger_forms_count(make_repo):
+    from src.dimensions.cicd import assess
+
+    for i, on in enumerate(("on: pull_request", "on:\n  - push\n  - pull_request", "on: [push, pull_request]", "on:\n  pull_request:\n")):
+        wf = f"name: ci\n{on}\njobs:\n  t:\n    runs-on: ubuntu-latest\n    steps:\n      - run: pytest\n"
+        checks = {c.id: c.score for c in assess(Repo(make_repo({".github/workflows/ci.yml": wf}, name=f"w{i}")))}
+        assert checks["ci.present"] == 1.0 and checks["ci.pr"] == 1.0, on
+
+
+def test_personal_claude_local_md_is_not_project_instructions(make_repo):
+    from src.dimensions.harness import assess
+
+    checks = {c.id: c.score for c in assess(Repo(make_repo({"CLAUDE.local.md": "# mine", "app.py": ""})))}
+    assert checks["ai.instructions"] == 0.0

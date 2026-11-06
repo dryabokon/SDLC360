@@ -19,5 +19,7 @@ what matters. A weighted mean also let many minor passes hide one fundamental ga
 ## Consequences
 
 - The checklist is the contract that people edit. The scanner implements it.
-- Some default expectations (`runs/`, skills, cost tracking) are conventions of our team. Libraries that do not
-  share them score lower by design. Per-profile checklists (library / service / agentic) are the planned remedy.
+- Every expectation in the default checklist is justified in `checklists/acceptance.md`: either by an external
+  source (`docs/sources/`) or, explicitly, as a team convention.
+- Team-only practices (such as writing outputs to `runs/<timestamp>_<name>/`) are not in the default checklist.
+  A team that wants them adds a custom `- [ ]` line to its repository's `.sdlc360/expectations.md`.

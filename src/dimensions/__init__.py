@@ -1,16 +1,16 @@
-"""Registry of assessment dimensions (order = order on the radar chart)."""
+"""Registry of assessment dimensions. Order = order of tabs and radar axes: design -> build -> verify -> deliver -> operate."""
 
-from . import architecture, cicd, cost, documentation, harness, hygiene, runs, security, skills, tests
+from . import architecture, cicd, cost, documentation, harness, hygiene, reproducibility, security, skills, tests
 
 DIMENSIONS = [
-    security.DIMENSION,
+    architecture.DIMENSION,
+    documentation.DIMENSION,
     harness.DIMENSION,
     skills.DIMENSION,
-    documentation.DIMENSION,
-    architecture.DIMENSION,
-    tests.DIMENSION,
-    cicd.DIMENSION,
-    runs.DIMENSION,
-    cost.DIMENSION,
     hygiene.DIMENSION,
+    tests.DIMENSION,
+    security.DIMENSION,
+    reproducibility.DIMENSION,
+    cicd.DIMENSION,
+    cost.DIMENSION,
 ]

@@ -8,10 +8,10 @@ import time
 from datetime import UTC, datetime
 
 from . import __version__
+from .acceptance import method_for
 from .checklist import CRITICAL_CAP, PRIORITY_WEIGHT, priority_from_weight
 from .checklist import resolve as resolve_checklist
 from .dimensions import DIMENSIONS
-from .methods import method_for
 from .model import band, grade
 from .repo import Repo
 

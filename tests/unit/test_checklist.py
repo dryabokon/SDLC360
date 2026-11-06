@@ -1,7 +1,7 @@
 from pathlib import Path
 
+from src.acceptance import criteria, sources
 from src.checklist import DEFAULT_CHECKLIST, PRIORITY_WEIGHT, parse, priority_from_weight, resolve
-from src.methods import METHODS
 
 SAMPLE = """
 # title
@@ -46,7 +46,31 @@ def test_default_checklist_is_consistent():
     items = parse(DEFAULT_CHECKLIST.read_text(encoding="utf-8"))
     ids = [i["id"] for its in items.values() for i in its]
     assert len(ids) == len(set(ids))
-    assert not [i for i in ids if i not in METHODS], "checks without a 'how checked' description"
+    acc = criteria()
+    assert not [i for i in ids if i not in acc], "checks without an acceptance block in checklists/acceptance.md"
     for section, its in items.items():
         crit = sum(i["priority"] == "critical" for i in its)
         assert 1 <= crit <= 2, section
+
+
+def test_acceptance_blocks_are_complete_and_justified():
+    """Every acceptance block says how it is checked and when it is met, and is backed by a source or a stated convention."""
+    acc, src = criteria(), sources()
+    for cid, block in acc.items():
+        assert block.get("looks_at") and block.get("met_when"), cid
+        assert block["basis"] or block.get("convention"), f"{cid}: no Basis and no Convention"
+        for b in block["basis"]:
+            assert b["source"] in src, f"{cid}: unknown source {b['source']}"
+            assert b["quote"].startswith('"') and b["quote"].endswith('"'), f"{cid}: quote must be verbatim in quotes"
+
+
+def test_acceptance_has_no_orphans():
+    items = parse(DEFAULT_CHECKLIST.read_text(encoding="utf-8"))
+    ids = {i["id"] for its in items.values() for i in its}
+    assert not set(criteria()) - ids, "acceptance blocks for checks that are not in the checklist"
+
+
+def test_sources_have_metadata():
+    for sid, meta in sources().items():
+        for key in ("title", "publisher", "published", "url", "retrieved", "license"):
+            assert meta.get(key), f"{sid}: missing {key}"

@@ -22,7 +22,7 @@ def assess(repo: Repo):
         "ci.present",
         "GitHub Actions workflows present",
         3,
-        min(1.0, len(wf) / 2) if wf else (0.4 if other else 0.0),
+        1.0 if wf else (0.4 if other else 0.0),
         short(wf) if wf else (f"non-GitHub CI: {short(other)}" if other else "no CI configuration"),
         "Add .github/workflows/ci.yml running lint + tests on push and pull_request.",
     )
@@ -38,7 +38,9 @@ def assess(repo: Repo):
             c.add(cid, t, w, 0.0, "no workflows")
         return c.items
 
-    pr = re.search(r"^\s*(pull_request|pull_request_target|merge_group)\s*:", txt, re.M) or re.search(r"on:\s*\[[^\]]*pull_request", txt)
+    pr = re.search(r"^\s*(-\s*)?(pull_request|pull_request_target|merge_group)\b\s*(:|$)", txt, re.M) or re.search(
+        r"\bon:\s*(\[[^\]]*\bpull_request|pull_request\b|merge_group\b)", txt
+    )
     c.add(
         "ci.pr",
         "Runs on pull requests (gate before merge)",

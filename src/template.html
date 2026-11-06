@@ -493,6 +493,13 @@ function whyText(c) {
     na: ["Not applicable", "This expectation does not apply to this project, so it is left out of the score."],
     review: ["Awaiting review", "This is your own expectation. The reviewer agent has not judged it yet."] }[c.status];
 }
+function basisHtml(m) {
+  const items = (m.basis || []).map((b) => `<li><a class="fl" href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.title)}</a>`
+    + ` <span class="muted">· ${esc(b.locator)}</span><div class="muted" style="font-style:italic">${esc(b.quote)}</div></li>`);
+  if (items.length) return `<ul class="evl">${items.join("")}</ul>`;
+  return m.convention ? `<span class="muted">Team convention: ${esc(m.convention)}</span>` : "";
+}
+
 function checkDetail(c) {
   if (!c) return "";
   const [head, sub] = whyText(c), m = c.method || {}, h = REPORT.repo.head || {}, gh = REPORT.repo.source.startsWith("github.com/");
@@ -504,7 +511,12 @@ function checkDetail(c) {
       ${row("Found", c.evidence.length ? `<ul class="evl">${c.evidence.map(evidenceItem).join("")}</ul>` : `<span class="muted">No evidence recorded.</span>`)}
       ${row("Verdict", `<div class="vd">${rag(c.status, "lg")}${head}</div><div style="margin-top:2px">${sub}</div>`, "hl")}
       ${c.status !== "pass" && c.status !== "na" && c.recommendation ? row("To do", `<span style="color:var(--text)">${linkify(c.recommendation)}</span>`) : ""}
+      ${c.status === "partial" && m.partial_when ? row("Partially met when", linkify(m.partial_when)) : ""}
+      ${c.status === "na" && m.na_when ? row("Not applicable when", linkify(m.na_when)) : ""}
       ${row("How checked", m.looks_at ? linkify(m.looks_at) : "")}
+      ${row("Limits", m.limits ? `<span class="muted">${linkify(m.limits)}</span>` : "")}
+      ${row("Known gap", m.known_gap ? `<span class="muted">${linkify(m.known_gap)}</span>` : "")}
+      ${row("Basis", basisHtml(m))}
       ${row("Assessed", `${c.source === "review" ? "Reviewer agent" : "Scanner"}${h.sha ? ` · commit ${gh ? `<a class="fl" href="https://${REPORT.repo.source}/commit/${h.sha}" target="_blank" rel="noopener">${h.sha.slice(0, 8)}</a>` : `<code>${h.sha.slice(0, 8)}</code>`}` : ""} · ${fdate(REPORT.generated_at)}`)}
       ${row("Counts", `${PRIO_LABEL[c.priority] || "Important"} · weight ${c.weight}${c.priority === "critical" ? " · gate: not met caps the aspect at 49, partially at 74" : ""}`)}
     </tbody></table>`;

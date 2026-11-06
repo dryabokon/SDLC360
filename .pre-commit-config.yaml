@@ -5,11 +5,12 @@ repos:
       - id: check-yaml
       - id: check-toml
       - id: end-of-file-fixer
-        exclude: ^runs/
+        exclude: ^(runs/|docs/sources/)
       - id: trailing-whitespace
-        exclude: ^runs/
+        exclude: ^(runs/|docs/sources/)
       - id: detect-private-key
       - id: check-added-large-files
+        args: [--maxkb=1500]
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.5.0
     hooks:

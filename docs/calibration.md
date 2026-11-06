@@ -10,7 +10,7 @@ Scores below are from 2026-11-06 with the default checklist and history 6.
 
 | Repository | Overall | Notes |
 |---|---|---|
-| pydantic/pydantic-ai | 86.9 (B) | highest; Runs gated (no `runs/`, our convention) |
+| pydantic/pydantic-ai | 86.9 (B) | highest; was gated on Runs for lacking `runs/` (removed since, see below) |
 | openai/openai-agents-python | 78.5 | |
 | modelcontextprotocol/python-sdk | 76.7 | |
 | anthropics/claude-agent-sdk-python | 64.8 | |
@@ -20,8 +20,9 @@ Scores below are from 2026-11-06 with the default checklist and history 6.
 | encode/httpx | 52.9 | mature library, but it lacks our AI-harness and runs conventions |
 | Textualize/rich | 50.8 | same |
 
-No repository is green on every aspect. `runs/`, skills and cost tracking are conventions of our team, and
-libraries score lower by design (see `adr/0003-checklist-and-critical-gate.md`).
+No repository is green on every aspect. Skills and cost tracking matter mostly for agentic projects, so libraries
+score lower there. The `runs/` folder expectation was removed from the default checklist on 2026-11-06: it is a
+team convention, and reproducibility is now judged by lockfiles, pinned toolchains, entry points and provenance.
 
 ## False positives fixed during calibration
 
