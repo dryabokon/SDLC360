@@ -5,11 +5,13 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## doc.readme: The README explains what the project is and how to start.
 
+**Accepted when.** The README has at least {min_words} words.
+
 **How we check.** Root-level files matching `README*` (any case or extension). If there are several, it takes the first in sorted order. It counts word tokens (`\w+` runs, so code and URLs count too).
 
-- **Met:** A root README with at least {target_words*0.85} words (85% of the target of {target_words}).
-- **Partially met:** A root README with at least {target_words*0.35} words.
-- **Not met:** No root README, or one with fewer than {target_words*0.35} words.
+- **Met:** A root README with at least {min_words} words.
+- **Partially met:** A root README with at least {min_words:partial} words.
+- **Not met:** No root README, or one with fewer than {min_words:partial} words.
 
 **What the check cannot see.** Only length is measured. Pasted logs, badges, licence text or code blocks raise the count. A README in a subfolder is ignored. A translated `README.ja.md` sorts before `README.md` and can be the one measured.
 
@@ -22,6 +24,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [agents-md](../references/agents-md/), Why AGENTS.md? · supporting
 
 ## doc.readme_sections: The README covers setup, usage, testing, configuration and overview.
+
+**Accepted when.** The README covers installation, usage, testing, configuration, an overview and contributing.
 
 **How we check.** It searches the README's headings plus the first 30,000 characters of its text, lowercased, for six topics: install/setup, usage, testing (`\btest`), configuration, architecture/overview, and contributing/development.
 
@@ -37,6 +41,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## doc.links: Docs reference files that actually exist.
 
+**Accepted when.** Links to files in the docs work: at most 1 in 20 points to a file that does not exist.
+
 **How we check.** Up to 300 tracked `.md` files, excluding those under root `node_modules/` or `vendor/`. It takes relative markdown links and images (no scheme, no leading `/`, `<` or `~`, anchors dropped) and backticked paths that contain `/` and end in an extension or `/`. Each one is resolved from the file's folder or from the repo root.
 
 - **Met:** At most 5% of references are broken (1 - 3*broken/total >= 0.85). Also Met when there are no references at all.
@@ -49,10 +55,12 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## doc.freshness: Docs are updated together with the code.
 
+**Accepted when.** The docs were updated no more than {max_lag_days} days before the latest code change.
+
 **How we check.** The newest commit touching the root README or any docs page (as found by doc.docs_dir) is compared with the newest commit touching the first 2,000 source files.
 
-- **Met:** Docs were last changed no more than about {met_days} days before the code (full score up to {grace_days} days, then a linear fade to 0 at {max_lag_days} days).
-- **Partially met:** Docs lag the code by about {met_days+1} to {partial_days} days. Also when either date is unknown (for example no source files or no history), which scores 0.5.
+- **Met:** Docs were last changed no more than about {max_lag_days} days before the code (full score up to {grace_days} days, then a linear fade to 0 at {zero_days} days).
+- **Partially met:** Docs lag the code by about {max_lag_days+1} to {partial_days} days. Also when either date is unknown (for example no source files or no history), which scores 0.5.
 - **Not met:** Docs lag the code by more than about {partial_days} days, or there is no README and no docs page.
 
 **What the check cannot see.** Only the single newest doc touch counts, so a typo fix anywhere resets the clock. It does not check that docs changed in the same commits or PRs as the code they describe.
@@ -69,10 +77,12 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## doc.docs_dir: Deeper documentation lives in a docs/ folder.
 
+**Accepted when.** A docs folder holds at least {min_pages} pages.
+
 **How we check.** It counts `.md`, `.mdx`, `.rst` and `.adoc` files at any depth under the root `docs/`, `doc/`, `documentation/` or `website/docs/`.
 
-- **Met:** {target*0.85} or more pages (target: {target}).
-- **Partially met:** {target*0.35} or more pages.
+- **Met:** {min_pages} or more pages.
+- **Partially met:** {min_pages:partial} or more pages.
 - **Not met:** Fewer.
 
 **What the check cannot see.** Only the count matters, so empty stubs and ADRs count. Docs in nested packages, other folder names, wikis or external sites are not seen.
@@ -80,6 +90,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 **Our convention.** Deeper material belongs in versioned docs next to the code rather than in a wiki the agent cannot read.
 
 ## doc.standard_files: LICENSE, CONTRIBUTING and CHANGELOG are present.
+
+**Accepted when.** LICENSE, CONTRIBUTING and CHANGELOG files are present.
 
 **How we check.** Basename matches anywhere in the tree for LICENSE (`LICENSE*`, `COPYING*`), CONTRIBUTING (`CONTRIBUTING*`) and CHANGELOG (`CHANGELOG*`, `CHANGES*`, `HISTORY*`, `RELEASES*`).
 
@@ -99,11 +111,13 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## doc.inline: Public code is documented inline (docstrings / doc comments).
 
+**Accepted when.** At least {min_share}% of Python functions and classes have a docstring (other languages: doc comments in at least 43% of files).
+
 **How we check.** If there is any Python source, it takes up to 400 `.py` source files. It counts `def` and `class` headers with a non-underscore name whose `:` ends the line, then checks whether the next line opens a `"""` or `'''` docstring. Without Python, it takes up to 400 `.ts`, `.tsx`, `.js`, `.go`, `.rs`, `.java`, `.cs` or `.kt` files. A file counts if it contains `/**`, a `///` line or `// Capitalword `.
 
-- **Met:** Python: at least {target_share*0.85}% of the counted definitions have docstrings (target: {target_share}%). Other languages: at least 42.5% of files have a doc comment.
-- **Partially met:** Python: at least {target_share*0.35}%. Other languages: 17.5% to 42.4%.
-- **Not met:** Python below {target_share*0.35}%. Other languages below 17.5%.
+- **Met:** Python: at least {min_share}% of the counted definitions have docstrings. Other languages: at least 42.5% of files have a doc comment.
+- **Partially met:** Python: at least {min_share:partial}%. Other languages: 17.5% to 42.4%.
+- **Not met:** Python below {min_share:partial}%. Other languages below 17.5%.
 - **Not applicable:** Python source exists but no definition header matched. If the repo has neither Python nor the listed languages, the check is not produced and drops out of the report.
 
 **What the check cannot see.** Multi-line signatures (common after black or ruff format), one-line defs and headers with trailing comments are skipped entirely. Prefixed docstrings (`r"""`) are missed. Any comment starting `// TODO ` counts as a doc comment. `.jsx`, `.rb`, `.php` and C/C++ are never examined.

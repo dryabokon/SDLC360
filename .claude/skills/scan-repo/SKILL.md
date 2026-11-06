@@ -11,7 +11,7 @@ description: Run an SDLC360 assessment of a GitHub or local repository and summa
 
    ```bash
    python sdlc.py scan <target> --no-history     # quick
-   python sdlc.py scan <target>                  # with Dynamics
+   python sdlc.py scan <target> --history 8      # also re-score 8 past commits (slower)
    ```
 
    The last line of output is the run folder `runs/<id>/`.

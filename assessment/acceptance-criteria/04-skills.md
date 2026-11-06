@@ -5,6 +5,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## sk.present: Reusable agent procedures exist as markdown skills / subagents / commands.
 
+**Accepted when.** At least 3 skills, subagents or commands exist as markdown files.
+
 **How we check.** Counts files named `SKILL.md` anywhere (case-insensitive), `.md` under root `.claude/agents/`, `agents/`, `.github/agents/`, `.md` under `.claude/commands/` and `commands/`, `.github/prompts/*.prompt.md`, `.cursor/rules/*.mdc` and `.github/instructions/*.instructions.md`.
 
 - **Met:** Three or more such files.
@@ -29,6 +31,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## sk.frontmatter: Every skill declares a name and description in frontmatter.
 
+**Accepted when.** Nearly every skill (85%) declares a name and a description.
+
 **How we check.** Each file found by `sk.present`: it must start with a `---` YAML block. Skills and subagents need non-empty `name` and `description`; commands, prompts and rules need only `description`.
 
 - **Met:** At least 85% of the files have the required fields.
@@ -51,6 +55,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [anthropic-claude-code-best-practices](../references/anthropic-claude-code-best-practices/), Put team procedures in skills · supporting
 
 ## sk.descriptions: Descriptions say what the skill does and when to use it.
+
+**Accepted when.** Nearly every skill description (85%) says what the skill does and when to use it.
 
 **How we check.** Each file's frontmatter `description`: length 40–1024 characters and contains "use when/this/for/to", the word "when", or "trigger…"/"invoke…".
 
@@ -79,6 +85,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## sk.links: Links and scripts referenced by skills exist.
 
+**Accepted when.** Nearly all files and links that skills refer to (85%) exist.
+
 **How we check.** In every skill/agent/command/rule file: relative markdown links and backticked paths with an extension or trailing slash. Each must resolve from the file's folder, the repo root, or as a path suffix of any file. URLs and absolute paths are ignored.
 
 - **Met:** At least 85% of references resolve, or there are no references.
@@ -95,6 +103,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [agent-skills-spec](../references/agent-skills-spec/), File references · supporting
 
 ## sk.size: Skills stay concise and push detail into references.
+
+**Accepted when.** Skills stay short: at most 15% of them are oversized.
 
 **How we check.** Line count (including frontmatter) of every skill/agent/command/rule file; over 500 lines counts as oversized.
 
@@ -122,6 +132,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [anthropic-claude-code-best-practices](../references/anthropic-claude-code-best-practices/), Put team procedures in skills · supporting
 
 ## sk.layout: Skills follow one layout and kebab-case naming.
+
+**Accepted when.** Skills follow one folder layout, mostly with kebab-case names.
 
 **How we check.** For each `SKILL.md`, whether its parent folder name is lowercase kebab-case (and the file is named exactly `SKILL.md`). Also whether any file exists under `*/skills/<name>/scripts/`, `references/` or `assets/`. Score = 0.6 × share of well-named skills + 0.4 if any supporting file exists.
 

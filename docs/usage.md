@@ -20,8 +20,7 @@ Pick a project in the header, or enter a GitHub URL / `owner/repo` / choose a lo
 
 ```bash
 python sdlc.py scan https://github.com/encode/httpx --open   # or owner/repo, or D:/path/to/repo
-python sdlc.py scan . --no-history                           # quick: skip re-scoring past commits
-python sdlc.py scan owner/repo --history 8 --months 12       # Dynamics: 8 past commits over 12 months
+python sdlc.py scan owner/repo --history 8 --months 12       # also re-score 8 past commits (stored, not shown yet)
 python sdlc.py scan owner/repo --profile prototype          # another profile (assessment/profiles/)
 python sdlc.py list                                          # projects and their runs
 python sdlc.py render runs/<run-id> --profile <name>         # re-apply a profile / acceptance / review.json, no re-scan
@@ -37,7 +36,8 @@ python sdlc.py serve --port 8360 --open                      # the web app in th
 3. **Apply the profile** (`--profile`, default *Standard*; a repository may bring `.sdlc360/capabilities.md`):
    which capabilities count, their priority (`critical` / `important` / `nice`) and the thresholds the rules use.
    An unmet critical capability caps its aspect at 49, a partially met one at 74.
-4. **Dynamics**: re-score a sample of past commits and compute weekly velocity and test / doc discipline.
+4. **History** (only with `--history N`): re-score a sample of past commits and compute weekly velocity. The data is
+   kept in the run for a trend view that the app does not show for now.
 5. **Write a run folder** and render a self-contained HTML report.
 
 ## Run folders

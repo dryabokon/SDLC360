@@ -44,7 +44,7 @@ def test_profile_switches_off_reprioritises_and_adds_own_capabilities(tmp_profil
             "capabilities": {
                 "arch.adr": {"enabled": False},
                 "test.coverage": {"priority": "critical"},
-                "doc.readme": {"params": {"target_words": 100}},
+                "doc.readme": {"params": {"min_words": 100}},
             },
             "custom": [
                 {"aspect": "security", "text": "Keys are rotated quarterly.", "priority": "nice", "met_when": "A rotation in the last 90 days."}
@@ -56,20 +56,20 @@ def test_profile_switches_off_reprioritises_and_adds_own_capabilities(tmp_profil
     assert "arch.adr" not in ids
     assert ids["test.coverage"]["priority"] == "critical"
     assert ids["custom.security.keys-are-rotated-quarterly"]["met_when"] == "A rotation in the last 90 days."
-    assert cl["params"]["doc.readme"] == {"target_words": 100}
+    assert cl["params"]["doc.readme"] == {"min_words": 100}
 
 
 def test_validate_rejects_bad_input():
     with pytest.raises(ValueError, match="between"):
-        validate({"name": "x", "capabilities": {"doc.readme": {"params": {"target_words": -5}}}})
+        validate({"name": "x", "capabilities": {"doc.readme": {"params": {"min_words": -5}}}})
     with pytest.raises(ValueError, match="number"):
-        validate({"name": "x", "capabilities": {"doc.readme": {"params": {"target_words": "many"}}}})
+        validate({"name": "x", "capabilities": {"doc.readme": {"params": {"min_words": "many"}}}})
     with pytest.raises(ValueError, match="name"):
         validate({"name": " "})
     with pytest.raises(ValueError, match="aspect"):
         validate({"name": "x", "custom": [{"aspect": "nope", "text": "t"}]})
     clean = validate(
-        {"name": "x", "capabilities": {"no.such": {"enabled": False}, "doc.readme": {"priority": "urgent", "params": {"target_words": 400}}}}
+        {"name": "x", "capabilities": {"no.such": {"enabled": False}, "doc.readme": {"priority": "urgent", "params": {"min_words": 340}}}}
     )
     assert clean["capabilities"] == {}  # unknown ids, unknown priorities and default values are not stored
 
@@ -84,11 +84,11 @@ def test_standard_is_read_only_and_ids_are_safe(tmp_profiles):
 
 
 def test_fill_states_the_thresholds_in_force():
-    assert fill("{target*0.85} or more (target: {target})", {"target": 3}) == "3 or more (target: 3)"
-    assert fill("ratio {target_ratio*0.35}", {"target_ratio": 0.4}) == "ratio 0.14"
-    assert fill("{unknown} stays", {"target": 3}) == "{unknown} stays"
+    assert fill("{min_files} files, partly from {min_files:partial}", {"min_files": 5}) == "5 files, partly from 3"
+    assert fill("ratio {min_ratio:partial}", {"min_ratio": 0.34}) == "ratio 0.14"
+    assert fill("{unknown} stays", {"min_files": 3}) == "{unknown} stays"
     assert "about 80 days" in method_for("doc.freshness")["met_when"]
-    assert "at least 170 words" in method_for("doc.readme", {"target_words": 200})["met_when"]
+    assert "at least 200 words" in method_for("doc.readme", {"min_words": 200})["accepted"]
 
 
 def test_every_parameter_is_used_by_its_rule_and_its_text():
@@ -108,7 +108,7 @@ def test_threshold_changes_the_verdict(make_repo):
     strict, lenient = Repo(root), Repo(root)
     s = scan(strict, only=["docs"])
     cl = checklist("standard")
-    cl["params"]["doc.readme"] = {"target_words": 100}
+    cl["params"]["doc.readme"] = {"min_words": 100}
     lenient_report = scan(lenient, only=["docs"], checklist=cl)
 
     def status(r):
@@ -121,7 +121,7 @@ def test_rerender_applies_a_profile_without_rescanning(make_repo, tmp_path, tmp_
     run = run_scan(str(make_repo({"README.md": "hello\n"})), history_points=0, runs_dir=tmp_path / "runs", cache_dir=tmp_path / "c")
     profiles.save(
         "relaxed",
-        {"name": "Relaxed", "capabilities": {"doc.readme": {"enabled": False, "params": {}}, "test.ratio": {"params": {"target_ratio": 1}}}},
+        {"name": "Relaxed", "capabilities": {"doc.readme": {"enabled": False, "params": {}}, "test.ratio": {"params": {"min_ratio": 1}}}},
     )
     rerender(run, profile="relaxed")
     rep = json.loads((run / "report.json").read_text(encoding="utf-8"))

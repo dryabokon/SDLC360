@@ -6,23 +6,11 @@ import json
 from html import escape
 from pathlib import Path
 
-from .acceptance import criteria, references
-
 TEMPLATE = Path(__file__).with_name("template.html")
 
 
-def _sources() -> list[dict]:
-    """Bundled references with how many acceptance blocks cite each, for the How it works tab."""
-    cited: dict[str, int] = {}
-    for block in criteria().values():
-        for b in block.get("basis", []):
-            cited[b["source"]] = cited.get(b["source"], 0) + 1
-    keys = ("title", "publisher", "published", "url")
-    return [{"id": sid, **{k: m.get(k, "") for k in keys}, "cited": cited.get(sid, 0)} for sid, m in references().items()]
-
-
 def _template() -> str:
-    return TEMPLATE.read_text(encoding="utf-8").replace("/*__SOURCES__*/[]", _embed(_sources()))
+    return TEMPLATE.read_text(encoding="utf-8")
 
 
 def _embed(obj) -> str:

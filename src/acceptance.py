@@ -5,6 +5,8 @@ next to the evidence, and the published basis (assessment/references/) that just
 
     ## sec.no_secrets: No secrets are committed.
 
+    **Accepted when.** one plain sentence; thresholds as {key} (shown first, edited in the app)
+
     **How we check.** what the scanner looks at
 
     - **Met:** ...
@@ -37,6 +39,7 @@ CRITERIA = ROOT / "assessment" / "acceptance-criteria"
 REFERENCES = ROOT / "assessment" / "references"
 
 PARAGRAPHS = {
+    "accepted when": "accepted",
     "how we check": "looks_at",
     "what the check cannot see": "limits",
     "known flaw": "known_gap",
@@ -115,7 +118,7 @@ def criteria() -> dict[str, dict]:
 
 def method_for(check_id: str, params: dict | None = None) -> dict:
     """Acceptance block for a check, thresholds filled in, basis entries resolved to their reference metadata."""
-    values = params or defaults().get(check_id, {})
+    values = {**defaults().get(check_id, {}), **(params or {})}  # keys unknown to this version (older runs) are ignored by fill()
     c: dict = {k: fill(v, values) if isinstance(v, str) else v for k, v in criteria().get(check_id, {}).items()}
     refs = references()
     c["basis"] = [

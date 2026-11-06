@@ -149,7 +149,9 @@ def finalize(report: dict, review: dict | None = None) -> dict:
     verdicts = (review.get("capabilities") or review.get("expectations") or {}) if isinstance(review, dict) else {}  # key before 0.4
     items = (report.get("checklist") or {}).get("items", {})
     wanted, used = (report.get("checklist") or {}).get("params") or {}, report.get("scan_params") or {}
-    report["thresholds_changed"] = sorted(cid for cid in wanted if cid in used and wanted[cid] != used[cid])  # take effect at the next scan
+    report["thresholds_changed"] = sorted(  # take effect at the next scan; keys of older versions are not compared
+        cid for cid in wanted if any(k in used.get(cid, {}) and used[cid][k] != v for k, v in wanted[cid].items())
+    )
     for d in report["dimensions"]:
         if "auto_checks" not in d:  # report@1 compatibility
             d["auto_checks"] = d.pop("checks")

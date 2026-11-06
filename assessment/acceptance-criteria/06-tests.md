@@ -5,10 +5,12 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## test.present: The project has an automated test suite.
 
+**Accepted when.** There are at least {min_files} test files.
+
 **How we check.** Tracked source-extension files under a `test/`, `tests/`, `__tests__/`, `spec/`, `specs/`, `e2e/` or `integration_test(s)/` folder, or named `test_*`, `*_test.*`, `*.test.*`, `*.spec.*` or `*test(s).cs/java/kt`. It counts files.
 
-- **Met:** {target*0.85} or more test files (target: {target}).
-- **Partially met:** {target*0.35} or more test files.
+- **Met:** {min_files} or more test files.
+- **Partially met:** {min_files:partial} or more test files.
 - **Not met:** Fewer.
 
 **What the check cannot see.** It counts files, not tests: `conftest.py`, helpers, fixtures and empty files count. Vendored tests count. Names such as `latest.java` or `contest.cs` count as tests. Whether the tests run or pass is not checked.
@@ -28,6 +30,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [nist-ssdf](../references/nist-ssdf/), SP 800-218 PW.8.2, p.24 · direct
 
 ## test.ci: Tests run in CI on every push and pull request.
+
+**Accepted when.** A CI workflow runs the tests.
 
 **How we check.** It searches `ci_text` (GitHub workflow YAML plus the scripts/Makefile/nox/tox/package.json/pyproject they delegate to) for a test command such as `pytest`, `tox`, `nox`, `npm test`, `jest`, `go test`, `cargo test`, `mvn test`, `dotnet test` or `make test`.
 
@@ -55,11 +59,13 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## test.ratio: Tests grow with the code (healthy test-to-source ratio).
 
+**Accepted when.** There are at least {min_ratio} test files per source file.
+
 **How we check.** The number of test files (as in test.present) divided by the number of source files.
 
-- **Met:** A ratio of {target_ratio*0.85} or more (85% of the target ratio {target_ratio}).
-- **Partially met:** A ratio of {target_ratio*0.35} or more.
-- **Not met:** A ratio below {target_ratio*0.35}.
+- **Met:** A ratio of {min_ratio} or more.
+- **Partially met:** A ratio of {min_ratio:partial} or more.
+- **Not met:** A ratio below {min_ratio:partial}.
 - **Not applicable:** No source files.
 
 **What the check cannot see.** It counts files, not lines or tests. Vendored tests inflate the ratio. Shell scripts count as source. One large test file per many modules looks weak even if coverage is high.
@@ -71,6 +77,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [agents-md](../references/agents-md/), README: Sample AGENTS.md file / Testing instructions · supporting
 
 ## test.coverage: Coverage is measured and a minimum is enforced.
+
+**Accepted when.** Test coverage is measured and a minimum is enforced.
 
 **How we check.** Coverage files anywhere (`.coveragerc`, `codecov.yml`, `.codecov.yml`, `coverage.config.*`, `.nycrc*`, `jacoco*`, `tarpaulin.toml`). Coverage keywords (`--cov`, `coverage run`, `--coverage`, `codecov`, `coveralls`, `fail_under` and others) in the root `pyproject.toml`, `package.json`, `ci_text` or any `Makefile`/`justfile`. Threshold keywords (`fail_under`, `fail-under`, `coverageThreshold`, `--cov-fail-under`, `minimum_coverage`) are searched in the same places and in the coverage files. Score: 0.6 if measured, plus 0.4 if a threshold is found.
 
@@ -92,6 +100,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## test.framework: The test runner is configured explicitly.
 
+**Accepted when.** The test runner is configured explicitly (pytest, Jest, Vitest and the like).
+
 **How we check.** Anywhere in the tree: `pytest.ini`, `conftest.py`, `tox.ini`, `noxfile.py`, `jest/vitest/playwright/cypress` configs, `karma.conf.*`, `.mocharc*`, `phpunit.xml*` or `*.runsettings`. Also `[tool.pytest` in the root `pyproject.toml`, a `"test":` key in the root `package.json`, a `*_test.go` test file, or a root `Cargo.toml` alongside test files.
 
 - **Met:** Test files exist and at least one of these is found.
@@ -105,6 +115,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 **Our convention.** An explicitly configured test runner gives humans and agents one unambiguous command and test discovery rule.
 
 ## test.layers: Beyond unit tests there are integration / e2e / property tests.
+
+**Accepted when.** Besides unit tests there are at least two other kinds: integration, end-to-end or property-based tests.
 
 **How we check.** It searches the test file paths plus the root `pyproject.toml` and `package.json` for three layers: integration (`integration`), e2e (`e2e`, `end.to.end`, `playwright`, `cypress`, `selenium`) and property/fuzz (`hypothesis`, `fast-check`, `proptest`, `quickcheck`, `fuzz`).
 

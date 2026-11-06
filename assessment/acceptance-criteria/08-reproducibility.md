@@ -5,6 +5,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## rep.lockfile: Dependencies are locked to exact versions.
 
+**Accepted when.** Dependencies are locked to exact versions: a lockfile, or requirements files pinned with `==` throughout.
+
 **How we check.** Lockfiles anywhere in the tree by file name: `uv.lock`, `poetry.lock`, `Pipfile.lock`, `pdm.lock`, `pixi.lock`, `conda-lock.yml`, `requirements*.lock`, `package-lock.json`, `npm-shrinkwrap.json`, `pnpm-lock.yaml`, `yarn.lock`, `bun.lock(b)`, `Cargo.lock`, `go.sum`, `Gemfile.lock`, `composer.lock`, `packages.lock.json`, `gradle.lockfile`, `flake.lock`. It also reads every `requirements*.txt` and `constraints*.txt`.
 
 - **Met:** At least one lockfile exists, or at least one `requirements*.txt` / `constraints*.txt` is "fully pinned". Fully pinned means it has at least one requirement line and every one contains `==` or ` @ `. Comments and lines starting with `-` are ignored.
@@ -32,6 +34,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## rep.environment: Runtime and toolchain versions are pinned (version files / container).
 
+**Accepted when.** At least 2 files pin the runtime and tool versions (`.python-version`, `.nvmrc`, a Dockerfile and the like).
+
 **How we check.** Counts files, matched by name anywhere: `.python-version`, `.nvmrc`, `.node-version`, `.tool-versions`, `mise.toml`, `.mise.toml`, `rust-toolchain*`, `global.json`, `.sdkmanrc`, `.java-version`, `.ruby-version`, `.go-version`, `Dockerfile`, `*.dockerfile`, `docker-compose*.yml`, `compose.y*ml`, `flake.nix`, `shell.nix`, `devbox.json`. It also counts any file under the root `.devcontainer/`.
 
 - **Met:** 2 or more matching files (score = files / 2, capped at 1).
@@ -58,6 +62,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## rep.entrypoints: One command sets up, builds and tests the project.
 
+**Accepted when.** One command sets up, builds or tests the project (a Makefile, scripts, `start.sh`, package.json scripts).
+
 **How we check.** Any of these, matched by name anywhere: `Makefile`, `justfile`, `Taskfile.y*ml`, `noxfile.py`, `tox.ini`, `start*.sh`, `run*.sh`, `start*.bat`. Also any file under the root `scripts/`, a `"scripts":` key in the root `package.json`, or `[project.scripts]`, `[tool.poe` or `[tool.hatch.envs` in the root `pyproject.toml`.
 
 - **Met:** At least one of these is found (the score is true/false).
@@ -75,6 +81,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [dora-2025-ai-capabilities-model](../references/dora-2025-ai-capabilities-model/), p. 41 · supporting
 
 ## rep.documented: How to get the same result from a clean checkout is documented.
+
+**Accepted when.** The docs explain how to set up and get the same results from a clean checkout.
 
 **How we check.** Joins the text of the first 40 files matching `README*`, `CONTRIBUTING*`, `AGENTS.md` or `CLAUDE.md` anywhere, or any `docs/**.md`. It looks for (a) a markdown heading line (`#…`) containing install, setup, getting started, quick start/quickstart or development, and (b) reproduction wording: `reproduc*`, `rerun`/`re-run*`, `deterministic*`, or "same result(s)".
 
@@ -99,6 +107,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [nist-ssdf](../references/nist-ssdf/), SP 800-218A PS.3.1.R3, p.21 · supporting
 
 ## rep.provenance: Results record the code version and configuration that produced them.
+
+**Accepted when.** Experiment and ML code records which code version and configuration produced each result.
 
 **How we check.** Source files (first 3000) are searched for an ML import (`import torch|tensorflow|sklearn|jax|xgboost|lightgbm`, `from torch|sklearn|transformers|tensorflow|jax import`) and for tracker words (`mlflow`, `wandb`, `dvc`, `sacred`, `aim`, `neptune`, `clearml`, `comet_ml`, `tensorboard`, `lightning.pytorch.loggers`). Tracker words are also searched in requirements, `pyproject.toml` and `package.json`. It also looks for `dvc.yaml`, `.dvc/config`, `MLproject`, and for git-SHA code (`rev-parse HEAD`, `git describe`, `GITHUB_SHA`, `GIT_COMMIT`, `git_sha`, `commit_sha`, `get_git_hash`, `repo.head.commit`).
 
@@ -126,6 +136,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [openssf-scorecard](../references/openssf-scorecard/), Signed-Releases · supporting
 
 ## rep.seeds: Randomness is seeded where results depend on it.
+
+**Accepted when.** Experiment and ML code sets its random seeds.
 
 **How we check.** Applies only when an ML import (same pattern as `rep.provenance`, first 2000 source files) is found. Source files are then searched for `seed(`, `random_state`, `manual_seed`, `set_seed`, `--seed` or `SEED =` (case-insensitive, so `seed=` also counts).
 

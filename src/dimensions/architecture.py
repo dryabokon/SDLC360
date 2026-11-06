@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from ..model import Checks, Dimension, short
 from ..repo import Repo
-from ._util import freshness_score
+from ._util import freshness_score, reach
 
 
 def assess(repo: Repo):
@@ -28,7 +28,7 @@ def assess(repo: Repo):
         "arch.diagrams",
         "Diagrams as code (Mermaid / PlantUML / C4 / draw.io)",
         2,
-        min(1.0, total / repo.param("arch.diagrams", "target")),
+        reach(total, repo.param("arch.diagrams", "min_diagrams")),
         [f"markdown with diagrams: {short(mermaid, 3)}", f"diagram files: {short(diagram_files, 3)}"],
         "Add a Mermaid/C4 context + container diagram in the architecture doc so it renders on GitHub and diffs in PRs.",
     )
@@ -39,7 +39,7 @@ def assess(repo: Repo):
         "arch.adr",
         "Design decision records",
         2,
-        min(1.0, len(adrs) / repo.param("arch.adr", "target")),
+        reach(len(adrs), repo.param("arch.adr", "min_records")),
         f"{len(adrs)} decision records in {short(adr_dirs, 2)}" if adrs else "no design-decisions folder",
         "Record significant design decisions, one file each (docs/design-decisions/NN-title.md: context, decision, consequences).",
     )
@@ -81,7 +81,6 @@ def assess(repo: Repo):
         fs, msg = freshness_score(
             repo.last_modified(arch),
             repo.last_modified(repo.source_files[:2000]),
-            repo.param("arch.fresh", "grace_days"),
             repo.param("arch.fresh", "max_lag_days"),
         )
         c.add(

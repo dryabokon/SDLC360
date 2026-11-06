@@ -44,27 +44,21 @@ class Param:
     step: float = 1
 
 
-def _fresh(what: str) -> list[Param]:
-    return [
-        Param("grace_days", f"{what} may lag the code by", 30, "days", 0, 365),
-        Param("max_lag_days", "Lag at which the score reaches zero", 365, "days", 31, 3650),
-    ]
-
-
-# Thresholds of the scanner rules that a profile may change. Rules read them via Repo.param(); the acceptance
-# criteria quote them as {key} (also {key*0.85}, {key+1}) so the texts always state the numbers in force.
+# Thresholds a profile may change. Each one IS the acceptance threshold quoted in the capability's "Accepted when"
+# sentence ("There are at least {min_files} test files"). Rules read them via Repo.param(); texts quote them as {key},
+# and {key:partial} for the level where "Partially met" starts.
 PARAMS: dict[str, list[Param]] = {
-    "arch.diagrams": [Param("target", "Diagrams for full marks", 2, "diagrams", 1, 50)],
-    "arch.adr": [Param("target", "Decision records for full marks", 3, "records", 1, 100)],
+    "arch.diagrams": [Param("min_diagrams", "Diagrams kept as code", 2, "diagrams", 1, 50)],
+    "arch.adr": [Param("min_records", "Recorded design decisions", 3, "records", 1, 100)],
     "arch.structure": [Param("max_root_files", "Source files allowed in the root", 5, "files", 0, 200)],
-    "arch.boundaries": [Param("min_source_files", "Applies to projects with more source files than", 50, "files", 0, 100000)],
-    "arch.fresh": _fresh("The architecture document"),
-    "doc.readme": [Param("target_words", "README length for full marks", 400, "words", 20, 10000, 10)],
-    "doc.docs_dir": [Param("target", "Documentation pages for full marks", 3, "pages", 1, 500)],
-    "doc.freshness": _fresh("Documentation"),
-    "doc.inline": [Param("target_share", "Documented Python definitions for full marks", 60, "%", 5, 100)],
-    "test.present": [Param("target", "Test files for full marks", 5, "files", 1, 10000)],
-    "test.ratio": [Param("target_ratio", "Test-to-source file ratio for full marks", 0.4, "", 0.05, 5, 0.05)],
+    "arch.boundaries": [Param("min_source_files", "Checked for projects with more source files than", 50, "files", 0, 100000)],
+    "arch.fresh": [Param("max_lag_days", "Architecture document may lag the code by", 80, "days", 1, 3650)],
+    "doc.readme": [Param("min_words", "README length", 340, "words", 20, 10000, 10)],
+    "doc.docs_dir": [Param("min_pages", "Pages in the docs folder", 3, "pages", 1, 500)],
+    "doc.freshness": [Param("max_lag_days", "Docs may lag the code by", 80, "days", 1, 3650)],
+    "doc.inline": [Param("min_share", "Documented Python functions and classes", 51, "%", 1, 100)],
+    "test.present": [Param("min_files", "Test files", 5, "files", 1, 10000)],
+    "test.ratio": [Param("min_ratio", "Test files per source file", 0.34, "", 0.01, 5, 0.01)],
     "hyg.file_size": [Param("max_kb", "Largest acceptable source file", 60, "KB", 1, 10000)],
 }
 
@@ -74,20 +68,21 @@ def defaults() -> dict[str, dict[str, float]]:
 
 
 def derived(params: dict[str, float]) -> dict[str, float]:
-    """Values the texts need that follow from the parameters (freshness: lag at which the score is 0.85 / 0.35)."""
+    """Values the detailed texts need that follow from the thresholds (freshness: full score and partial limits)."""
     out = dict(params)
-    if "grace_days" in params and "max_lag_days" in params:
-        g, m = params["grace_days"], params["max_lag_days"]
-        out["met_days"] = round(g + 0.15 * (m - g))
-        out["partial_days"] = round(g + 0.65 * (m - g))
+    if "max_lag_days" in params:
+        m = params["max_lag_days"]
+        out["grace_days"] = round(m * 30 / 80)
+        out["partial_days"] = round(m * 248 / 80)
+        out["zero_days"] = round(m * 365 / 80)
     return out
 
 
-PLACEHOLDER_RE = re.compile(r"\{(\w+)(?:([*+])([\d.]+))?\}")
+PLACEHOLDER_RE = re.compile(r"\{(\w+)(?:([*+])([\d.]+)|:(partial))?\}")
 
 
 def fill(text: str, params: dict[str, float]) -> str:
-    """Replace {key}, {key*0.85}, {key+1} with numbers. Counts are rounded up: 85% of 3 files means 3 files."""
+    """Replace {key}, {key*3}, {key+1} and {key:partial} with numbers. Counts are rounded up."""
     if not params or "{" not in text:
         return text
     values = derived(params)
@@ -97,7 +92,9 @@ def fill(text: str, params: dict[str, float]) -> str:
         if key not in values:
             return m.group(0)
         v = float(values[key])
-        if op:
+        if m.group(4):  # where Partially met starts: score 0.35 on the reach() scale
+            v = v * 0.35 / 0.85
+        elif op:
             v = v * float(arg) if op == "*" else v + float(arg)
         whole = float(values[key]).is_integer()
         return str(math.ceil(v - 1e-9)) if whole else f"{v:.2f}".rstrip("0").rstrip(".")

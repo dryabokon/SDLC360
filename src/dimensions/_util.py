@@ -92,8 +92,14 @@ def days_between(a: datetime | None, b: datetime | None) -> float | None:
     return (b - a).total_seconds() / 86400
 
 
-def freshness_score(doc_time: datetime | None, code_time: datetime | None, grace: float = 30, zero_at: float = 365) -> tuple[float, str]:
-    """1.0 if doc updated within `grace` days of the last code change, decays linearly to 0 at `zero_at` days behind."""
+def reach(value: float, accepted_from: float) -> float:
+    """Score of a measure against its acceptance threshold: exactly 0.85 (Met) at the threshold, 0.35 (Partially met) at 41% of it."""
+    return min(1.0, 0.85 * value / accepted_from) if accepted_from > 0 else 1.0
+
+
+def freshness_score(doc_time: datetime | None, code_time: datetime | None, met_days: float = 80) -> tuple[float, str]:
+    """Met (0.85) while the doc lags the code by at most `met_days`. Full score up to 3/8 of that, zero at 4.5625x (30 / 80 / 365 by default)."""
+    grace, zero_at = met_days * 30 / 80, met_days * 365 / 80
     lag = days_between(doc_time, code_time)
     if lag is None:
         return 0.5, "freshness unknown (no history)"

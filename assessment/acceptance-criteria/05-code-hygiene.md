@@ -5,6 +5,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## hyg.lint: A linter is configured.
 
+**Accepted when.** A linter is configured (ruff, ESLint, golangci-lint and the like).
+
 **How we check.** Matched by name anywhere: `ruff.toml`, `.ruff.toml`, `.flake8`, `.pylintrc`, `pylintrc`, `.eslintrc*`, `eslint.config.*`, `biome.json*`, `.golangci.y*ml`, `clippy.toml`, `.rubocop.yml`, `detekt.yml`, `.editorconfig`, `stylecop.json`, `.swiftlint.yml`, `deno.json`. Also `[tool.ruff`/`[tool.pylint`/`[tool.flake8` in the root `pyproject.toml`, or `"eslint…`/`"@biomejs…` in the root `package.json`.
 
 - **Met:** Any one of these is found.
@@ -27,6 +29,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## hyg.format: An auto-formatter is configured.
 
+**Accepted when.** An auto-formatter is configured (ruff format, Black, Prettier and the like).
+
 **How we check.** Matched by name anywhere: `.prettierrc*`, `prettier.config.*`, `rustfmt.toml`, `.rustfmt.toml`, `.clang-format`, `dprint.json`. Also `[tool.black`/`[tool.ruff.format`/`[tool.isort` in the root `pyproject.toml`, any `go.mod` (gofmt), `"prettier…`/`"@biomejs…` in the root `package.json`, a biome config found by `hyg.lint`, or any `[tool.ruff` section in `pyproject.toml`.
 
 - **Met:** Any one is found.
@@ -42,6 +46,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [nist-ssdf](../references/nist-ssdf/), SP 800-218 PW.5.1 Ex.7, p.22 · direct
 
 ## hyg.types: Static typing is enforced.
+
+**Accepted when.** Types are checked: a type checker is configured and about half of the Python files are annotated, or TypeScript runs in strict mode.
 
 **How we check.** If any `.py` source file exists (the Python branch wins over TS): type-checker config (`[tool.mypy`/`[tool.pyright`/`[tool.basedpyright` in root `pyproject.toml`, or `mypy.ini`, `.mypy.ini`, `pyrightconfig.json` anywhere). It also counts the share of the first 300 Python source files with at least one annotated parameter or `->` return. Score = 0.5 x config + 0.5 x min(1, share / 0.7). Otherwise, if any JS/TS source file exists: score = 0.6 x any `tsconfig*.json` + 0.4 x any of them containing `"strict": true`.
 
@@ -62,6 +68,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## hyg.precommit: Pre-commit hooks run format and lint locally.
 
+**Accepted when.** Pre-commit hooks (pre-commit, husky, lefthook) run checks before every commit.
+
 **How we check.** Matched by name anywhere: `.pre-commit-config.yaml`, `lefthook.yml`, `.lefthook.yml`, `lint-staged.config.*`, `.lintstagedrc*`, plus any file under root `.husky/`.
 
 - **Met:** Any one is found.
@@ -80,6 +88,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## hyg.file_size: No oversized source files.
 
+**Accepted when.** No source file is larger than {max_kb} KB (large projects may have a few).
+
 **How we check.** On-disk size of the first 3000 source files (tests, vendor/, third_party/, docs/, examples/ and .github/ excluded). Files over {max_kb} KB ({max_kb*1000} bytes) are oversized. Score = 1 − min(1, oversized / D), where D = max(5, 5% of all source files).
 
 - **Met:** Up to 100 source files: none oversized. Over 100: oversized files are at most 0.75% of source files.
@@ -91,6 +101,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 **Our convention.** Very large files hurt human review and overflow agent context budgets (see anthropic-context-engineering on limited attention).
 
 ## hyg.editor: .editorconfig / .gitattributes keep formatting consistent.
+
+**Accepted when.** At least 2 settings files keep formatting consistent across editors (`.editorconfig`, `.gitattributes` and the like).
 
 **How we check.** Files named `.editorconfig` or `.gitattributes` anywhere. Score = number of such files / 2, with no cap.
 
@@ -105,6 +117,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 **Our convention.** Shared line-ending and whitespace rules prevent noisy diffs between Windows, Linux and agent-generated edits.
 
 ## hyg.templates: PR and issue templates guide contributors.
+
+**Accepted when.** Pull request and issue templates exist.
 
 **How we check.** Files at `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE*` (including that folder), `.github/ISSUE_TEMPLATE/*` (including `config.yml`) and `docs/pull_request_template.md`. Score = min(1, count / 2).
 

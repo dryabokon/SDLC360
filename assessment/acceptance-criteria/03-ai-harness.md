@@ -5,6 +5,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## ai.instructions: The repo has an agent instruction file (CLAUDE.md / AGENTS.md).
 
+**Accepted when.** An agent instruction file (`AGENTS.md`, `CLAUDE.md` or Copilot instructions) sits in the project root.
+
 **How we check.** Tracked files with the exact (case-sensitive) name `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursorrules`, `.windsurfrules` anywhere, `.github/copilot-instructions.md`, and files under root `.cursor/rules/`. `CLAUDE.local.md` is personal configuration (see `ai.no_local_leak`) and does not count.
 
 - **Met:** One of those files sits at the repo root or under `.github/`.
@@ -28,6 +30,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [agents-md](../references/agents-md/), How to use AGENTS.md? · direct
 
 ## ai.instructions_quality: The instruction file states build/test commands, layout and conventions.
+
+**Accepted when.** The instruction file covers commands, layout, conventions and tests, in 8 to 800 lines.
 
 **How we check.** The main file: `CLAUDE.md`, else `AGENTS.md`, else `.github/copilot-instructions.md`, else the first root/.github instruction file. Symlinks are followed, as are up to 5 `@file.md` import lines. In headings plus the first 20,000 characters it looks for four topics: commands (build/run/install/make/npm/pip/cargo…), testing (`test…`), layout (architect/structure/layout/directory/module), conventions (convention/style/guideline/rule/must/never/always). It also counts lines.
 
@@ -55,6 +59,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## ai.instructions_fresh: The instruction file matches the current code (no stale paths).
 
+**Accepted when.** The paths named in the instruction file exist, and the file is kept up to date with the code.
+
 **How we check.** In the main file (or the imported file for a ≤3-line wrapper): relative markdown links and backticked paths with an extension or trailing slash. Each must resolve from the file's folder, the repo root, or as a path suffix of any file. Also compares the file's last commit with the latest commit touching source code. Score = 0.6 × share of paths resolving + 0.4 × freshness (1.0 within 30 days, falling to 0 at 365 days behind).
 
 - **Met:** Score ≥ 0.85, e.g. all paths resolve and the file was updated within ~155 days of the last code change, or at least 75% resolve and it is within 30 days.
@@ -80,6 +86,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [anthropic-claude-code-best-practices](../references/anthropic-claude-code-best-practices/), Keep CLAUDE.md short · supporting
 
 ## ai.settings: Shared agent settings define what agents may and may not do.
+
+**Accepted when.** Shared agent settings (`.claude/settings.json`) say what agents may and may not do.
 
 **How we check.** Root `.claude/settings.json`, parsed as JSON for a non-empty `permissions` key.
 
@@ -107,6 +115,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## ai.guardrails: Hooks enforce formatting, linting and tests automatically.
 
+**Accepted when.** Agent hooks in `.claude/settings.json` run formatting, linting or tests automatically.
+
 **How we check.** A non-empty `hooks` key in `.claude/settings.json`. Otherwise any file under root `.claude/hooks/` or `.husky/`, or any `.pre-commit-config.yaml` / `lefthook.yml` anywhere.
 
 - **Met:** `.claude/settings.json` declares agent hooks.
@@ -133,6 +143,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## ai.no_local_leak: Personal agent settings are not committed.
 
+**Accepted when.** Personal agent files (`settings.local.json`, `CLAUDE.local.md`) are not committed.
+
 **How we check.** Tracked files ending in `.claude/settings.local.json` or `CLAUDE.local.md` (case-sensitive, any depth).
 
 - **Met:** None is tracked.
@@ -148,6 +160,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [anthropic-claude-code-best-practices](../references/anthropic-claude-code-best-practices/), Keep CLAUDE.md short · direct
 
 ## ai.extensions: Repeated workflows are packaged as skills, subagents or commands.
+
+**Accepted when.** At least 3 skills, subagents or commands package repeated workflows.
 
 **How we check.** Counts files at any depth under the root folders `.claude/skills/`, `.claude/agents/` (`.md`), `.claude/commands/` (`.md`), `.github/prompts/` (`.md`), `.github/chatmodes/`, `.github/instructions/`, `.github/agents/`, `.cursor/rules/`, `.codex/`, `.claude-plugin/`, `.agents/skills/`, `.agents/agents/`.
 
@@ -173,6 +187,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## ai.ci_agents: AI agents are wired into CI for review or triage.
 
+**Accepted when.** A CI workflow runs an AI agent, for example for code review or issue triage.
+
 **How we check.** Text of `.github/workflows/*` (not delegated scripts) for `anthropics/claude-code-action`, `claude-code-base-action`, `openai/codex-action`, `coderabbit` or `copilot`, case-insensitive.
 
 - **Met:** Any of those strings appears.
@@ -196,6 +212,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [anthropic-claude-code-best-practices](../references/anthropic-claude-code-best-practices/), Run Claude from a script · supporting
 
 ## ai.scoped_context: Large codebases give agents scoped, per-package context.
+
+**Accepted when.** A large codebase also has instruction files inside its packages, not only at the root.
 
 **How we check.** Counts non-test source files (excluding `vendor/`, `third_party/`, `docs/`, `examples/`, `.github/`); if over 300, looks for instruction files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursorrules`, `.windsurfrules`, `CLAUDE.local.md`) in any subfolder other than `.github/` and `.cursor/`.
 
@@ -221,6 +239,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [google-new-sdlc](../references/google-new-sdlc/), p. 16 · supporting
 
 ## ai.mcp: External tools the project relies on are declared as MCP servers.
+
+**Accepted when.** The MCP servers the project relies on are declared in the repository (`.mcp.json` or similar).
 
 **How we check.** Any `.mcp.json` anywhere, root `.vscode/mcp.json` or `.cursor/mcp.json`.
 

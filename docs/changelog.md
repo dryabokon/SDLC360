@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.0 (2026-11-06)
+
+- Two tabs: **Assessment** and **Capabilities**, with the same layout. Recommendations, Dynamics and How it works are
+  gone for now.
+- Recommendations live in the Assessment: the overview says where to start and what is going well; an open
+  capability shows what to do right in its row and its card, a met one gets a short acknowledgement.
+- Every capability has one plain **Accepted when** sentence; its numbers are the thresholds and are edited inline in
+  the Capabilities tab. The technical details are folded away.
+- Thresholds now are the acceptance numbers themselves (`min_words` 340 instead of a "target" of 400), so the
+  sentence and the verdict agree exactly.
+- Scans from the app and `scan` without `--history` no longer re-score past commits.
+- Open runs are re-judged in memory when loaded, so they show the current texts.
+
 ## 0.4.0 (2026-11-06)
 
 - **Capabilities** instead of "expectations": the catalog is `assessment/capabilities.md`.

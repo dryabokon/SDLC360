@@ -5,6 +5,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## cost.llm_tracking: LLM token usage and cost are tracked per call / run.
 
+**Accepted when.** The code records LLM token usage and cost.
+
 **How we check.** LLM detection looks at source files (first 4000, excluding root `scripts/`, `examples/` and `.github/`). It looks for line-start Python imports of anthropic, openai, langchain*, llama_index, litellm, google genai/generativeai, mistralai, cohere, groq, ollama or claude_agent_sdk. It also looks for JS `require`/`from` of `openai`, `@anthropic-ai/*`, `ai`, `@ai-sdk/*` or `langchain*`, and for the same packages declared in requirements, `pyproject.toml`, `package.json`, `go.mod`, `Cargo.toml` or `*.csproj`. If found, it searches source lines for `usage.input_tokens/output_tokens/prompt_tokens/completion_tokens/total_tokens`, `cost_usd`, `total_cost`, `token_count`, `count_tokens`, `track_cost`, `cost_tracker`, `get_openai_callback`, `langfuse`, `helicone`, `langsmith` or `openlit`.
 
 - **Met:** 2 or more matching lines (score = lines / 2).
@@ -29,6 +31,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [dora-2025-state-of-ai-assisted-development](../references/dora-2025-state-of-ai-assisted-development/), p. 83 · supporting
 
 ## cost.llm_limits: LLM calls are bounded by max_tokens, budgets and retries.
+
+**Accepted when.** LLM calls are bounded: maximum tokens, budgets and retry limits.
 
 **How we check.** Only when an LLM SDK is detected (see `cost.llm_tracking`). Source lines are searched for the words `max_tokens`, `max_output_tokens`, `max_completion_tokens`, `budget`, `max_cost`, `spend_limit`, `rate_limit` or `max_retries`.
 
@@ -55,6 +59,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## cost.infra: Cloud resources have budgets, tags and cost checks.
 
+**Accepted when.** Cloud resources have budgets, cost tags and cost checks.
+
 **How we check.** IaC files: `*.tf`, `*.bicep`, `cdk.json`, `Pulumi.yaml`, `serverless.yml`, `template.yaml`, `*.cfn.yaml` anywhere, or any file under root `k8s/`, `helm/` or `charts/`. In those files (first 200) plus all workflow YAML, it collects distinct matches of: `infracost`, `aws_budgets_budget`, `azurerm_consumption_budget`, `google_billing_budget`, cost-center/cost_center, `tags`, `labels:`/`labels =`, `autoscal`, `spot`, `preemptible`, `resources:` followed by `limits`.
 
 - **Met:** 3 or more distinct signals (score = distinct / 3).
@@ -69,6 +75,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 **Our convention.** Cloud spend without budgets or tags cannot be attributed or capped; applies only when infrastructure is defined as code.
 
 ## cost.llm_efficiency: Prompt caching and a central model config keep spend down.
+
+**Accepted when.** Prompts are cached and models are configured in one place.
 
 **How we check.** Only when an LLM SDK is detected. Source lines are searched for caching (`cache_control`, `prompt_cach`, `semantic_cache`, `lru_cache`, `@cache`, `diskcache`, `redis`) and for "model config": `MODEL`, `model_name`, `model_id` or `DEFAULT_MODEL` followed by `:` or `=`, case-insensitive.
 
@@ -93,6 +101,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## cost.ci: CI minutes are controlled (timeouts, cancel-in-progress, path filters).
 
+**Accepted when.** CI minutes are controlled: outdated runs are cancelled, unrelated changes skipped, jobs have timeouts.
+
 **How we check.** Only when GitHub workflows exist and the project uses an LLM SDK or IaC. In all workflow text it counts `timeout-minutes` occurrences and jobs. A job counts if its key is indented 2 spaces and the next line, at 4 spaces, is `runs-on` or `uses`; at least 1 job is assumed. It also looks for `cancel-in-progress: true` and a `paths:`/`paths-ignore:` line. Score = 0.4 x min(1, timeouts/jobs) + 0.35 x cancel + 0.25 x paths.
 
 - **Met:** `cancel-in-progress: true` AND a path filter AND timeouts on at least 62.5% of counted jobs.
@@ -105,6 +115,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 **Our convention.** Timeouts, cancel-in-progress and path filters stop CI minutes from being burned by hung or superseded jobs.
 
 ## cost.documented: Expected costs and budgets are documented.
+
+**Accepted when.** Expected costs or budgets are written down.
 
 **How we check.** Text of the first 30 files matching `README*`, `CLAUDE.md` or `COST*.md` anywhere, or any `docs/**.md`, searched case-insensitively for words starting with `cost`, `budget`, `pricing` or `spend`, or for a `$` followed by a digit.
 

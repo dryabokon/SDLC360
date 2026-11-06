@@ -13,12 +13,16 @@ In the app, **Apply to this run** re-judges the open run with a profile at once 
 capabilities). Changed thresholds take effect when the project is re-assessed, because the rules measure with them.
 From the command line: `python sdlc.py scan <target> --profile <name>` and `python sdlc.py render runs/<id> --profile <name>`.
 
-## Thresholds in the texts
+## Accepted when
 
-A rule with adjustable thresholds (for example the README length) quotes them in its acceptance criteria as
-`{target_words}`, `{target_words*0.85}` or `{max_root_files+1}`. The app and the report show the numbers of the
-profile in force, so the texts never disagree with the verdicts. The thresholds and their ranges are listed in
-`src/profiles.py → PARAMS`; a test fails when a rule or a text does not use one.
+Every capability has one plain sentence that says when it is accepted, for example
+"There are at least {min_files} test files." This is what people read in the app, and the numbers in it are what they
+change in the **Capabilities** tab. Each `{key}` is a threshold of the rule (listed with its range in
+`src/profiles.py → PARAMS`), so the sentence always states the number the verdict is based on. Tests fail when a
+sentence and its rule disagree on the thresholds.
+
+Everything else in a block (how the rule checks, partial verdicts, blind spots, published basis) is for developers and
+for readers who want to dig deeper; the app shows it folded away under "How this is checked, and why it matters".
 
 ## Acceptance criteria
 
@@ -26,6 +30,8 @@ One block per capability. The heading repeats the capability word for word (a te
 
 ```markdown
 ## sec.no_secrets: No secrets are committed.
+
+**Accepted when.** No passwords, tokens or API keys are written in the tracked files.
 
 **How we check.** What the scanner looks at, in plain words.
 

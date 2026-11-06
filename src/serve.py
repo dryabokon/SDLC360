@@ -13,11 +13,12 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from . import profiles
-from .acceptance import method_for
+from .acceptance import criteria, method_for
 from .dimensions import DIMENSIONS
 from .render import render_app
 from .repo import check_target
 from .runner import DEFAULT_CACHE, DEFAULT_RUNS, RUN_ID_RE, list_projects, rerender, run_scan
+from .scanner import finalize
 
 log = logging.getLogger("sdlc360")
 JOBS: dict[str, dict] = {}
@@ -102,6 +103,8 @@ def catalog(draft: dict | None = None) -> dict:
                 params[cid].update(ov.get("params", {}))
     out = profiles.catalog_for_ui()
     out["names"] = {d.id: d.name for d in DIMENSIONS}
+    out["descriptions"] = {d.id: d.description for d in DIMENSIONS}
+    out["accepted"] = {cid: c.get("accepted", "") for cid, c in criteria().items()}  # with {key} placeholders: the app puts inputs there
     out["methods"] = {c["id"]: method_for(c["id"], params.get(c["id"])) for its in out["aspects"].values() for c in its}
     return out
 
@@ -166,8 +169,10 @@ def make_handler(runs_dir: Path, cache_dir: Path):
                     return self._json({"error": str(e)}, 404)
             if len(parts) == 4 and parts[1:3] == ["api", "runs"] and RUN_ID_RE.match(parts[3]):
                 f = runs_dir / parts[3] / "report.json"
-                if f.exists():
-                    return self._send(200, f.read_bytes(), "application/json; charset=utf-8")
+                if f.exists():  # re-judged in memory: the current acceptance texts, the file stays as it is
+                    report = json.loads(f.read_text(encoding="utf-8"))
+                    rv = f.with_name("review.json")
+                    return self._json(finalize(report, json.loads(rv.read_text(encoding="utf-8")) if rv.exists() else None))
                 return self._json({"error": "run not found"}, 404)
             if len(parts) == 4 and parts[1:3] == ["api", "jobs"] and parts[3] in JOBS:
                 return self._json(JOBS[parts[3]])

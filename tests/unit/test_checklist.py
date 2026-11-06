@@ -89,3 +89,16 @@ def test_acceptance_headings_repeat_the_capability_text():
 def test_reference_ids_are_their_folder_names():
     for folder, meta in references().items():
         assert meta.get("id") == folder, folder
+
+
+def test_every_capability_has_a_plain_accepted_sentence():
+    """The sentence users read and edit: one line, and its only placeholders are the rule's own thresholds."""
+    import re
+
+    from src.profiles import PARAMS
+
+    for cid, block in criteria().items():
+        text = block.get("accepted", "")
+        assert text and len(text) < 260, cid
+        keys = set(re.findall(r"\{(\w+)\}", text))
+        assert keys == {p.key for p in PARAMS.get(cid, [])}, f"{cid}: the sentence must show each threshold once as {{key}}"

@@ -5,6 +5,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## ci.present: CI runs on GitHub Actions.
 
+**Accepted when.** At least one GitHub Actions workflow exists.
+
 **How we check.** `.yml`/`.yaml` files under `.github/workflows/`, subfolders included. With none, it looks for `.gitlab-ci.yml`, `Jenkinsfile`, `azure-pipelines.yml`, `.circleci/config.yml`, `bitbucket-pipelines.yml` or `.travis.yml`.
 
 - **Met:** At least one workflow file.
@@ -26,6 +28,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [nist-ssdf](../references/nist-ssdf/), SP 800-218 PO.3.2 Ex.3, p.16 · supporting
 
 ## ci.pr: CI gates pull requests before merge.
+
+**Accepted when.** CI runs on pull requests.
 
 **How we check.** All workflow text, searched for the triggers `pull_request`, `pull_request_target` or `merge_group` in any YAML form: a key (`pull_request:`), a list item (`- pull_request`), a scalar (`on: pull_request`) or a flow list (`on: [push, pull_request]`).
 
@@ -51,6 +55,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## ci.stages: CI lints, tests and builds.
 
+**Accepted when.** CI lints, tests and builds.
+
 **How we check.** It searches `ci_text` (workflows plus the scripts they delegate to) for three stages. Lint/typecheck: `ruff`, `eslint`, `mypy`, `pre-commit run` and others. Test: the test.ci command list. Build: `\bbuild\b`, `docker build`, `cargo build`, `tsc` and others.
 
 - **Met:** All 3 stages are found.
@@ -64,6 +70,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 **Our convention.** Lint, test and build in CI are the minimum feedback loop; each missing stage lets a class of defects reach main.
 
 ## ci.cd: Releases or deployments are automated.
+
+**Accepted when.** Releases or deployments are automated, for example on a version tag.
 
 **How we check.** Workflow text only (not delegated scripts). It looks for deploy keywords (`deploy`, `release`, `publish`, `docker push`, `helm`, `kubectl`, `aws-actions`, `goreleaser` and others). It also looks for a tag trigger (`tags:` followed by a list item) or `release:` followed by `types`. Score: 0.5 for any keyword, 0.5 for a tag/release trigger, 0.5 for 3 or more distinct keywords, capped at 1.
 
@@ -89,6 +97,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## ci.hygiene: Jobs have timeouts, version matrices and protected environments.
 
+**Accepted when.** CI jobs have timeouts, a version matrix, and protected environments or manual approval.
+
 **How we check.** Workflow text only. It counts occurrences of `timeout-minutes` (job or step level) against detected jobs: 2-space keys whose next line is a 4-space `runs-on:` or `uses:`, minimum 1. It also looks for any `matrix:`, and for an `environment:` line or `workflow_dispatch`. Score = 0.4×min(1, timeouts/jobs) + 0.3×matrix + 0.3×(environment or dispatch).
 
 - **Met:** A matrix, an environment or manual dispatch, and timeouts on at least about 63% of detected jobs.
@@ -106,6 +116,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [nist-ssdf](../references/nist-ssdf/), SP 800-218 PO.5.1, p.17 · supporting
 
 ## ci.pinning: Third-party actions are pinned to commit SHAs.
+
+**Accepted when.** Nearly all third-party actions (85%) are pinned to a commit SHA.
 
 **How we check.** It finds `uses: owner/repo@ref` entries in workflow text, excluding `actions/*` and `github/*`. It counts every occurrence whose ref is exactly 40 lowercase hex characters as pinned.
 
@@ -130,6 +142,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [nist-ssdf](../references/nist-ssdf/), SP 800-218 PO.3.2 Ex.7, p.16 · supporting
 
 ## ci.speed: CI is fast: caching, cancel-in-progress and path filters.
+
+**Accepted when.** CI caches dependencies, cancels outdated runs and skips unrelated changes.
 
 **How we check.** Workflow text only. Cache: `actions/cache`, `cache: pip|npm|yarn|pnpm|gradle|maven|go|poetry|uv`, `enable-cache`, `setup-uv`, `Swatinem/rust-cache` or `cache-from`. Concurrency: a `concurrency:` line. Paths: a `paths:` or `paths-ignore:` line. Score = 0.45 cache + 0.35 concurrency + 0.2 paths.
 

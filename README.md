@@ -1,8 +1,8 @@
 # SDLC360: a 360° check-up of any software repository
 
 Point SDLC360 at a GitHub repository or a local git folder. A minute later you see, aspect by aspect, whether the
-project is run the way a modern, AI-assisted team should run it: what is in place, what is missing, what to fix
-first, and how the project has been moving over the last year.
+project is run the way a modern, AI-assisted team should run it: what is in place, what is missing, and what to fix
+first.
 
 It answers questions like:
 
@@ -48,7 +48,7 @@ An unmet critical capability caps its aspect at 49 out of 100, whatever else pas
 
 ## Your journey
 
-Six steps, all in the browser.
+Five steps, all in the browser.
 
 <details><summary><b>1 · Start the app</b></summary>
 
@@ -59,58 +59,45 @@ Six steps, all in the browser.
 Requirements: Python 3.12+ and git. Nothing to install: the tool uses only the Python standard library.
 </details>
 
-<details><summary><b>2 · Choose a project and scan it</b></summary>
+<details><summary><b>2 · Choose a project and assess it</b></summary>
 
 Click the project name in the header. Paste a GitHub URL or `owner/repo`, or pick a local git folder with the folder
-picker. **Scan** checks the current commit, re-scores a few past commits for the Dynamics view and stores the run.
-Local folders are only read, never changed.
+picker, choose a profile and press **Assess**. Local folders are only read, never changed.
 </details>
 
 <details><summary><b>3 · Read the assessment</b></summary>
 
-The **Overview** shows all aspects at once. Each aspect tab is a checklist: ID, criticality, the capability and
-its status. Click a row to see what we expected, what we found, the verdict, how it was checked, its limits and the
-published basis for it.
+The **Overview** shows every aspect at once, **where to start** (the open capabilities that matter most, with what
+to do) and **what is going well**. Each aspect is a list of capabilities with their status. Click one to see the
+verdict: what to do if it is not met yet, or a well-deserved nod if it is; when it is accepted; and what we found.
 
-![An aspect: the checklist on the left, the selected capability on the right](docs/images/aspect.png)
+![An aspect: capabilities on the left, the selected one on the right](docs/images/aspect.png)
 </details>
 
-<details><summary><b>4 · Decide what to fix</b></summary>
+<details><summary><b>4 · Make it yours</b></summary>
 
-**Recommendations** lists every open capability across all aspects, critical first, with what to do.
+The **Capabilities** tab has the same layout. Switch capabilities on or off, set how critical each one is, change
+the numbers in **Accepted when** ("There are at least **5** test files"), and add capabilities of your own in plain
+words. Save it as a profile; **Apply to this run** re-judges the open assessment at once.
 
-![Recommendations: open capabilities, critical first](docs/images/recommendations.png)
+![Capabilities: the same aspects, with switches, criticality and editable acceptance](docs/images/capabilities.png)
 </details>
 
-<details><summary><b>5 · See how the project evolves</b></summary>
-
-**Dynamics** shows the score over the last months, delivery pace, active contributors, and how often commits
-touch tests and documentation.
-
-![Dynamics: score over time, velocity, contributors, engineering discipline](docs/images/dynamics.png)
-</details>
-
-<details><summary><b>6 · Fix and re-assess</b></summary>
+<details><summary><b>5 · Fix and re-assess</b></summary>
 
 After changes, press **Re-assess**. The new run appears next to the earlier ones, so progress is visible.
 </details>
 
-## Make it yours
-
-The tab **How it works** in the app explains the same on one page.
-
-![How it works: components, where to change what, how scores are computed, sources](docs/images/how-it-works.png)
+## Where things live
 
 | You want to change | Where |
 |---|---|
-| **Which capabilities count**, how important each is, and the thresholds (for example the README length or the test-to-code ratio) | the **Capabilities** tab: pick a profile (*Standard*, *Prototype*) or save your own |
-| **How a capability is judged**: met / partially / not met, limits, basis | [`assessment/acceptance-criteria/`](assessment/acceptance-criteria/), one file per aspect |
-| **A capability of your own** that no rule checks | **Capabilities** tab → *Add your own capability*, with when it is met; a reviewer records the verdict ([review.json](docs/reviewer-verdicts.md)) |
+| **Which capabilities count**, how critical each is, and the numbers they are accepted at | the **Capabilities** tab: a profile (*Standard*, *Prototype*, or your own) |
+| **A capability of your own** that no rule checks | **Capabilities** tab → *Add your own capability*, with when it is accepted; a reviewer records the verdict ([review.json](docs/reviewer-verdicts.md)) |
+| **How a rule checks**, its blind spots and published basis (for developers) | [`assessment/acceptance-criteria/`](assessment/acceptance-criteria/), one file per aspect |
 | **Why we expect it** | [`assessment/references/`](assessment/references/README.md) |
 
-Profiles are saved in [`assessment/profiles/`](assessment/profiles/); everything else that defines the assessment
-sits next to them in [`assessment/`](assessment/README.md). **Apply to this run** re-judges the open run at once;
-changed thresholds take effect at the next **Re-assess**. From the command line:
+Profiles are saved in [`assessment/profiles/`](assessment/profiles/). From the command line:
 `python sdlc.py scan <target> --profile prototype`, `python sdlc.py render runs/<run-id> --profile <name>`.
 
 ## How it works
@@ -123,7 +110,7 @@ flowchart LR
     Src["References<br/>assessment/references/"] -->|basis| A
     S --> Run["Run folder<br/>runs/&lt;id&gt;/"]
     Rev["Reviewer (optional)<br/>review.json"] -.-> Run
-    Run --> D["Dashboard<br/>Assessment · Recommendations · Dynamics"]
+    Run --> D["App<br/>Assessment · Capabilities"]
 ```
 
 ## For developers

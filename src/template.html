@@ -78,28 +78,19 @@ button,input{font:inherit;color:inherit}.muted{color:var(--muted)}.spacer{flex:1
 .subnav button.on{color:var(--text);border-bottom-color:var(--series-1);font-weight:600}
 .subnav button:hover{color:var(--text)}
 .pane{padding:12px 16px 16px}
-.guide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}.guide .wide{grid-column:1/-1}
-.guide h2{font-size:15px;margin:0 0 4px}.guide h3{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin:0 0 8px;font-weight:600}
-.guide p{margin:0 0 8px;color:var(--ink-2)}.guide ol{margin:0;padding-left:20px}.guide li{margin:0 0 7px;color:var(--ink-2)}.guide li b{color:var(--text)}
-.guide table{border-collapse:collapse;width:100%}.guide th,.guide td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
-.guide th{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:600}.guide tr:last-child td{border-bottom:0}
-.guide code{font:11.5px ui-monospace,Consolas,monospace}
-#gsvg{display:block;width:100%;height:auto;max-height:430px}
-#gsvg .bx{fill:var(--surface);stroke:var(--line);stroke-width:1.3}#gsvg .bx.grp{fill:var(--fill)}#gsvg .bx.dash{stroke-dasharray:5 4}
-#gsvg .bx.key{stroke:var(--series-1);stroke-width:1.6}
-#gsvg .t{font-size:13px;font-weight:600;fill:var(--text)}#gsvg .s{font-size:11px;fill:var(--muted)}#gsvg .m{font:10.5px ui-monospace,Consolas,monospace;fill:var(--muted)}
-#gsvg .k{font-size:9.5px;font-weight:700;letter-spacing:.05em;fill:var(--faint)}
-#gsvg .ln{fill:none;stroke:var(--muted);stroke-width:1.4}#gsvg .ln.dash{stroke-dasharray:5 4}#gsvg .mk{fill:var(--muted)}
-#gsvg .lb{font-size:10.5px;fill:var(--muted);font-weight:600}#gsvg .lbg{fill:var(--surface)}
-@media (max-width:1100px){.guide{grid-template-columns:1fr}}
+#gsvg-removed{display:block;width:100%;height:auto;max-height:430px}
+#gsvg-removed .bx{fill:var(--surface);stroke:var(--line);stroke-width:1.3}#gsvg-removed .bx.grp{fill:var(--fill)}#gsvg-removed .bx.dash{stroke-dasharray:5 4}
+#gsvg-removed .bx.key{stroke:var(--series-1);stroke-width:1.6}
+#gsvg-removed .t{font-size:13px;font-weight:600;fill:var(--text)}#gsvg-removed .s{font-size:11px;fill:var(--muted)}#gsvg-removed .m{font:10.5px ui-monospace,Consolas,monospace;fill:var(--muted)}
+#gsvg-removed .k{font-size:9.5px;font-weight:700;letter-spacing:.05em;fill:var(--faint)}
+#gsvg-removed .ln{fill:none;stroke:var(--muted);stroke-width:1.4}#gsvg-removed .ln.dash{stroke-dasharray:5 4}#gsvg-removed .mk{fill:var(--muted)}
+#gsvg-removed .lb{font-size:10.5px;fill:var(--muted);font-weight:600}#gsvg-removed .lbg{fill:var(--surface)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;min-width:0;min-height:0;padding:12px 14px;display:flex;flex-direction:column}
 .chead{display:flex;align-items:center;gap:10px;margin-bottom:6px;min-height:22px;flex-wrap:wrap}
 .chart{flex:1;min-height:0;position:relative}
 .chart svg{position:absolute;inset:0;width:100%;height:100%}
 .fill{height:clamp(420px,calc(100vh - 46px - 41px - 28px),720px)}
 .ov{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;min-height:420px}
-.recs{display:grid;grid-template-columns:320px minmax(0,1fr);gap:12px;align-items:start}
-.recs .big{font-size:44px;font-weight:700;line-height:1;letter-spacing:-.02em}.recs .big small{font-size:15px;color:var(--muted);font-weight:500}
 .chk{width:100%;border-collapse:collapse}
 .chk th{text-align:left;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line)}
 .chk td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
@@ -112,7 +103,7 @@ button,input{font:inherit;color:inherit}.muted{color:var(--muted)}.spacer{flex:1
 .prio.critical{color:var(--text);border-color:var(--text)}
 .prio.nice{border-style:dashed;color:var(--faint)}
 .gate{margin-top:12px;border-left:2px solid var(--critical);background:var(--fill);padding:6px 9px;border-radius:0 6px 6px 0;font-size:12px;color:var(--ink-2)}
-.dimgrid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:12px;margin-top:12px;align-items:start}
+.dimgrid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:12px;margin-top:12px;align-items:start}
 .rag{display:inline-block;width:10px;height:10px;border-radius:50%;flex:none;vertical-align:middle}
 .rag.pass{background:var(--good)}.rag.partial{background:var(--warning)}.rag.fail{background:var(--critical)}
 .rag.na{background:transparent;border:1.5px solid var(--axis)}.rag.review{background:transparent;border:1.5px dashed var(--series-1)}
@@ -218,28 +209,46 @@ svg text{fill:var(--ink-2);font-size:12px}svg .tick{fill:var(--faint);font-size:
 #tip{position:fixed;pointer-events:none;z-index:30;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:8px;
   padding:7px 9px;font-size:12px;box-shadow:0 6px 24px rgba(0,0,0,.18);opacity:0;transition:opacity .08s;max-width:280px}
 #tip .row{display:flex;justify-content:space-between;gap:14px;color:var(--muted)}#tip .row b{color:var(--text)}
-/* capabilities (profiles) */
-.capbar{flex-direction:row;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px}
-.capdesc{flex:1;min-width:220px;font-size:12px}
-.fld{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}.fld>span{white-space:nowrap}
+/* assessment: verdicts that say what to do, or cheer */
+.ov2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px;margin-top:12px}
+.todo{margin:8px 0 6px;padding-left:20px}.todo li{padding:6px 4px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:4px}
+.todo li:last-child{border-bottom:0}.todo li:hover{background:var(--fill)}
+.rec{color:var(--ink-2);font-size:12.5px;margin-top:3px;padding-left:10px;border-left:2px solid var(--warning)}
+.rec.sm{font-size:12px;color:var(--muted);margin-top:4px}
+.cheer{color:var(--good-text);font-weight:600}.cheer.big{font-size:15px;margin:10px 0}
+.dhead{display:flex;gap:8px;align-items:center}.dhead .cid{font:11.5px ui-monospace,Consolas,monospace;color:var(--muted)}
+.vbox{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:8px;background:var(--fill);margin:0 0 12px;color:var(--ink-2)}
+.vbox b{color:var(--text)}.vbox .rag{margin-top:2px}
+.vbox.good{background:color-mix(in srgb,var(--good) 10%,var(--surface));border:1px solid color-mix(in srgb,var(--good) 35%,var(--line))}
+.vbox.warn{background:color-mix(in srgb,var(--warning) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--warning) 45%,var(--line))}
+.vbox.bad{background:color-mix(in srgb,var(--critical) 8%,var(--surface));border:1px solid color-mix(in srgb,var(--critical) 35%,var(--line))}
+.todo1{margin-top:6px;color:var(--text)}
+.acc,.found{margin:0 0 12px;color:var(--text)}
+.acc>.lbl,.found>.lbl,.todo1>.lbl{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600;margin-bottom:3px}
+.acc{font-size:13.5px;line-height:1.6}
+.more{border-top:1px solid var(--line);padding-top:8px}.more summary{cursor:pointer;color:var(--muted);font-size:12px;padding:2px 0 6px}
+.more summary:hover{color:var(--text)}.more .kv th{width:110px}
+/* capabilities: same layout, settings instead of verdicts */
+.pbar{display:flex;align-items:center;gap:8px}
+.pbar .icon-btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;height:28px;padding:0 10px;color:var(--text);font-size:12px;font-weight:500}
+.pbar .icon-btn.pri{background:var(--text);color:var(--surface);border-color:var(--text)}.pbar .icon-btn:disabled{opacity:.45;cursor:default}.pbar #cap-msg{font-size:12px;white-space:nowrap}
+.fld{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
 select,.txt{height:30px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 8px;font:inherit}
-textarea.txt{height:auto;min-height:52px;padding:6px 8px;resize:vertical}
-select:focus,.txt:focus,.prm input:focus{outline:2px solid var(--series-1);outline-offset:-1px}
-.capdesc .txt{width:100%}
-#cap-msg{font-size:12px}#cap-msg.err,.err{color:var(--bad-text)}
-.captab select{height:26px;font-size:12px;padding:0 4px;width:100%}
-.captab tr.off td{color:var(--faint)}.captab tr.off td:nth-child(3){text-decoration:line-through}
-.captab input[type=checkbox]{width:15px;height:15px;accent-color:var(--series-1);cursor:pointer}
-.chg{display:inline-block;min-width:16px;padding:0 5px;border-radius:8px;background:var(--series-1);color:#fff;font-size:10.5px;font-weight:600;text-align:center;line-height:16px}
-.cid .chg{background:none;color:var(--series-1);padding:0;min-width:0;font-size:14px}
-.prms{display:grid;gap:8px;margin:2px 0 10px;padding:10px;background:var(--fill);border-radius:8px}
-.prm{display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:4px 10px;color:var(--ink-2)}
-.prm input{height:28px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--text);padding:0 6px;font:inherit;text-align:right}
-.prm em{grid-column:1/-1;font-style:normal;font-size:11px;color:var(--faint);margin-top:-2px}
-.own{display:grid;grid-template-columns:minmax(0,1fr) 130px 30px;gap:6px;padding:8px 0;border-bottom:1px dashed var(--line)}
-.own textarea{grid-column:1/-1}
-#cap-add{margin-top:8px}
+textarea.txt{height:auto;min-height:60px;padding:6px 8px;resize:vertical;line-height:1.5}
+select:focus,.txt:focus,.inl:focus{outline:2px solid var(--series-1);outline-offset:-1px}
+#cap-msg.err,.err{color:var(--bad-text)}
+#cap-tab select{height:24px;font-size:11.5px;padding:0 2px;width:100%;background:var(--surface)}
+#cap-tab tr.off td{color:var(--faint)}#cap-tab tr.off td:nth-child(3){text-decoration:line-through}
+.inl{width:76px;height:26px;margin:0 3px;border:1px solid var(--series-1);border-radius:6px;background:var(--surface);color:var(--text);font:inherit;font-weight:600;text-align:center}
+.dot1{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--series-1);vertical-align:middle;margin-left:3px}
+.sw{position:relative;display:inline-block;width:30px;height:17px;cursor:pointer}.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw i{position:absolute;inset:0;border-radius:9px;background:var(--axis);transition:background .15s}
+.sw i::after{content:"";position:absolute;left:2px;top:2px;width:13px;height:13px;border-radius:50%;background:#fff;transition:transform .15s}
+.sw input:checked+i{background:var(--series-1)}.sw input:checked+i::after{transform:translateX(13px)}
+.sw input:disabled+i{opacity:.5;cursor:default}.sw input:focus-visible+i{outline:2px solid var(--series-1);outline-offset:2px}
 .add form select{height:32px;max-width:150px}
+@media (max-width:1100px){.ov2{grid-template-columns:1fr}.pbar{flex-wrap:wrap}}
+.lnk{color:var(--series-1);text-decoration:none;cursor:pointer}.lnk:hover{text-decoration:underline}
 .hidden{display:none!important}
 @media (max-width:1100px){.dimgrid{grid-template-columns:1fr}.detail{position:static;max-height:none}.ov{grid-template-columns:1fr 1fr}.ov>.card:last-child{grid-column:1/-1}.fill,.dyn{height:auto}
   .ov>.card,.dyn>.card{min-height:380px}.dyn{grid-template-columns:1fr;grid-template-rows:none}.cols2{grid-template-columns:1fr}}
@@ -272,13 +281,14 @@ select:focus,.txt:focus,.prm input:focus{outline:2px solid var(--series-1);outli
         <div class="how" id="how"><b>What happens when you press Assess</b><ol>
           <li>GitHub repos are cloned into a local cache; local folders are read in place and never modified.</li>
           <li>About 70 automated checks run on the latest commit and are judged against the chosen profile of capabilities.</li>
-          <li>The same checks re-run on 8 past commits, and git history is measured, for the Dynamics view.</li></ol>
-          Runs locally, takes 1–2 minutes, no AI involved. The result is saved as a new run in <code>runs/</code>.</div>
+          </ol>
+          Runs locally, takes a few seconds to a minute, no AI involved. The result is saved as a new run in <code>runs/</code>.</div>
       </div>
     </div>
   </div>
-  <nav class="tabs" id="tabs"><button data-v="assessment" class="on" type="button">Assessment</button><button data-v="recommendations" type="button">Recommendations</button><button data-v="dynamics" type="button">Dynamics</button><button data-v="capabilities" type="button">Capabilities</button><button data-v="guide" type="button">How it works</button></nav>
+  <nav class="tabs" id="tabs"><button data-v="assessment" class="on" type="button">Assessment</button><button data-v="capabilities" type="button">Capabilities</button></nav>
   <span class="spacer"></span>
+  <span class="pbar hidden" id="cap-bar"></span>
   <button class="icon-btn" id="theme" type="button" aria-label="Toggle theme"></button>
 </header>
 
@@ -286,17 +296,16 @@ select:focus,.txt:focus,.prm input:focus{outline:2px solid var(--series-1);outli
   <nav class="subnav" id="subnav"></nav>
   <div class="pane" id="assess-pane"></div>
 </section>
-<section class="view" id="v-recommendations"><div class="pane" id="rec-pane"></div></section>
-<section class="view" id="v-dynamics"><div class="pane" id="dyn-pane"></div></section>
-<section class="view" id="v-capabilities"><div class="pane" id="cap-pane"></div></section>
-<section class="view" id="v-guide"><div class="pane" id="guide-pane"></div></section>
+<section class="view" id="v-capabilities">
+  <nav class="subnav" id="cap-nav"></nav>
+  <div class="pane" id="cap-pane"></div>
+</section>
 <section class="view" id="v-empty"><div class="empty" id="empty"></div></section>
 <div id="tip" role="tooltip"></div>
 
 <script>
 const MODE = /*__MODE__*/"static";
 let REPORT = /*__REPORT__*/null;
-const SOURCES = /*__SOURCES__*/[];
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const BANDS = { good: "Good", warning: "Needs work", serious: "Weak", critical: "Critical", na: "N/A" };
@@ -338,78 +347,24 @@ function dimTip(d) {
 function bindDim(node, d) { node.addEventListener("mouseenter", (e) => showTip(e, dimTip(d))); node.addEventListener("mousemove", moveTip);
   node.addEventListener("mouseleave", hideTip); node.addEventListener("click", () => { hideTip(); go("assessment", d.id); }); }
 
-/* ---------- routing: #assessment/<sub> | #dynamics ---------- */
+/* ---------- routing: #assessment/<sub> | #capabilities ---------- */
 let state = { view: "assessment", sub: "overview" };
 function go(view, sub) { state.view = view; if (sub) state.sub = sub; history.replaceState(null, "", `#${state.view}${state.view === "assessment" ? "/" + state.sub : ""}`); render(); }
-(function parseHash() { const [v, s] = location.hash.slice(1).split("/"); if (["dynamics", "assessment", "recommendations", "capabilities", "guide"].includes(v)) state.view = v; if (s) state.sub = s; })();
+(function parseHash() { const [v, s] = location.hash.slice(1).split("/"); if (["assessment", "capabilities"].includes(v)) state.view = v; if (s) state.sub = s; })();
 document.querySelectorAll("#tabs button").forEach((b) => b.onclick = () => go(b.dataset.v));
 
-const VIEWS = ["assessment", "recommendations", "dynamics", "capabilities", "guide", "empty"];
-const FREE_VIEWS = ["guide", "capabilities"];  // work without an open report
+const VIEWS = ["assessment", "capabilities", "empty"];
+const FREE_VIEWS = ["capabilities"];  // works without an open report
 function render() {
   hideTip();
   if (!REPORT && !FREE_VIEWS.includes(state.view)) { showEmpty(); return; }
   document.querySelectorAll("#tabs button").forEach((b) => { b.classList.toggle("on", b.dataset.v === state.view); b.hidden = (!REPORT && !FREE_VIEWS.includes(b.dataset.v)) || (b.dataset.v === "capabilities" && MODE !== "app"); });
   $("#tabs").classList.remove("hidden");
   for (const v of VIEWS) $("#v-" + v).classList.toggle("on", v === state.view);
-  if (state.view === "guide") renderGuide(); else if (state.view === "capabilities") renderCapabilitiesView();
-  else if (state.view === "assessment") renderAssessment(); else if (state.view === "recommendations") renderRecommendations(); else renderDynamics();
+  $("#cap-bar").classList.toggle("hidden", state.view !== "capabilities");
+  if (state.view === "capabilities") renderCapabilitiesView(); else renderAssessment();
 }
 
-/* =================== ASSESSMENT =================== */
-function renderAssessment() {
-  const dims = REPORT.dimensions;
-  if (state.sub !== "overview" && !dims.some((d) => d.id === state.sub)) state.sub = "overview";
-  $("#subnav").innerHTML = `<button data-s="overview" class="${state.sub === "overview" ? "on" : ""}">Overview</button>` +
-    dims.map((d) => `<button data-s="${d.id}" class="${state.sub === d.id ? "on" : ""}">${esc(d.name)}</button>`).join("");
-  $("#subnav").querySelectorAll("button").forEach((b) => b.onclick = () => go("assessment", b.dataset.s));
-  if (state.sub === "overview") overview(); else dimension(dims.find((d) => d.id === state.sub));
-}
-
-function overview() {
-  $("#assess-pane").innerHTML = `
-  <div class="ov fill">
-    <div class="card"><div class="chead"><h3>Maturity profile</h3><span class="spacer"></span><span class="legend" id="radar-legend"></span></div><div class="chart" id="radar"></div></div>
-    <div class="card"><div class="chead"><h3>Scores by aspect</h3><span class="spacer"></span>
-      <span class="legend">${["good", "warning", "serious", "critical"].map((b) => `<span><span class="dot" style="background:${bandColor(b)};border-radius:2px"></span>${BANDS[b]}</span>`).join("")}</span></div>
-      <div class="chart" id="bars"></div></div>
-  </div>`;
-  radar($("#radar")); bars($("#bars"));
-}
-
-/* =================== RECOMMENDATIONS =================== */
-function allActions() {
-  const acts = [];
-  for (const d of REPORT.dimensions) {
-    const cs = d.checks.filter((c) => c.score != null), tw = cs.reduce((a, c) => a + c.weight, 0) || 1;
-    for (const c of cs) if (c.status !== "pass") {
-      const gain = 100 * c.weight * (1 - c.score) / tw;
-      acts.push({ d, c, gain, rank: PRIO_RANK[c.priority] ?? 1, prio: gain * (1 + (100 - (d.score || 0)) / 100) });
-    }
-  }
-  return acts.sort((a, b) => a.rank - b.rank || b.prio - a.prio);  // critical first, then by impact
-}
-function renderRecommendations() {
-  const R = REPORT, o = R.overall, rv = R.review || {}, scored = R.dimensions.filter((d) => d.score != null), acts = allActions();
-  const ul = (xs) => xs && xs.length ? `<ul>${xs.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : `<div class="muted" style="margin-bottom:8px">–</div>`;
-  const strong = rv.strengths || scored.filter((d) => d.band === "good").map((d) => `${d.name} (${fmt(d.score)})`);
-  const weak = rv.risks || scored.filter((d) => ["critical", "serious"].includes(d.band)).map((d) => `${d.name} (${fmt(d.score)})`);
-  $("#rec-pane").innerHTML = `<div class="recs">
-    <div class="card"><h3>Overall maturity</h3>
-      <div style="display:flex;align-items:center;gap:14px;margin:10px 0 6px"><div class="big">${fmt(o.score)}<small> /100</small></div>
-        <span class="grade" style="border-color:${bandColor(o.band)}">${o.grade}</span></div>
-      <div class="legend" style="margin-bottom:12px"><span><span class="dot" style="background:${bandColor(o.band)}"></span>${BANDS[o.band]}</span><span>${acts.length} open capabilities</span></div>
-      <div class="sumtx">${rv.summary ? `<p style="margin:0 0 8px">${esc(rv.summary)}</p>` : ""}
-        <h3 style="margin:4px 0 2px">${rv.strengths ? "Strengths" : "Strong aspects"}</h3>${ul(strong)}
-        <h3 style="margin:4px 0 2px">${rv.risks ? "Risks" : "Weak aspects"}</h3>${ul(weak)}</div></div>
-    <div class="card" style="padding:4px 4px"><table class="chk"><thead><tr><th style="width:36px">#</th><th>Open capability · what to do</th><th style="width:120px">Priority</th><th style="width:140px">Aspect</th><th style="width:110px">Status</th><th class="num" style="width:90px" title="Points this aspect gains when the capability is fully met">Gain</th></tr></thead><tbody>
-      ${acts.map((a, i) => `<tr class="row" data-d="${a.d.id}"><td class="muted">${i + 1}</td>
-        <td><div class="ex">${esc(a.c.title)}</div>${a.c.recommendation ? `<div class="muted" style="font-size:12px;margin-top:2px">→ ${esc(a.c.recommendation)}</div>` : ""}</td>
-        <td>${prio(a.c.priority)}</td><td class="muted">${esc(a.d.name)}</td><td>${verdict(a.c.status)}</td><td class="num delta up">+${fmt(a.gain)}</td></tr>`).join("")
-        || `<tr><td></td><td class="muted">Every capability is met.</td></tr>`}
-    </tbody></table></div></div>`;
-  $("#rec-pane").querySelectorAll("tr.row").forEach((tr) => tr.onclick = () => go("assessment", tr.dataset.d));
-}
 const VERDICT = { pass: ["Met", "pass"], partial: ["Partially met", "partial"], fail: ["Not met", "fail"], na: ["Not applicable", "na"], review: ["Awaiting review", "review"] };
 const PRIO_LABEL = { critical: "Critical", important: "Important", nice: "Nice to have" }, PRIO_RANK = { critical: 0, important: 1, nice: 2 };
 const prio = (p) => `<span class="prio ${p || "important"}">${PRIO_LABEL[p] || "Important"}</span>`;
@@ -462,39 +417,6 @@ function bars(host) {
   });
 }
 
-let SEL = {};  // selected check per aspect
-function dimension(d) {
-  const cnt = (s) => d.checks.filter((c) => c.status === s).length;
-  const assessed = cnt("pass") + cnt("partial") + cnt("fail");
-  if (SEL[d.id] == null) { const i = d.checks.findIndex((c) => c.status === "fail" || c.status === "partial"); SEL[d.id] = i < 0 ? 0 : i; }
-  $("#assess-pane").innerHTML = `
-    <div class="card dimhead" style="padding:10px 14px">
-      <div style="flex:1;min-width:260px"><h2 style="font-size:15px">${esc(d.name)}</h2><div class="muted" style="font-size:12px">${esc(d.description)}</div></div>
-      <div style="text-align:right"><div style="font-size:13px;font-weight:600">${cnt("pass")} of ${assessed} capabilities met</div>
-        <div class="muted" style="font-size:11.5px">${cnt("partial")} partially · ${cnt("fail")} not met${cnt("review") ? " · " + cnt("review") + " awaiting review" : ""}${cnt("na") ? " · " + cnt("na") + " n/a" : ""}</div></div>
-      <div class="num" style="font-size:30px">${fmt(d.score)}<small> /100</small></div><span class="grade" style="border-color:${bandColor(d.band)};width:36px;height:36px;font-size:18px">${d.grade}</span>
-    </div>
-    ${d.capped_by && d.capped_by.length ? `<div class="gate"><b>Critical gate:</b> ${d.capped_by.length === 1 ? "a critical capability is" : d.capped_by.length + " critical capabilities are"} not fully met, so this aspect is capped at ${fmt(d.score)} (would be ${fmt(d.uncapped_score)}).</div>` : ""}
-    ${d.review_notes && d.review_notes.length ? `<div class="note" style="margin-top:12px">${d.adjust ? `<b>${d.adjust > 0 ? "+" : ""}${d.adjust}</b> reviewer adjustment · ` : ""}${d.review_notes.map(esc).join(" ")}</div>` : ""}
-    <div class="dimgrid">
-      <div class="card" style="padding:0"><table class="cktab" id="cktab" tabindex="0" style="outline:none">
-        <colgroup><col style="width:178px"><col style="width:100px"><col><col style="width:74px"></colgroup>
-        <thead><tr><th>ID</th><th>Criticality</th><th>Description</th><th>Status</th></tr></thead>
-        <tbody>${d.checks.map((c, i) => `<tr data-i="${i}">
-          <td class="cid">${esc(c.id)}</td><td>${prio(c.priority)}</td><td>${esc(c.title)}</td>
-          <td class="st">${rag(c.status)}${c.score == null ? "–" : Math.round(c.score * 100) + "%"}</td></tr>`).join("")}</tbody>
-      </table></div>
-      <div class="card detail" id="ckdetail"></div>
-    </div>
-    <div class="foot">Capabilities, priorities and thresholds: profile <b>${esc(profileName(REPORT))}</b> (change in the <b>Capabilities</b> tab). Use ↑ ↓ to move through the checks.</div>`;
-  const rows = document.querySelectorAll("#cktab tbody tr");
-  const select = (i) => { SEL[d.id] = i; rows.forEach((r) => r.classList.toggle("sel", +r.dataset.i === i)); $("#ckdetail").innerHTML = checkDetail(d.checks[i]); };
-  rows.forEach((r) => r.onclick = () => { select(+r.dataset.i); $("#cktab").focus({ preventScroll: true }); });
-  $("#cktab").onkeydown = (e) => { const n = d.checks.length; if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault();
-    select((SEL[d.id] + (e.key === "ArrowDown" ? 1 : n - 1)) % n); document.querySelector("#cktab tr.sel").scrollIntoView({ block: "nearest" }); } };
-  select(Math.min(SEL[d.id], d.checks.length - 1));
-}
-
 /* ---------- evidence: turn raw scanner strings into readable facts ---------- */
 const PATH_RE = /(?<=^|[\s,(\[`])(\.[\w-]+(?:\/[\w@.-]+)+|(?:[\w@~-][\w@~.-]*\/)+[\w@-][\w@.-]*\.[A-Za-z0-9]{1,6}|[\w-]+\.(?:md|py|ts|tsx|js|jsx|json|ya?ml|toml|ini|cfg|lock|sh|ps1|go|rs|java|cs|rb|mdx|rst))(?::(\d+))?(?=$|[\s,;)\]`]|\.(?:\s|$))/g;
 function fileUrl(path, line) {
@@ -528,14 +450,6 @@ function evidenceItem(e) {
   if (m) return `<li>${linkify(m[1])} <span class="muted">references missing</span> <code>${esc(m[2])}</code></li>`;
   return `<li>${linkify(e)}</li>`;
 }
-function whyText(c) {
-  const pct = c.score == null ? null : Math.round(c.score * 100);
-  return { pass: ["Met · 100%", "Everything this capability requires was found at the assessed commit."],
-    partial: [`Partially met · ${pct}%`, "Some of the required signals were found, others are missing."],
-    fail: [`Not met · ${pct}%`, "The required signals were not found at the assessed commit."],
-    na: ["Not applicable", "This capability does not apply to this project, so it is left out of the score."],
-    review: ["Awaiting review", "This is your own capability. The reviewer agent has not judged it yet."] }[c.status];
-}
 function basisHtml(m) {
   const items = (m.basis || []).map((b) => `<li><a class="fl" href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.title)}</a>`
     + ` <span class="muted">· ${esc(b.locator)}${b.strength ? " · " + esc(b.strength) : ""}</span><div class="muted" style="font-style:italic">${esc(b.quote)}</div></li>`);
@@ -543,33 +457,134 @@ function basisHtml(m) {
   return m.convention ? `<span class="muted">Team convention: ${esc(m.convention)}</span>` : "";
 }
 
-function checkDetail(c) {
-  if (!c) return "";
-  const [head, sub] = whyText(c), m = c.method || {}, h = REPORT.repo.head || {}, gh = REPORT.repo.source.startsWith("github.com/");
-  const row = (k, v, cls = "") => v ? `<tr class="${cls}"><th>${k}</th><td>${v}</td></tr>` : "";
-  return `<div style="display:flex;gap:8px;align-items:center"><span class="cid" style="font:11.5px ui-monospace,Consolas,monospace;color:var(--muted)">${esc(c.id)}</span>${prio(c.priority)}</div>
-    <h2>${esc(c.title)}</h2>
-    <table class="kv"><tbody>
-      ${row("Expected", m.met_when ? linkify(m.met_when) : esc(c.title))}
-      ${row("Found", c.evidence.length ? `<ul class="evl">${c.evidence.map(evidenceItem).join("")}</ul>` : `<span class="muted">No evidence recorded.</span>`)}
-      ${row("Verdict", `<div class="vd">${rag(c.status, "lg")}${head}</div><div style="margin-top:2px">${sub}</div>`, "hl")}
-      ${c.status !== "pass" && c.status !== "na" && c.recommendation ? row("To do", `<span style="color:var(--text)">${linkify(c.recommendation)}</span>`) : ""}
-      ${c.status === "partial" && m.partial_when ? row("Partially met when", linkify(m.partial_when)) : ""}
-      ${c.status === "na" && m.na_when ? row("Not applicable when", linkify(m.na_when)) : ""}
-      ${row("How checked", m.looks_at ? linkify(m.looks_at) : "")}
-      ${row("Limits", m.limits ? `<span class="muted">${linkify(m.limits)}</span>` : "")}
-      ${row("Known gap", m.known_gap ? `<span class="muted">${linkify(m.known_gap)}</span>` : "")}
-      ${row("Basis", basisHtml(m))}
-      ${row("Assessed", `${c.source === "review" ? "Reviewer agent" : "Scanner"}${h.sha ? ` · commit ${gh ? `<a class="fl" href="https://${REPORT.repo.source}/commit/${h.sha}" target="_blank" rel="noopener">${h.sha.slice(0, 8)}</a>` : `<code>${h.sha.slice(0, 8)}</code>`}` : ""} · ${fdate(REPORT.generated_at)}`)}
-      ${row("Counts", `${PRIO_LABEL[c.priority] || "Important"} · weight ${c.weight}${c.priority === "critical" ? " · gate: not met caps the aspect at 49, partially at 74" : ""}`)}
-    </tbody></table>`;
+/* =================== ASSESSMENT =================== */
+function subnavHtml(view, ids, names, sel, right = "") {
+  return `<button data-s="overview" class="${sel === "overview" ? "on" : ""}">Overview</button>` +
+    ids.map((id) => `<button data-s="${id}" class="${sel === id ? "on" : ""}">${esc(names[id] || id)}</button>`).join("") + right;
+}
+function renderAssessment() {
+  const dims = REPORT.dimensions;
+  if (state.sub !== "overview" && !dims.some((d) => d.id === state.sub)) state.sub = "overview";
+  $("#subnav").innerHTML = subnavHtml("assessment", dims.map((d) => d.id), Object.fromEntries(dims.map((d) => [d.id, d.name])), state.sub);
+  $("#subnav").querySelectorAll("button[data-s]").forEach((b) => b.onclick = () => go("assessment", b.dataset.s));
+  if (state.sub === "overview") overview(); else dimension(dims.find((d) => d.id === state.sub));
 }
 
-/* =================== CAPABILITIES: profiles edited in the app =================== */
-const CAP = { list: [], id: null, saved: null, draft: null, cat: null, aspect: null, sel: null, msg: "", err: false, delArm: false, timer: null };
+/* open capabilities, critical first, then by how many points they would win back */
+function openItems() {
+  const acts = [];
+  for (const d of REPORT.dimensions) {
+    const cs = d.checks.filter((c) => c.score != null), tw = cs.reduce((a, c) => a + c.weight, 0) || 1;
+    for (const c of cs) if (c.status !== "pass") acts.push({ d, c, rank: PRIO_RANK[c.priority] ?? 1, gain: 100 * c.weight * (1 - c.score) / tw });
+  }
+  return acts.sort((a, b) => a.rank - b.rank || b.gain - a.gain);
+}
+function overview() {
+  const acts = openItems(), all = REPORT.dimensions.flatMap((d) => d.checks), met = all.filter((c) => c.status === "pass");
+  const critMet = met.filter((c) => c.priority === "critical").length, critAll = all.filter((c) => c.priority === "critical" && c.status !== "na").length;
+  const good = REPORT.dimensions.filter((d) => d.band === "good");
+  $("#assess-pane").innerHTML = `
+  <div class="ov fill">
+    <div class="card"><div class="chead"><h3>Maturity profile</h3><span class="spacer"></span><span class="legend" id="radar-legend"></span></div><div class="chart" id="radar"></div></div>
+    <div class="card"><div class="chead"><h3>Scores by aspect</h3><span class="spacer"></span>
+      <span class="legend">${["good", "warning", "serious", "critical"].map((b) => `<span><span class="dot" style="background:${bandColor(b)};border-radius:2px"></span>${BANDS[b]}</span>`).join("")}</span></div>
+      <div class="chart" id="bars"></div></div>
+  </div>
+  <div class="ov2">
+    <div class="card"><h3>Where to start</h3>
+      ${acts.length ? `<ol class="todo">${acts.slice(0, 5).map((a) => `<li data-d="${a.d.id}" data-c="${esc(a.c.id)}">
+        <div><b>${esc(a.c.title)}</b> ${prio(a.c.priority)} <span class="muted">· ${esc(a.d.name)}</span></div>
+        ${a.c.recommendation ? `<div class="rec">${linkify(a.c.recommendation)}</div>` : ""}</li>`).join("")}</ol>
+        ${acts.length > 5 ? `<div class="muted" style="font-size:12px">${acts.length - 5} more open capabilities are listed in each aspect.</div>` : ""}`
+      : `<div class="cheer big">Every capability is in place. Outstanding work.</div>`}</div>
+    <div class="card"><h3>What is going well</h3>
+      <div class="cheer">${met.length} of ${all.filter((c) => c.status !== "na").length} capabilities are in place${critAll ? `, including ${critMet} of ${critAll} critical ones` : ""}.</div>
+      ${good.length ? `<div class="muted" style="margin-top:6px">Strong aspects: ${good.map((d) => `<a class="lnk" href="#assessment/${d.id}" data-go="${d.id}">${esc(d.name)}</a> ${fmt(d.score)}`).join(" · ")}. Keep them that way.</div>` : ""}</div>
+  </div>`;
+  radar($("#radar")); bars($("#bars"));
+  $("#assess-pane").querySelectorAll(".todo li").forEach((li) => li.onclick = () => { const d = REPORT.dimensions.find((x) => x.id === li.dataset.d);
+    SEL[d.id] = d.checks.findIndex((c) => c.id === li.dataset.c); go("assessment", d.id); });
+  $("#assess-pane").querySelectorAll("[data-go]").forEach((a) => a.onclick = (e) => { e.preventDefault(); go("assessment", a.dataset.go); });
+}
+
+let SEL = {};  // selected row per aspect (assessment) — the capabilities tab keeps its own
+function aspectHead(name, description, right) {
+  return `<div class="card dimhead" style="padding:10px 14px">
+    <div style="flex:1;min-width:260px"><h2 style="font-size:15px">${esc(name)}</h2><div class="muted" style="font-size:12px">${esc(description)}</div></div>${right}</div>`;
+}
+function capTable(id, rows, last) {
+  return `<div class="card" style="padding:0"><table class="cktab" id="${id}" tabindex="0" style="outline:none">
+    <colgroup><col style="width:178px"><col style="width:112px"><col><col style="width:84px"></colgroup>
+    <thead><tr><th>ID</th><th>Criticality</th><th>Description</th><th>${last}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function bindRows(tab, n, get, set, draw) {
+  const rows = document.querySelectorAll(`#${tab} tbody tr`);
+  const select = (i) => { set(i); rows.forEach((r) => r.classList.toggle("sel", +r.dataset.i === i)); draw(i); };
+  rows.forEach((r) => r.onclick = (e) => { if (e.target.closest("input,select,button")) return; select(+r.dataset.i); $("#" + tab).focus({ preventScroll: true }); });
+  $("#" + tab).onkeydown = (e) => { if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return; e.preventDefault();
+    select((get() + (e.key === "ArrowDown" ? 1 : n - 1)) % n); document.querySelector(`#${tab} tr.sel`).scrollIntoView({ block: "nearest" }); };
+  if (n) select(Math.min(get(), n - 1));
+}
+function dimension(d) {
+  const cnt = (s) => d.checks.filter((c) => c.status === s).length, assessed = cnt("pass") + cnt("partial") + cnt("fail");
+  const first = d.checks.findIndex((c) => c.status === "fail" || c.status === "partial");
+  if (SEL[d.id] == null || SEL[d.id] < 0) SEL[d.id] = first < 0 ? 0 : first;
+  const open = d.checks.filter((c) => c.status === "fail" || c.status === "partial").sort((a, b) => (PRIO_RANK[a.priority] ?? 1) - (PRIO_RANK[b.priority] ?? 1));
+  const mood = !assessed ? `<span class="muted">Nothing to assess here.</span>`
+    : !open.length ? `<span class="cheer">All ${assessed} capabilities are in place. Great work.</span>`
+    : `<span>${cnt("pass")} of ${assessed} in place. Start with <a class="lnk" href="#" data-start="${esc(open[0].id)}">${esc(open[0].title)}</a></span>`;
+  $("#assess-pane").innerHTML = aspectHead(d.name, d.description, `
+      <div style="text-align:right;max-width:420px;font-size:12.5px">${mood}
+        ${cnt("review") ? `<div class="muted" style="font-size:11.5px">${cnt("review")} awaiting review</div>` : ""}</div>
+      <div class="num" style="font-size:30px">${fmt(d.score)}<small> /100</small></div><span class="grade" style="border-color:${bandColor(d.band)};width:36px;height:36px;font-size:18px">${d.grade}</span>`) + `
+    ${d.capped_by && d.capped_by.length ? `<div class="gate"><b>Critical gate:</b> ${d.capped_by.length === 1 ? "a critical capability is" : d.capped_by.length + " critical capabilities are"} not fully met, so this aspect is capped at ${fmt(d.score)} (would be ${fmt(d.uncapped_score)}).</div>` : ""}
+    ${d.review_notes && d.review_notes.length ? `<div class="note" style="margin-top:12px">${d.adjust ? `<b>${d.adjust > 0 ? "+" : ""}${d.adjust}</b> reviewer adjustment · ` : ""}${d.review_notes.map(esc).join(" ")}</div>` : ""}
+    <div class="dimgrid">${capTable("cktab", d.checks.map((c, i) => `<tr data-i="${i}">
+        <td class="cid">${esc(c.id)}</td><td>${prio(c.priority)}</td>
+        <td>${esc(c.title)}${(c.status === "fail" || c.status === "partial") && c.recommendation ? `<div class="rec sm">${linkify(c.recommendation)}</div>` : ""}</td>
+        <td class="st">${rag(c.status)}${c.score == null ? "–" : Math.round(c.score * 100) + "%"}</td></tr>`).join(""), "Status")}
+      <div class="card detail" id="ckdetail"></div></div>`;
+  const start = $("#assess-pane [data-start]");
+  if (start) start.onclick = (e) => { e.preventDefault(); SEL[d.id] = d.checks.findIndex((c) => c.id === start.dataset.start); dimension(d); };
+  bindRows("cktab", d.checks.length, () => SEL[d.id], (i) => SEL[d.id] = i, (i) => $("#ckdetail").innerHTML = checkDetail(d.checks[i]));
+}
+
+/* ---------- one card for a capability: the same in Assessment (verdict) and Capabilities (settings) ---------- */
+const CHEER = { critical: "Solid foundation: this critical capability is in place.", important: "Well done: this is in place.", nice: "Nice touch: this goes beyond the basics." };
+function verdictBox(c) {
+  const pct = c.score == null ? "" : ` · ${Math.round(c.score * 100)}%`, m = c.method || {};
+  if (c.status === "pass") return `<div class="vbox good">${rag("pass", "lg")}<div><b>${CHEER[c.priority] || CHEER.important}</b></div></div>`;
+  if (c.status === "na") return `<div class="vbox">${rag("na", "lg")}<div><b>Not applicable here.</b> ${m.na_when ? `<span class="muted">${plain(m.na_when)}</span>` : "It is left out of the score."}</div></div>`;
+  if (c.status === "review") return `<div class="vbox">${rag("review", "lg")}<div><b>Waiting for a reviewer.</b> <span class="muted">Your own capability: a person or an agent records the verdict in review.json.</span></div></div>`;
+  const gate = c.priority === "critical" ? `<div class="muted" style="margin-top:4px">Critical: until it is met, the aspect is capped at ${c.status === "fail" ? 49 : 74}.</div>` : "";
+  return `<div class="vbox ${c.status === "fail" ? "bad" : "warn"}">${rag(c.status, "lg")}<div><b>${c.status === "fail" ? "Not met" : "Almost there"}${pct}</b>
+    ${c.recommendation ? `<div class="todo1"><span class="lbl">What to do</span>${linkify(c.recommendation)}</div>` : ""}${gate}</div></div>`;
+}
+function moreAbout(m, extra = "") {
+  const row = (k, v) => v ? `<tr><th>${k}</th><td>${v}</td></tr>` : "";
+  const body = row("How we check", m.looks_at ? plain(m.looks_at) : "") + row("Partly met", plain(m.partial_when || "")) + row("Not met", plain(m.not_met_when || ""))
+    + row("Not counted", plain(m.na_when || "")) + row("Blind spots", m.limits ? `<span class="muted">${plain(m.limits)}</span>` : "")
+    + row("Known flaw", m.known_gap ? `<span class="muted">${plain(m.known_gap)}</span>` : "") + row("Why it matters", basisHtml(m)) + extra;
+  return body ? `<details class="more"><summary>How this is checked, and why it matters</summary><table class="kv"><tbody>${body}</tbody></table></details>` : "";
+}
+function checkDetail(c) {
+  if (!c) return "";
+  const m = c.method || {}, h = REPORT.repo.head || {}, gh = REPORT.repo.source.startsWith("github.com/");
+  const assessed = `<tr><th>Assessed</th><td>${c.source === "review" ? "Reviewer" : "Scanner"}${h.sha ? ` · commit ${gh ? `<a class="fl" href="https://${REPORT.repo.source}/commit/${h.sha}" target="_blank" rel="noopener">${h.sha.slice(0, 8)}</a>` : `<code>${h.sha.slice(0, 8)}</code>`}` : ""} · ${fdate(REPORT.generated_at)}</td></tr>`;
+  return `<div class="dhead"><span class="cid">${esc(c.id)}</span>${prio(c.priority)}</div>
+    <h2>${esc(c.title)}</h2>
+    ${verdictBox(c)}
+    <div class="acc"><span class="lbl">Accepted when</span>${plain(m.accepted || m.met_when || c.title)}</div>
+    <div class="found"><span class="lbl">What we found</span>${c.evidence.length ? `<ul class="evl">${c.evidence.map(evidenceItem).join("")}</ul>` : `<span class="muted">No evidence recorded.</span>`}</div>
+    ${moreAbout(m, assessed)}`;
+}
+
+/* =================== CAPABILITIES: the profile, laid out exactly like the assessment =================== */
+const CAP = { list: [], id: null, saved: null, draft: null, cat: null, sub: "overview", sel: {}, msg: "", err: false, delArm: false, timer: null };
 const PRIOS = ["critical", "important", "nice"];
 const clone = (o) => JSON.parse(JSON.stringify(o));
 const plain = (t) => esc(t).replace(/`([^`]+)`/g, "<code>$1</code>");
+const fmtNum = (v) => (Math.round(v * 100) / 100).toString();
 function capNorm(p) { const c = {}; Object.keys(p.capabilities || {}).sort().forEach((k) => { const v = p.capabilities[k], o = {};
     if (v.enabled === false) o.enabled = false; if (v.priority) o.priority = v.priority; if (v.params && Object.keys(v.params).length) o.params = v.params;
     if (Object.keys(o).length) c[k] = o; });
@@ -578,313 +593,145 @@ const capDirty = () => CAP.saved && CAP.draft && capNorm(CAP.saved) !== capNorm(
 function capSay(msg, err = false) { CAP.msg = msg; CAP.err = err; const m = $("#cap-msg"); if (m) { m.textContent = msg; m.className = err ? "err" : "muted"; } }
 function profileName(r) { const c = (r && r.checklist) || {}; return c.profile ? c.profile.name : c.origin === "repository" ? "the repository's .sdlc360/capabilities.md" : c.origin === "explicit" ? "a custom file" : "Standard"; }
 function runProfile() { return REPORT && REPORT.checklist && REPORT.checklist.profile ? REPORT.checklist.profile.id : null; }
-
 function capOpen(id) {
   return Promise.all([api("/api/profiles"), api(`/api/profiles/${encodeURIComponent(id)}`)]).then(([list, prof]) => {
-    CAP.list = list; CAP.id = id; CAP.saved = prof; CAP.draft = clone({ name: prof.name, description: prof.description, capabilities: prof.capabilities, custom: prof.custom });
-    CAP.delArm = false; store("sdlc360-profile", id); return capCatalog();
+    CAP.list = list; CAP.id = id; CAP.saved = prof; CAP.delArm = false;
+    CAP.draft = clone({ name: prof.name, description: prof.description, capabilities: prof.capabilities, custom: prof.custom });
+    store("sdlc360-profile", id); return capCatalog();
   });
 }
 function capCatalog() {
-  return api("/api/catalog", { profile: CAP.draft }).then((cat) => { CAP.cat = cat; capSay(CAP.msg === "Thresholds are not valid" ? "" : CAP.msg); renderCapabilities(); })
-    .catch((e) => { capSay(e.message, true); });
+  return api("/api/catalog", { profile: CAP.draft }).then((cat) => { CAP.cat = cat; renderCapabilities(); }).catch((e) => capSay(e.message, true));
 }
 function renderCapabilitiesView() {
   if (MODE !== "app") { $("#cap-pane").innerHTML = `<div class="empty">Profiles are edited in the app: <code>./start.sh</code>.</div>`; return; }
-  const want = CAP.id || runProfile() || store("sdlc360-profile") || "standard";
-  if (!CAP.cat) capOpen(want).catch(() => capOpen("standard")); else renderCapabilities();
+  if (!CAP.cat) { if (state.sub !== "overview") CAP.sub = state.sub;  // #capabilities/<aspect>
+    capOpen(runProfile() || store("sdlc360-profile") || "standard").catch(() => capOpen("standard")); } else renderCapabilities();
 }
+const ov = (cid) => CAP.draft.capabilities[cid] || {};
 function capOverride(cid) { return CAP.draft.capabilities[cid] || (CAP.draft.capabilities[cid] = {}); }
-function capClean(cid) { const o = CAP.draft.capabilities[cid]; if (!o) return;
-  if (o.params && !Object.keys(o.params).length) delete o.params; if (!Object.keys(o).length) delete CAP.draft.capabilities[cid]; }
-function paramValue(cid, p) { const o = CAP.draft.capabilities[cid]; return o && o.params && o.params[p.key] != null ? o.params[p.key] : p.default; }
-function paramSummary(cid) { return (CAP.cat.params[cid] || []).map((p) => `${fmtNum(paramValue(cid, p))}${p.unit === "%" ? "%" : p.unit ? " " + p.unit : ""}`).join(" · "); }
-const fmtNum = (v) => (Math.round(v * 100) / 100).toString();
-function changed(cid) { return !!CAP.draft.capabilities[cid]; }
-
+function capClean(cid) { const o = CAP.draft.capabilities[cid]; if (!o) return; if (o.params && !Object.keys(o.params).length) delete o.params; if (!Object.keys(o).length) delete CAP.draft.capabilities[cid]; }
+function paramValue(cid, p) { const o = ov(cid); return o.params && o.params[p.key] != null ? o.params[p.key] : p.default; }
+/* rows of an aspect: the catalog in order, then your own; the same order the assessment shows */
+function capRows(aspect) {
+  const d = CAP.draft;
+  return CAP.cat.aspects[aspect].map((c) => ({ id: c.id, text: c.text, std: c.priority, priority: ov(c.id).priority || c.priority, on: ov(c.id).enabled !== false, own: false }))
+    .concat(d.custom.map((c, i) => ({ c, i })).filter((x) => x.c.aspect === aspect)
+      .map(({ c, i }) => ({ id: "your own", text: c.text || "(new capability)", priority: c.priority, on: true, own: true, idx: i })));
+}
+function profileBar() {
+  const builtin = CAP.saved.builtin, dirty = capDirty();
+  return `<span id="cap-msg" class="${CAP.err ? "err" : "muted"}">${esc(CAP.msg || (dirty ? "Unsaved changes" : ""))}</span>
+    <label class="fld"><span>Profile</span><select id="cap-prof">${CAP.list.map((p) => `<option value="${esc(p.id)}" ${p.id === CAP.id ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select></label>
+    ${builtin ? "" : `<button class="icon-btn pri" id="cap-save" type="button" ${dirty ? "" : "disabled"}>Save</button>`}
+    <input id="cap-newname" class="txt" placeholder="New profile name" maxlength="60" style="width:150px"><button class="icon-btn" id="cap-copy" type="button">Save as new</button>`;
+}
 function renderCapabilities() {
+  const cat = CAP.cat, aspects = Object.keys(cat.aspects);
+  if (CAP.sub !== "overview" && !cat.aspects[CAP.sub]) CAP.sub = "overview";
+  $("#cap-nav").innerHTML = subnavHtml("capabilities", aspects, cat.names, CAP.sub);
+  $("#cap-bar").innerHTML = profileBar();
+  $("#cap-nav").querySelectorAll("button[data-s]").forEach((b) => b.onclick = () => { CAP.sub = b.dataset.s; renderCapabilities(); });
+  if (CAP.sub === "overview") capOverview(); else capAspect(CAP.sub);
+  capBindBar();
+}
+function capOverview() {
   const cat = CAP.cat, d = CAP.draft, builtin = CAP.saved.builtin, aspects = Object.keys(cat.aspects);
-  if (!CAP.aspect || !cat.aspects[CAP.aspect]) CAP.aspect = aspects[0];
-  const caps = cat.aspects[CAP.aspect];
-  if (!CAP.sel || !caps.some((c) => c.id === CAP.sel)) CAP.sel = caps[0] && caps[0].id;
   const runName = REPORT ? REPORT.repo.source.replace(/^github\.com\//, "").replace(/^.*[\\/](?=[^\\/]+$)/, "") : "";
-  const nChanged = (a) => cat.aspects[a].filter((c) => changed(c.id)).length + d.custom.filter((c) => c.aspect === a).length;
-  const off = (cid) => (d.capabilities[cid] || {}).enabled === false;
-  $("#cap-pane").innerHTML = `
-  <div class="card capbar">
-    <label class="fld"><span>Profile</span><select id="cap-prof">${CAP.list.map((p) => `<option value="${esc(p.id)}" ${p.id === CAP.id ? "selected" : ""}>${esc(p.name)}${p.builtin ? " (read-only)" : ""}</option>`).join("")}</select></label>
-    <div class="capdesc">${builtin ? `<span class="muted">${esc(d.description)}</span>`
-      : `<input id="cap-desc" class="txt" value="${esc(d.description)}" placeholder="What this profile is for" maxlength="300">`}</div>
-    <span id="cap-msg" class="${CAP.err ? "err" : "muted"}">${esc(CAP.msg)}</span>
-    ${builtin ? "" : `<button class="icon-btn pri" id="cap-save" type="button" ${capDirty() ? "" : "disabled"}>Save</button>`}
-    <input id="cap-newname" class="txt" placeholder="New profile name" maxlength="60" style="width:170px">
-    <button class="icon-btn" id="cap-copy" type="button">Save as new</button>
-    ${builtin ? "" : `<button class="icon-btn" id="cap-del" type="button">${CAP.delArm ? "Click again to delete" : "Delete"}</button>`}
+  $("#cap-pane").innerHTML = `<div class="ov2" style="margin-top:0">
+    <div class="card"><h3>Profile</h3>
+      <h2 style="font-size:17px;margin:6px 0 4px">${esc(d.name)}</h2>
+      ${builtin ? `<p class="muted" style="margin:0 0 8px">${esc(d.description)}</p><p style="margin:0">Standard is the published baseline and stays as it is. Change anything in the aspects, then <b>Save as new</b>.</p>`
+        : `<textarea id="cap-desc" class="txt" maxlength="300" placeholder="What this profile is for" style="width:100%">${esc(d.description)}</textarea>
+           <div style="margin-top:8px"><button class="icon-btn" id="cap-del" type="button">${CAP.delArm ? "Click again to delete" : "Delete this profile"}</button></div>`}</div>
+    <div class="card"><h3>Use it</h3>
+      <p style="margin:6px 0">In each aspect, switch capabilities on or off, set how critical they are, and adjust the numbers in <b>Accepted when</b>. Add your own capabilities in plain words.</p>
+      <p class="muted" style="margin:0 0 8px">On / off, criticality and your own capabilities apply to a run right away. New numbers take effect when the project is assessed again.</p>
+      ${REPORT ? `<div>The open run of <b>${esc(runName)}</b> uses <b>${esc(profileName(REPORT))}</b>. <button class="icon-btn" id="cap-apply" type="button" ${capDirty() ? "disabled title='Save first'" : ""}>Apply “${esc(CAP.saved.name)}” to this run</button></div>
+        ${(REPORT.thresholds_changed || []).length ? `<div class="note" style="margin-top:8px">New numbers for ${REPORT.thresholds_changed.map((x) => `<code>${esc(x)}</code>`).join(", ")}: press <b>Re-assess</b> on the project to use them.</div>` : ""}` : ""}</div>
   </div>
-  <div class="note" style="margin-top:10px">${builtin ? "<b>Standard</b> is the published baseline and cannot be changed: adjust anything below, then <b>Save as new</b>. " : ""}
-    Switching capabilities off, priorities and your own capabilities apply to a run at once; changed <b>thresholds</b> take effect at the next assessment.
-    ${REPORT ? `<br>The open run of <b>${esc(runName)}</b> is judged with <b>${esc(profileName(REPORT))}</b>.
-<button class="ghost" style="visibility:visible;margin-left:6px" id="cap-apply" type="button" ${capDirty() ? "disabled title='Save first'" : ""}>Apply “${esc(CAP.saved.name)}” to this run</button>` : ""}
-    ${REPORT && (REPORT.thresholds_changed || []).length ? `<br><b>Thresholds changed</b> for ${REPORT.thresholds_changed.map((x) => `<code>${esc(x)}</code>`).join(", ")}: press <b>Re-assess</b> on the project to apply them.` : ""}</div>
-  <nav class="subnav capnav" id="cap-aspects" style="position:static;padding:8px 0 0;margin-top:6px">${aspects.map((a) => { const n = nChanged(a);
-    return `<button data-a="${a}" class="${a === CAP.aspect ? "on" : ""}">${esc(cat.names[a] || a)}${n ? ` <span class="chg">${n}</span>` : ""}</button>`; }).join("")}</nav>
-  <div class="dimgrid">
-    <div class="card" style="padding:0"><table class="cktab captab" id="cap-tab">
-      <colgroup><col style="width:44px"><col style="width:170px"><col><col style="width:116px"><col style="width:110px"></colgroup>
-      <thead><tr><th>On</th><th>ID</th><th>Capability</th><th>Priority</th><th>Thresholds</th></tr></thead>
-      <tbody>${caps.map((c) => { const o = d.capabilities[c.id] || {};
-        return `<tr data-id="${c.id}" class="${c.id === CAP.sel ? "sel" : ""} ${off(c.id) ? "off" : ""}">
-        <td><input type="checkbox" data-on="${c.id}" ${off(c.id) ? "" : "checked"} aria-label="Assess ${esc(c.id)}"></td>
-        <td class="cid">${esc(c.id)}${changed(c.id) ? ` <span class="chg" title="Differs from Standard">•</span>` : ""}</td><td>${esc(c.text)}</td>
-        <td><select data-prio="${c.id}" ${off(c.id) ? "disabled" : ""}>${PRIOS.map((p) => `<option value="${p}" ${(o.priority || c.priority) === p ? "selected" : ""}>${PRIO_LABEL[p]}</option>`).join("")}</select></td>
-        <td class="muted" style="font-size:12px">${paramSummary(c.id) || "–"}</td></tr>`; }).join("")}</tbody></table></div>
-    <div class="card detail" id="cap-detail">${capDetail(caps.find((c) => c.id === CAP.sel))}</div>
-  </div>
-  <div class="card" style="margin-top:12px"><h3>Your own capabilities in ${esc(cat.names[CAP.aspect] || CAP.aspect)}</h3>
-    <p class="muted" style="margin:4px 0 8px">No rule checks these: a reviewer (a person or an agent) records the verdict in <code>review.json</code>. Say plainly when one is met.</p>
-    <div id="cap-own">${d.custom.map((c, i) => c.aspect !== CAP.aspect ? "" : `<div class="own" data-i="${i}">
-      <input class="txt" data-f="text" value="${esc(c.text)}" maxlength="300" placeholder="The capability, e.g. Keys are rotated every quarter.">
-      <select data-f="priority">${PRIOS.map((p) => `<option value="${p}" ${c.priority === p ? "selected" : ""}>${PRIO_LABEL[p]}</option>`).join("")}</select>
-      <button class="icon-btn" type="button" data-rm="${i}" title="Remove">✕</button>
-      <textarea class="txt" data-f="met_when" maxlength="1000" placeholder="Met when… e.g. the runbook shows a rotation in the last 90 days.">${esc(c.met_when)}</textarea></div>`).join("")}</div>
-    <div><button class="icon-btn" type="button" id="cap-add">+ Add your own capability</button></div>
-  </div>
-  <div class="foot">Profiles are saved as <code>assessment/profiles/&lt;name&gt;.json</code> in SDLC360 (commit them to share). The rules themselves and their texts live in <code>src/dimensions/</code> and <code>assessment/acceptance-criteria/</code>.</div>`;
-  capBind();
+  <div class="card" style="padding:0;margin-top:12px"><table class="cktab"><colgroup><col><col style="width:140px"><col style="width:140px"><col style="width:140px"></colgroup>
+    <thead><tr><th>Aspect</th><th>Capabilities on</th><th>Critical</th><th>Your own</th></tr></thead><tbody>${aspects.map((a) => { const rows = capRows(a), on = rows.filter((r) => r.on);
+      return `<tr data-a="${a}"><td><b>${esc(cat.names[a] || a)}</b></td><td>${on.length} of ${rows.length}</td><td>${on.filter((r) => r.priority === "critical").length}</td><td>${rows.filter((r) => r.own).length || "–"}</td></tr>`; }).join("")}</tbody></table></div>`;
+  $("#cap-pane").querySelectorAll("tr[data-a]").forEach((tr) => tr.onclick = () => { CAP.sub = tr.dataset.a; renderCapabilities(); });
+  const desc = $("#cap-desc"); if (desc) desc.oninput = () => { d.description = desc.value; capDirtyUi(); };
+  const del = $("#cap-del");
+  if (del) del.onclick = () => { if (!CAP.delArm) { CAP.delArm = true; del.textContent = "Click again to delete"; return; }
+    api(`/api/profiles/${encodeURIComponent(CAP.id)}/delete`, {}).then(() => { capSay(`Deleted “${CAP.saved.name}”.`); renderProfileSelect(); return capOpen("standard"); }).catch((e) => capSay(e.message, true)); };
+  const apply = $("#cap-apply");
+  if (apply) apply.onclick = () => { if (!CURRENT_RUN) return;
+    api(`/api/runs/${encodeURIComponent(CURRENT_RUN)}/apply`, { profile: CAP.id }).then((rep) => { REPORT = rep; SEL = {}; capSay(`Applied: overall ${fmt(rep.overall.score)}.`);
+      return api("/api/projects").then((ps) => { PROJECTS = ps; renderProjects(); renderCapabilities(); }); }).catch((e) => capSay(e.message, true)); };
 }
-function capDetail(c) {
-  if (!c) return "";
-  const m = CAP.cat.methods[c.id] || {}, ps = CAP.cat.params[c.id] || [], o = CAP.draft.capabilities[c.id] || {};
-  const row = (k, v) => v ? `<tr><th>${k}</th><td>${v}</td></tr>` : "";
-  const inputs = ps.map((p) => `<label class="fld prm"><span>${esc(p.label)}</span><input type="number" data-param="${p.key}" min="${p.min}" max="${p.max}" step="${p.step}" value="${paramValue(c.id, p)}">
-    <em>${esc(p.unit)}${paramValue(c.id, p) !== p.default ? ` · standard ${fmtNum(p.default)}` : ""}</em></label>`).join("");
-  return `<div style="display:flex;gap:8px;align-items:center"><span class="cid" style="font:11.5px ui-monospace,Consolas,monospace;color:var(--muted)">${esc(c.id)}</span>${prio(o.priority || c.priority)}
-      ${changed(c.id) ? `<button class="ghost" style="visibility:visible;margin-left:auto" id="cap-reset" type="button">Reset to Standard</button>` : ""}</div>
-    <h2>${esc(c.text)}</h2>
-    ${inputs ? `<div class="prms">${inputs}</div>` : `<div class="muted" style="font-size:12px;margin-bottom:6px">This rule has no adjustable thresholds.</div>`}
-    <table class="kv"><tbody>
-      ${row("Met when", plain(m.met_when || ""))}${row("Partially met", plain(m.partial_when || ""))}${row("Not met", plain(m.not_met_when || ""))}
-      ${row("Not applicable", plain(m.na_when || ""))}${row("How checked", plain(m.looks_at || ""))}
-      ${row("Limits", m.limits ? `<span class="muted">${plain(m.limits)}</span>` : "")}${row("Known flaw", m.known_gap ? `<span class="muted">${plain(m.known_gap)}</span>` : "")}
-      ${row("Why", basisHtml(m))}
-      ${row("Standard", `${PRIO_LABEL[c.priority]}`)}
-    </tbody></table>`;
+function capAspect(a) {
+  const rows = capRows(a), on = rows.filter((r) => r.on);
+  if (CAP.sel[a] == null) CAP.sel[a] = 0;
+  $("#cap-pane").innerHTML = aspectHead(CAP.cat.names[a] || a, CAP.cat.descriptions[a] || "", `
+      <div style="text-align:right;font-size:12.5px">${on.length} of ${rows.length} capabilities on · ${on.filter((r) => r.priority === "critical").length} critical</div>`) + `
+    <div class="dimgrid"><div>${capTable("cap-tab", rows.map((r, i) => `<tr data-i="${i}" class="${r.on ? "" : "off"}">
+        <td class="cid">${esc(r.id)}${!r.own && ov(r.id) && Object.keys(ov(r.id)).length ? ` <span class="dot1" title="Differs from Standard"></span>` : ""}</td>
+        <td><select data-prio="${i}" ${r.on ? "" : "disabled"} aria-label="Criticality">${PRIOS.map((p) => `<option value="${p}" ${r.priority === p ? "selected" : ""}>${PRIO_LABEL[p]}</option>`).join("")}</select></td>
+        <td>${esc(r.text)}</td>
+        <td class="st"><label class="sw" title="${r.on ? "Assessed" : "Not assessed"}"><input type="checkbox" data-on="${i}" ${r.on ? "checked" : ""} ${r.own ? "disabled" : ""}><i></i></label></td></tr>`).join(""), "On")}
+      <button class="icon-btn" type="button" id="cap-add" style="margin-top:10px">+ Add your own capability</button></div>
+      <div class="card detail" id="cap-detail"></div></div>`;
+  const draw = (i) => { $("#cap-detail").innerHTML = capDetail(rows[i]); capBindDetail(rows[i]); };
+  bindRows("cap-tab", rows.length, () => CAP.sel[a], (i) => CAP.sel[a] = i, draw);
+  $("#cap-tab").querySelectorAll("[data-on]").forEach((cb) => cb.onchange = () => { const r = rows[+cb.dataset.on], o = capOverride(r.id);
+    if (cb.checked) delete o.enabled; else o.enabled = false; capClean(r.id); renderCapabilities(); });
+  $("#cap-tab").querySelectorAll("[data-prio]").forEach((s) => s.onchange = () => { const r = rows[+s.dataset.prio];
+    if (r.own) CAP.draft.custom[r.idx].priority = s.value; else { const o = capOverride(r.id); if (s.value === r.std) delete o.priority; else o.priority = s.value; capClean(r.id); }
+    renderCapabilities(); });
+  $("#cap-add").onclick = () => { CAP.draft.custom.push({ aspect: a, text: "", priority: "important", met_when: "" }); CAP.sel[a] = capRows(a).length - 1; renderCapabilities();
+    const t = $("#cap-detail [data-f=text]"); if (t) t.focus(); };
 }
-function capBind() {
-  const d = CAP.draft, rerender = () => { renderCapabilities(); };
-  $("#cap-prof").onchange = (e) => { if (capDirty()) capSay("Unsaved changes were discarded."); capOpen(e.target.value); };
-  const desc = $("#cap-desc"); if (desc) desc.oninput = () => { d.description = desc.value; const s = $("#cap-save"); if (s) s.disabled = !capDirty(); };
-  $("#cap-aspects").querySelectorAll("button").forEach((b) => b.onclick = () => { CAP.aspect = b.dataset.a; CAP.sel = null; rerender(); });
-  $("#cap-tab").querySelectorAll("tbody tr").forEach((tr) => tr.onclick = (e) => { if (e.target.closest("input,select")) return; CAP.sel = tr.dataset.id; rerender(); });
-  $("#cap-tab").querySelectorAll("[data-on]").forEach((cb) => cb.onchange = () => { const id = cb.dataset.on, o = capOverride(id);
-    if (cb.checked) delete o.enabled; else o.enabled = false; capClean(id); rerender(); });
-  $("#cap-tab").querySelectorAll("[data-prio]").forEach((s) => s.onchange = () => { const id = s.dataset.prio, std = CAP.cat.aspects[CAP.aspect].find((c) => c.id === id).priority, o = capOverride(id);
-    if (s.value === std) delete o.priority; else o.priority = s.value; capClean(id); rerender(); });
+/* "Accepted when" with the thresholds as inline number fields */
+function acceptedEditable(cid) {
+  const raw = (CAP.cat.accepted || {})[cid] || "", ps = Object.fromEntries((CAP.cat.params[cid] || []).map((p) => [p.key, p]));
+  return plain(raw).replace(/\{(\w+)\}/g, (m, k) => { const p = ps[k]; if (!p) return m;
+    return `<input class="inl" type="number" data-param="${k}" min="${p.min}" max="${p.max}" step="${p.step}" value="${paramValue(cid, p)}" title="${esc(p.label)} (standard ${fmtNum(p.default)})">`; });
+}
+function capDetail(r) {
+  if (!r) return "";
+  if (r.own) { const c = CAP.draft.custom[r.idx];
+    return `<div class="dhead"><span class="cid">your own</span>${prio(c.priority)}<button class="ghost" style="visibility:visible;margin-left:auto" id="cap-rm" type="button">Remove</button></div>
+      <h2><input class="txt" data-f="text" value="${esc(c.text)}" maxlength="300" placeholder="The capability, e.g. Keys are rotated every quarter." style="width:100%;font-size:14px;font-weight:600"></h2>
+      <div class="acc"><span class="lbl">Accepted when</span><textarea class="txt" data-f="met_when" maxlength="1000" placeholder="In plain words, e.g. the runbook shows a rotation in the last 90 days." style="width:100%">${esc(c.met_when)}</textarea></div>
+      <div class="muted" style="font-size:12px">No rule checks this one: a reviewer (a person or an agent) records the verdict in <code>review.json</code>.</div>`; }
+  const m = CAP.cat.methods[r.id] || {}, changed = Object.keys(ov(r.id)).length;
+  return `<div class="dhead"><span class="cid">${esc(r.id)}</span>${prio(r.priority)}${changed ? `<button class="ghost" style="visibility:visible;margin-left:auto" id="cap-reset" type="button">Reset to Standard</button>` : ""}</div>
+    <h2>${esc(r.text)}</h2>
+    ${r.on ? "" : `<div class="vbox"><div><b>Switched off.</b> <span class="muted">It is not assessed with this profile.</span></div></div>`}
+    <div class="acc"><span class="lbl">Accepted when</span>${acceptedEditable(r.id)}</div>
+    ${(CAP.cat.params[r.id] || []).length ? `<div class="muted" style="font-size:12px;margin:-4px 0 10px">Change the number to adapt it; the standard is ${(CAP.cat.params[r.id]).map((p) => fmtNum(p.default) + (p.unit === "%" ? "%" : p.unit ? " " + p.unit : "")).join(", ")}.</div>` : ""}
+    ${moreAbout(m)}`;
+}
+function capBindDetail(r) {
+  if (!r) return;
+  const d = CAP.draft;
+  if (r.own) { const c = d.custom[r.idx];
+    $("#cap-detail").querySelectorAll("[data-f]").forEach((f) => f.oninput = () => { c[f.dataset.f] = f.value; capDirtyUi();
+      if (f.dataset.f === "text") { const cell = document.querySelector(`#cap-tab tr.sel td:nth-child(3)`); if (cell) cell.textContent = f.value || "(new capability)"; } });
+    $("#cap-rm").onclick = () => { d.custom.splice(r.idx, 1); CAP.sel[CAP.sub] = 0; renderCapabilities(); }; return; }
   $("#cap-detail").querySelectorAll("[data-param]").forEach((inp) => inp.onchange = () => {
-    const id = CAP.sel, p = CAP.cat.params[id].find((x) => x.key === inp.dataset.param), v = Number(inp.value), o = capOverride(id);
-    o.params = o.params || {}; if (inp.value === "" || v === p.default) delete o.params[p.key]; else o.params[p.key] = v; capClean(id);
+    const p = CAP.cat.params[r.id].find((x) => x.key === inp.dataset.param), v = Number(inp.value), o = capOverride(r.id);
+    o.params = o.params || {}; if (inp.value === "" || v === p.default) delete o.params[p.key]; else o.params[p.key] = v; capClean(r.id);
     clearTimeout(CAP.timer); CAP.timer = setTimeout(capCatalog, 150); });
-  const reset = $("#cap-reset"); if (reset) reset.onclick = () => { delete d.capabilities[CAP.sel]; capCatalog(); };
-  $("#cap-own").querySelectorAll(".own").forEach((row) => { const c = d.custom[+row.dataset.i];
-    row.querySelectorAll("[data-f]").forEach((f) => f.oninput = f.onchange = () => { c[f.dataset.f] = f.value; const s = $("#cap-save"); if (s) s.disabled = !capDirty(); }); });
-  $("#cap-own").querySelectorAll("[data-rm]").forEach((b) => b.onclick = () => { d.custom.splice(+b.dataset.rm, 1); rerender(); });
-  $("#cap-add").onclick = () => { d.custom.push({ aspect: CAP.aspect, text: "", priority: "important", met_when: "" }); rerender();
-    const all = $("#cap-own").querySelectorAll('[data-f="text"]'); if (all.length) all[all.length - 1].focus(); };
+  const reset = $("#cap-reset"); if (reset) reset.onclick = () => { delete d.capabilities[r.id]; capCatalog(); };
+}
+function capDirtyUi() { const s = $("#cap-save"); if (s) s.disabled = !capDirty(); if (!CAP.err) capSay(capDirty() ? "Unsaved changes" : ""); }
+function capBindBar() {
+  const d = CAP.draft;
+  $("#cap-prof").onchange = (e) => { CAP.msg = ""; CAP.sel = {}; capOpen(e.target.value); };
   const ownOk = () => d.custom.every((c) => c.text.trim()) || (capSay("Give each of your own capabilities a text, or remove it.", true), false);
   const save = $("#cap-save");
   if (save) save.onclick = () => { if (!ownOk()) return;
     api(`/api/profiles/${encodeURIComponent(CAP.id)}`, d).then(() => { capSay("Saved."); return capOpen(CAP.id); }).catch((e) => capSay(e.message, true)); };
   $("#cap-copy").onclick = () => { const name = $("#cap-newname").value.trim(); if (!ownOk()) return;
     const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
-    if (!id) return capSay("Type a name for the new profile first.", true);
-    if (CAP.list.some((p) => p.id === id)) return capSay(`A profile “${id}” already exists: pick another name.`, true);
-    api(`/api/profiles/${id}`, Object.assign(clone(d), { name })).then(() => { capSay(`Saved as “${name}”.`); return capOpen(id); }).catch((e) => capSay(e.message, true)); };
-  const del = $("#cap-del");
-  if (del) del.onclick = () => { if (!CAP.delArm) { CAP.delArm = true; del.textContent = "Click again to delete"; return; }
-    api(`/api/profiles/${encodeURIComponent(CAP.id)}/delete`, {}).then(() => { capSay(`Deleted “${CAP.saved.name}”.`); return capOpen("standard"); }).catch((e) => capSay(e.message, true)); };
-  const apply = $("#cap-apply");
-  if (apply) apply.onclick = () => { if (!CURRENT_RUN) return;
-    api(`/api/runs/${encodeURIComponent(CURRENT_RUN)}/apply`, { profile: CAP.id }).then((rep) => { REPORT = rep; capSay(`Applied to the open run: overall ${fmt(rep.overall.score)}.`);
-      return api("/api/projects").then((ps) => { PROJECTS = ps; renderProjects(); renderProfileSelect(); renderCapabilities(); }); }).catch((e) => capSay(e.message, true)); };
-}
-
-/* =================== HOW IT WORKS =================== */
-function renderGuide() {
-  const r = REPORT, cl = (r && r.checklist) || {}, h = (r && r.repo.head) || {};
-  const nExp = r ? r.dimensions.reduce((n, d) => n + d.checks.length, 0) : 0;
-  const cur = r ? `<p class="muted">This report: <b>${esc(r.repo.source)}</b>${h.sha ? ` at commit <code>${esc(h.sha.slice(0, 8))}</code>` : ""}, ${nExp} capabilities from
-    <code>${esc(cl.path ? cl.path.replace(/^.*[\\/](assessment|\.sdlc360)[\\/]/, "$1/") : "built-in checks")}</code> (profile ${esc(profileName(r))}), assessed ${fdate(r.generated_at)}.</p>` : "";
-  const src = SOURCES.map((x) => `<tr><td><code>${esc(x.id)}</code></td><td><a class="fl" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a><div class="muted">${esc(x.publisher)} · ${esc(x.published)}</div></td><td class="num">${x.cited}</td></tr>`).join("");
-  $("#guide-pane").innerHTML = `<div class="guide">
-  <div class="card wide"><h2>What SDLC360 does</h2>
-    <p>It reads a git repository and tells you, aspect by aspect, whether the project meets the capabilities we hold for a well-run,
-    AI-assisted codebase, with the evidence for every verdict. No LLM is involved: the same commit always gets the same verdicts.</p>${cur}
-    <svg id="gsvg" viewBox="0 0 1240 420" role="img" aria-label="How SDLC360 works: components and data flow"></svg></div>
-  <div class="card"><h3>Your journey</h3><ol>
-    <li><b>Pick a project</b> in the header, or add one: a GitHub URL, <code>owner/repo</code>, or a local git folder (folder picker). Local folders are read in place and never changed.</li>
-    <li><b>Scan.</b> The scanner checks the current commit against the checklist, re-scores a few past commits for Dynamics, and stores everything as a run in <code>runs/</code>.</li>
-    <li><b>Assessment</b>: the overview shows all aspects; each aspect tab is a checklist. Click a row to see what we expected, what we found, the verdict, how it was checked, its limits and the published basis for it.</li>
-    <li><b>Recommendations</b>: every open capability, critical first, with what to do.</li>
-    <li><b>Dynamics</b>: how the score, delivery pace and test / doc discipline changed over the last months.</li>
-    <li><b>Fix and re-assess.</b> After changes, press <b>Re-assess</b>: a new run appears next to the old one.</li></ol></div>
-  <div class="card"><h3>Where to change what</h3><table><thead><tr><th>You want to change</th><th>Edit</th><th>Takes effect</th></tr></thead><tbody>
-    <tr><td><b>Which capabilities count</b>, how important each is (critical / important / nice) and the thresholds</td><td>the <b>Capabilities</b> tab: a profile (<code>assessment/profiles/&lt;name&gt;.json</code>); the full list is <code>assessment/capabilities.md</code></td><td>on / off and priority: <i>Apply to this run</i>; thresholds: re-assess</td></tr>
-    <tr><td><b>How a capability is judged</b>: met / partially / not met, limits, basis</td><td><code>assessment/acceptance-criteria/&lt;aspect&gt;.md</code>; the rule itself in <code>src/dimensions/&lt;aspect&gt;.py</code></td><td>texts: re-render; rule: next scan</td></tr>
-    <tr><td><b>Your own capability</b> with no scanner rule</td><td>the <b>Capabilities</b> tab, <i>Add your own capability</i>, with when it is met; the verdict goes into <code>runs/&lt;id&gt;/review.json</code></td><td>re-render (shown as <i>Awaiting review</i> until judged)</td></tr>
-    <tr><td><b>Why we expect it</b>: published references</td><td><code>assessment/references/</code>, quoted in the acceptance criteria</td><td>re-render</td></tr></tbody></table></div>
-  <div class="card"><h3>How verdicts become scores</h3><ol>
-    <li>Each check scores 0–1: <b>Met</b> from 0.85, <b>Partially met</b> from 0.35, otherwise <b>Not met</b>; <b>Not applicable</b> when the practice does not apply (e.g. cost tracking without LLM calls).</li>
-    <li>An aspect score is the mean of its applicable capabilities, weighted by priority: critical 5, important 3, nice 1.</li>
-    <li><b>Critical gate</b>: an unmet critical capability caps its aspect at 49, a partially met one at 74, whatever else passes.</li>
-    <li>The overall score is the mean of the applicable aspects. Grades: A ≥ 90, B ≥ 80, C ≥ 65, D ≥ 50.</li></ol></div>
-  <div class="card"><h3>Why these capabilities: references</h3>
-    <p class="muted">Each capability cites published guidance verbatim, or is marked as our own convention. Copies and licences: <code>assessment/references/</code>.</p>
-    <table><thead><tr><th>Reference</th><th>Title</th><th class="num">Cited by</th></tr></thead><tbody>${src || `<tr><td colspan="3" class="muted">No references bundled in this report.</td></tr>`}</tbody></table></div>
-  </div>`;
-  drawGuide();
-}
-
-function drawGuide() {
-  const svg = $("#gsvg"), NS = "http://www.w3.org/2000/svg";
-  const el = (tag, a, p) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); (p || svg).appendChild(e); return e; };
-  const tx = (x, y, cls, s, anchor) => { const t = el("text", { x, y, class: cls }); if (anchor) t.setAttribute("text-anchor", anchor); t.textContent = s; return t; };
-  const box = (x, y, w, hgt, title, lines, cls, tag) => { el("rect", { x, y, width: w, height: hgt, rx: 8, class: "bx " + (cls || "") }); tx(x + 10, y + 19, "t", title);
-    if (tag) tx(x + w - 8, y + 17, "k", tag, "end"); (lines || []).forEach((l, i) => tx(x + 10, y + 37 + i * 15, l[0] === "~" ? "m" : "s", l.replace(/^~/, ""))); };
-  const m = el("marker", { id: "ga", viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" }, el("defs", {}));
-  el("path", { d: "M0,0L10,5L0,10z", class: "mk" }, m);
-  const arrow = (d, label, lx, ly, dash) => { el("path", { d, class: "ln" + (dash ? " dash" : ""), "marker-end": "url(#ga)" });
-    if (label) { const t = tx(lx, ly, "lb", label, "middle"); const b = t.getBBox(); svg.insertBefore(el("rect", { x: b.x - 3, y: b.y - 1, width: b.width + 6, height: b.height + 2, class: "lbg" }), t); } };
-  // top row: the flow of one scan
-  box(10, 40, 200, 130, "Repository", ["GitHub URL or owner/repo", "or a local git folder", "", "~.cache/repos/ (blobless clone)", "~local: read in place"], "", "TARGET");
-  box(290, 20, 260, 170, "Scanner", ["10 aspects, analytical rules", "files + git history of one commit", "no LLM: same commit, same verdicts", "", "~src/dimensions/<aspect>.py", "~src/scanner.py · history.py"], "key", "CODE");
-  box(630, 20, 260, 170, "Run folder", ["one scan = one immutable run", "", "~runs/<time>_<name>/", "~  manifest.json  report.json", "~  report.html    scan.log", "~  review.json (optional)"], "grp", "FILES");
-  box(970, 20, 260, 170, "Dashboard", ["Assessment · Recommendations", "Dynamics · How it works", "", "~python sdlc.py serve (./start.sh)", "~or open report.html offline"], "", "UI");
-  arrow("M210,105H288", "scan", 249, 97);
-  arrow("M550,105H628", "report", 589, 97);
-  arrow("M890,105H968", "render", 929, 97);
-  // bottom row: what people edit
-  tx(150, 258, "k", "WHAT PEOPLE EDIT");
-  box(150, 270, 250, 130, "Capabilities", ["what we want, with priority", "critical · important · nice", "", "~Capabilities tab: profiles", "~assessment/profiles/"], "", "WHAT");
-  box(495, 270, 250, 130, "Acceptance criteria", ["how each one is judged", "met / partially / not met, limits", "", "~assessment/acceptance-criteria/"], "", "HOW");
-  box(840, 270, 250, 130, "References", ["why we expect it", "DORA, NIST, OWASP, OpenSSF, …", "", "~assessment/references/"], "", "WHY");
-  arrow("M275,270C275,230 360,222 380,192", "decides what counts", 300, 226);
-  arrow("M620,270C620,232 520,224 500,192", "explains verdicts", 590, 228);
-  arrow("M840,335H747", "cited as basis", 793, 327);
-  box(1100, 210, 130, 50, "Reviewer", ["~review.json"], "dash", "OPTIONAL");
-  arrow("M1100,235C1000,235 880,225 862,192", "own capabilities", 985, 222, true);
-}
-
-/* =================== DYNAMICS =================== */
-const scorePoints = (get) => ((REPORT.history || {}).scores || []).filter((p) => get(p) != null).map((p) => ({ x: new Date(p.date), y: get(p), sha: p.sha }));
-function deltaHtml(pts) { if (pts.length < 2) return ""; const dv = pts.at(-1).y - pts[0].y, cls = dv > 0.5 ? "up" : dv < -0.5 ? "down" : "flat";
-  return `<span class="delta ${cls}">${dv > 0.5 ? "▲" : dv < -0.5 ? "▼" : "■"} ${dv > 0 ? "+" : ""}${fmt(dv)}</span> <span class="muted" style="font-size:11.5px">since ${fdate(pts[0].x)}</span>`; }
-function rolling(rows, key, k = 4) { return rows.map((r, i) => { const win = rows.slice(Math.max(0, i - k + 1), i + 1); const c = win.reduce((a, w) => a + w.commits, 0);
-  return c ? win.reduce((a, w) => a + (w[key] || 0) * w.commits / 100, 0) / c * 100 : null; }); }
-
-function renderDynamics() {
-  const H = REPORT.history || {}, weeks = (H.velocity || {}).weeks || [], overallPts = scorePoints((p) => p.overall);
-  if (!weeks.length && overallPts.length < 2) {
-    $("#dyn-pane").innerHTML = `<div class="empty"><h2>No history in this run</h2>Re-scan with history enabled to see how the project evolves:<br><code>python sdlc.py scan &lt;target&gt; --history 8</code></div>`; return;
-  }
-  const last12 = weeks.slice(-12), prev12 = weeks.slice(-24, -12), sum = (a, k) => a.reduce((s, w) => s + w[k], 0);
-  const vNow = sum(last12, "commits") / Math.max(1, last12.length), vPrev = prev12.length ? sum(prev12, "commits") / prev12.length : null;
-  const vd = vPrev ? (vNow - vPrev) / vPrev * 100 : null;
-  $("#dyn-pane").innerHTML = `
-  <div class="dyn">
-    <div class="card"><div class="chead"><h3>Maturity over time</h3><span class="spacer"></span>${deltaHtml(overallPts)}</div>
-      <div class="chart" id="d-overall"></div></div>
-    <div class="card"><div class="chead"><h3>Dimensions over time</h3><span class="spacer"></span><span class="muted" style="font-size:11.5px">change since first sampled scan</span></div>
-      <div class="minis" id="d-minis"></div></div>
-    <div class="card"><div class="chead"><h3>Velocity · commits per week</h3><span class="spacer"></span>
-        ${vd == null ? "" : `<span class="delta ${vd > 5 ? "up" : vd < -5 ? "down" : "flat"}">${vd > 0 ? "+" : ""}${Math.round(vd)}%</span><span class="muted" style="font-size:11.5px">last 12 wk vs previous 12</span>`}</div>
-      <div class="chart" id="d-velocity" style="flex:1.4"></div>
-      <div class="chead" style="margin-top:6px"><h3>Active contributors per week</h3></div><div class="chart" id="d-authors"></div></div>
-    <div class="card"><div class="chead"><h3>Engineering discipline · share of commits</h3><span class="spacer"></span>
-        <span class="legend"><span><i class="sw" style="border-color:var(--series-1)"></i>touch tests</span><span><i class="sw" style="border-color:var(--series-2)"></i>touch docs</span></span></div>
-      <div class="chart" id="d-quality"></div><div class="muted" style="font-size:11.5px;margin-top:4px">4-week rolling share of commits that change test files / documentation.</div></div>
-  </div>`;
-  if (overallPts.length > 1) lineChart($("#d-overall"), [{ name: "Overall", color: "var(--series-1)", pts: overallPts }], { yMin: 0, yMax: 100, ref: 75, dots: true, sha: true });
-  else $("#d-overall").innerHTML = `<div class="empty">Only one scan point. Re-scan with <code>--history 8</code>.</div>`;
-  const nPts = ((REPORT.history || {}).scores || []).length;
-  $("#d-minis").innerHTML = REPORT.dimensions.map((d) => {
-    const p = scorePoints((x) => x.dims[d.id]), dv = p.length > 1 ? p.at(-1).y - p[0].y : null;
-    return `<div class="mini" data-d="${d.id}"><span class="nm">${esc(d.name)}</span><svg data-spark="${d.id}"></svg><span class="v">${fmt(d.score)}</span>
-      <span class="delta ${dv == null || Math.abs(dv) <= 0.5 ? "flat" : dv > 0 ? "up" : "down"}" style="text-align:right">${dv == null || nPts < 2 ? "" : (Math.abs(dv) <= 0.5 ? "■ 0" : (dv > 0 ? "▲ +" : "▼ ") + fmt(dv))}</span></div>`;
-  }).join("");
-  $("#d-minis").querySelectorAll(".mini").forEach((m) => m.onclick = () => go("assessment", m.dataset.d));
-  $("#d-minis").querySelectorAll("svg[data-spark]").forEach((s) => spark(s, scorePoints((x) => x.dims[s.dataset.spark])));
-  if (weeks.length) {
-    columnChart($("#d-velocity"), weeks.map((w) => ({ x: new Date(w.week), y: w.commits, w })));
-    lineChart($("#d-authors"), [{ name: "Contributors", color: "var(--series-1)", pts: weeks.map((w) => ({ x: new Date(w.week), y: w.authors })) }], { yMin: 0, compact: true });
-    const t = rolling(weeks, "tests_pct"), dd = rolling(weeks, "docs_pct");
-    lineChart($("#d-quality"), [{ name: "Touch tests", color: "var(--series-1)", pts: weeks.map((w, i) => ({ x: new Date(w.week), y: t[i] })) },
-      { name: "Touch docs", color: "var(--series-2)", pts: weeks.map((w, i) => ({ x: new Date(w.week), y: dd[i] })) }], { yMin: 0, yMax: 100, unit: "%" });
-  }
-}
-
-/* ---------- generic charts ---------- */
-function niceMax(v) { if (v <= 5) return 5; const p = Math.pow(10, Math.floor(Math.log10(v))), m = v / p; return (m <= 2 ? 2 : m <= 5 ? 5 : 10) * p; }
-const mfmt = (d, span) => d.toLocaleDateString(undefined, span > 400 * 864e5 ? { month: "short", year: "2-digit" } : { month: "short", day: "numeric" });
-
-function lineChart(host, series, o = {}) {
-  const { svg, W, H } = svgIn(host, series.map((s) => s.name).join(", ") + " over time");
-  const L = 34, Rr = 12, T = 8, B = o.compact ? 18 : 22, all = series.flatMap((s) => s.pts.filter((p) => p.y != null));
-  if (!all.length || H < 20) return;
-  const x0 = Math.min(...all.map((p) => +p.x)), x1 = Math.max(...all.map((p) => +p.x));
-  const yMin = o.yMin ?? 0, yMax = o.yMax ?? niceMax(Math.max(...all.map((p) => p.y)) * 1.1);
-  const X = (t) => L + (W - L - Rr) * ((+t - x0) / ((x1 - x0) || 1)), Y = (v) => T + (H - T - B) * (1 - (v - yMin) / (yMax - yMin));
-  const yt = o.compact ? [yMin, yMax] : [0, .25, .5, .75, 1].map((f) => yMin + (yMax - yMin) * f);
-  yt.forEach((v) => { el("line", { x1: L, x2: W - Rr, y1: Y(v), y2: Y(v), stroke: v === yMin ? "var(--axis)" : "var(--grid)" }, svg);
-    el("text", { x: L - 6, y: Y(v), "text-anchor": "end", "dominant-baseline": "middle", class: "tick" }, svg).textContent = Math.round(v) + (o.unit || ""); });
-  if (o.ref != null) el("line", { x1: L, x2: W - Rr, y1: Y(o.ref), y2: Y(o.ref), stroke: "var(--faint)", "stroke-dasharray": "4 4" }, svg);
-  const nt = Math.max(2, Math.min(6, Math.floor((W - L) / 90)));
-  for (let i = 0; i <= nt; i++) { const d = new Date(x0 + (x1 - x0) * i / nt);
-    el("text", { x: X(d), y: H - 5, "text-anchor": i === 0 ? "start" : i === nt ? "end" : "middle", class: "tick" }, svg).textContent = mfmt(d, x1 - x0); }
-  series.forEach((s) => {
-    let dpath = "", pen = false;
-    s.pts.forEach((p) => { if (p.y == null) { pen = false; return; } dpath += (pen ? "L" : "M") + X(p.x).toFixed(1) + "," + Y(p.y).toFixed(1); pen = true; });
-    el("path", { d: dpath, fill: "none", stroke: s.color, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
-    if (o.dots) s.pts.forEach((p) => p.y != null && el("circle", { cx: X(p.x), cy: Y(p.y), r: 4, fill: s.color, stroke: "var(--surface)", "stroke-width": 2 }, svg));
-  });
-  const xs = [...new Set(all.map((p) => +p.x))].sort((a, b) => a - b);
-  const cross = el("line", { y1: T, y2: H - B, stroke: "var(--axis)", visibility: "hidden" }, svg);
-  const ov = el("rect", { x: L, y: T, width: W - L - Rr, height: H - T - B, fill: "transparent" }, svg);
-  ov.addEventListener("mousemove", (e) => {
-    const r = svg.getBoundingClientRect(), mx = (e.clientX - r.left) * W / r.width;
-    const t = xs.reduce((b, v) => Math.abs(X(v) - mx) < Math.abs(X(b) - mx) ? v : b, xs[0]);
-    cross.setAttribute("x1", X(t)); cross.setAttribute("x2", X(t)); cross.setAttribute("visibility", "visible");
-    const rows = series.map((s) => { const p = s.pts.find((q) => +q.x === t); return p && p.y != null ? `<div class="row"><span><i class="sw" style="border-color:${s.color}"></i> ${esc(s.name)}</span><b>${fmt(p.y)}${o.unit || ""}</b></div>` : ""; }).join("");
-    const p0 = series[0].pts.find((q) => +q.x === t);
-    showTip(e, `<b>${fdate(t)}</b>${rows}${o.sha && p0 && p0.sha ? `<div class="row"><span>commit</span><code>${p0.sha.slice(0, 8)}</code></div>` : ""}`);
-  });
-  ov.addEventListener("mouseleave", () => { cross.setAttribute("visibility", "hidden"); hideTip(); });
-}
-
-function columnChart(host, data) {
-  const { svg, W, H } = svgIn(host, "Commits per week");
-  const L = 34, Rr = 12, T = 8, B = 22, yMax = niceMax(Math.max(1, ...data.map((d) => d.y)));
-  const bw = (W - L - Rr) / data.length, Y = (v) => T + (H - T - B) * (1 - v / yMax);
-  data.forEach((d, i) => {
-    const hit = el("rect", { x: L + i * bw, y: T, width: bw, height: H - T - B, class: "hit" }, svg);
-    hit.addEventListener("mouseenter", (e) => { hit.style.fill = "var(--fill)";
-      showTip(e, `<b>Week of ${fdate(d.x)}</b><div class="row"><span>Commits</span><b>${d.y}</b></div><div class="row"><span>Contributors</span><span>${d.w.authors}</span></div><div class="row"><span>Files touched</span><span>${d.w.files}</span></div>`); });
-    hit.addEventListener("mousemove", moveTip); hit.addEventListener("mouseleave", () => { hit.style.fill = ""; hideTip(); });
-  });
-  [0, yMax / 2, yMax].forEach((v) => { el("line", { x1: L, x2: W - Rr, y1: Y(v), y2: Y(v), stroke: v ? "var(--grid)" : "var(--axis)", "pointer-events": "none" }, svg);
-    el("text", { x: L - 6, y: Y(v), "text-anchor": "end", "dominant-baseline": "middle", class: "tick" }, svg).textContent = Math.round(v); });
-  data.forEach((d, i) => {
-    const x = L + i * bw + 1, w = Math.max(1, bw - 2), h = Y(0) - Y(d.y);
-    if (d.y > 0) { const r = Math.min(3, w / 2, h); el("path", { d: `M${x},${Y(0)} v${-(h - r)} a${r},${r} 0 0 1 ${r},${-r} h${w - 2 * r} a${r},${r} 0 0 1 ${r},${r} v${h - r} z`, fill: "var(--series-1)", "pointer-events": "none" }, svg); }
-  });
-  const span = data.at(-1).x - data[0].x, step = Math.max(1, Math.ceil(data.length / Math.max(2, Math.floor((W - L) / 80))));
-  data.forEach((d, i) => { if (i % step === 0) el("text", { x: L + i * bw + bw / 2, y: H - 5, "text-anchor": "middle", class: "tick" }, svg).textContent = mfmt(d.x, span); });
-}
-
-function spark(svg, pts) {
-  const W = 300, H = 24; svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("preserveAspectRatio", "none");
-  if (pts.length < 2) { el("line", { x1: 0, x2: W, y1: H / 2, y2: H / 2, stroke: "var(--grid)" }, svg); return; }
-  const x0 = +pts[0].x, x1 = +pts.at(-1).x, X = (t) => 2 + (W - 4) * (+t - x0) / ((x1 - x0) || 1), Y = (v) => H - 3 - (H - 6) * v / 100;
-  el("path", { d: pts.map((p, i) => (i ? "L" : "M") + X(p.x).toFixed(1) + "," + Y(p.y).toFixed(1)).join(""), fill: "none", stroke: "var(--series-1)", "stroke-width": 1.5, "stroke-linejoin": "round", "vector-effect": "non-scaling-stroke" }, svg);
+    if (!id) { $("#cap-newname").focus(); return capSay("Type a name for the new profile.", true); }
+    if (CAP.list.some((p) => p.id === id)) return capSay(`“${id}” already exists: pick another name.`, true);
+    api(`/api/profiles/${id}`, Object.assign(clone(d), { name })).then(() => { capSay(`Saved as “${name}”.`); renderProfileSelect(); return capOpen(id); }).catch((e) => capSay(e.message, true)); };
 }
 
 /* =================== PROJECTS =================== */
@@ -920,7 +767,8 @@ function renderProfileSelect() {
 function refreshProjects() {
   renderProfileSelect();
   return api("/api/projects").then((ps) => { PROJECTS = ps; renderProjects();
-    const want = store("sdlc360-project"), p = ps.find((x) => x.source === want) || ps[0];
+    const q = new URLSearchParams(location.search).get("project"), want = store("sdlc360-project");  // ?project=<name> opens that project
+    const p = (q && ps.find((x) => x.name.toLowerCase().includes(q.toLowerCase()))) || ps.find((x) => x.source === want) || ps[0];
     if (p) return loadProject(p); setProjectName(); render(); });
 }
 const isLocal = (t) => /^([A-Za-z]:[\\/]|\/|~|\\\\)/.test(t);
@@ -932,18 +780,18 @@ function validate() {
     : !looksValid(t) ? "Use https://github.com/owner/repo, owner/repo, or a full local path."
     : isLocal(t) ? "Local folder — read in place, never modified." : "GitHub repository — cloned into the local cache.";
 }
-const STEPS = ["Fetch the repository", "Check the latest commit against capabilities", "Measure activity from git history", "Re-score past commits", "Save the run"];
-function stepOf(m) { return !m || m.startsWith("resolving") ? 0 : m.startsWith("scanning") ? 1 : m.startsWith("computing") ? 2 : m.startsWith("history") ? 3 : m === "done" ? 5 : 0; }
+const STEPS = ["Fetch the repository", "Check the latest commit against the capabilities", "Save the run"];
+function stepOf(m) { return !m || m.startsWith("resolving") ? 0 : m === "done" ? 3 : 1; }
 function showSteps(target, msgs, history) {
   const last = msgs.at(-1) || "", cur = stepOf(last), hm = /history (\d+)\/(\d+)/.exec(last);
   $("#progress").innerHTML = `<ol class="steps"><li class="run" style="padding-bottom:6px"><span class="spin"></span>Assessing ${esc(target)}</li>${STEPS.map((s, i) =>
-    `<li class="${i < cur ? "done" : i === cur ? "run" : ""}"><span class="mk">${i < cur ? "✓" : i === cur ? "›" : "·"}</span>${s}${i === 3 ? ` <span class="muted">(${hm ? hm[1] + " of " + hm[2] : (history || 8) + " commits"})</span>` : ""}</li>`).join("")}</ol>`;
+    `<li class="${i < cur ? "done" : i === cur ? "run" : ""}"><span class="mk">${i < cur ? "✓" : i === cur ? "›" : "·"}</span>${s}</li>`).join("")}</ol>`;
 }
 function setBusy(b) { scanning = b; $("#target").disabled = b; $("#how").classList.toggle("hidden", b); validate(); }
 function startScan(target, profile) {
   $("#progress").innerHTML = ""; panel.classList.add("on");
-  api("/api/scan", { target, history: 8, profile: profile || undefined }).then(({ job: id, display }) => {
-    setBusy(true); showSteps(display || target, [], 8);
+  api("/api/scan", { target, history: 0, profile: profile || undefined }).then(({ job: id, display }) => {
+    setBusy(true); showSteps(display || target, []);
     const poll = () => api(`/api/jobs/${id}`).then((j) => {
       if (j.status === "done") { setBusy(false); $("#progress").innerHTML = ""; $("#target").value = ""; validate();
         return api("/api/projects").then((ps) => { PROJECTS = ps; const p = ps.find((x) => x.runs.some((r) => r.id === j.run_id)); panel.classList.remove("on"); if (p) loadProject(p); }); }
@@ -984,6 +832,7 @@ if (MODE === "app") {
 function showEmpty() {
   document.querySelectorAll("#tabs button").forEach((b) => { b.hidden = !FREE_VIEWS.includes(b.dataset.v) || (b.dataset.v === "capabilities" && MODE !== "app"); b.classList.remove("on"); });
   for (const v of VIEWS) $("#v-" + v).classList.toggle("on", v === "empty");
+  $("#cap-bar").classList.add("hidden");
   $("#empty").innerHTML = `<h2>Assess a repository</h2>Point the assessment at a GitHub repository (<code>https://github.com/owner/repo</code> or <code>owner/repo</code>)
     or a local folder that is a git repository. Each scan is stored as a run under <code>runs/</code>.
     <div style="margin-top:14px;display:flex;gap:8px;justify-content:center"><button class="icon-btn pri" type="button" id="empty-add">Add project</button>

@@ -75,7 +75,7 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--ref", help="branch / tag / sha to check out (GitHub targets)")
     s.add_argument("--name", help="run name suffix (default: repo name)")
     s.add_argument("--only", help="comma-separated dimension ids")
-    s.add_argument("--history", type=int, default=8, help="historical commits to re-score for the Dynamics view (default 8)")
+    s.add_argument("--history", type=int, default=0, help="past commits to re-score; stored in the run for a future trend view (default 0)")
     s.add_argument("--months", type=int, default=12, help="history window in months (default 12)")
     s.add_argument("--no-history", action="store_true", help="skip historical re-scoring")
     s.add_argument("--profile", help="profile id from assessment/profiles/ (default: the repo's .sdlc360/capabilities.md, else standard)")

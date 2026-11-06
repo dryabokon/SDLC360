@@ -67,6 +67,6 @@ The report keeps raw scanner output (`auto_checks`) separate from final `checks`
 - Most checks are presence and structure heuristics. They can be satisfied by empty files, so a green verdict means
   "the practice is visible", not "the practice is good".
 - The secret scan covers HEAD only, not the history.
-- Historical points in Dynamics are scored with the rules of the tool version that produced the run.
+- Historical points (`--history`) are scored with the rules of the tool version that produced the run.
 
 Decisions behind this design: [design-decisions/](design-decisions/).

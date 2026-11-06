@@ -5,6 +5,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## arch.doc: An architecture document describes components, data flow and boundaries.
 
+**Accepted when.** There is an architecture document, for example `ARCHITECTURE.md` or `docs/architecture.md`.
+
 **How we check.** Files matching `ARCHITECTURE*` or `DESIGN.md` anywhere in the tree, or `docs/*architecture*`, `docs/*design*`, `docs/*overview*`, `doc/*architecture*` or `docs/arc42/*` at any depth. The extension must be `.md`, `.mdx`, `.rst`, `.adoc` or `.txt`.
 
 - **Met:** At least one such file exists.
@@ -27,10 +29,12 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## arch.diagrams: Architecture diagrams are kept as code (Mermaid / PlantUML / C4).
 
+**Accepted when.** The docs hold at least {min_diagrams} diagrams kept as code (Mermaid, PlantUML, C4, draw.io).
+
 **How we check.** The first 400 tracked `.md`/`.mdx` files are searched for a code fence opening with `mermaid`, `plantuml`, `d2`, `dot` or `graphviz`. It also counts `*.puml`, `*.plantuml`, `*.drawio`, `*.excalidraw`, `*.d2`, `*.mmd`, `*.dsl` and `*.c4` files anywhere. The total is the number of markdown files with a fence plus the number of diagram files.
 
-- **Met:** A total of {target*0.85} or more (target: {target}).
-- **Partially met:** A total of {target*0.35} or more.
+- **Met:** A total of {min_diagrams} or more.
+- **Partially met:** A total of {min_diagrams:partial} or more.
 - **Not met:** Fewer.
 
 **What the check cannot see.** A markdown file counts once, however many diagrams it holds. Any `.dsl` file counts, Structurizr or not. Diagrams in `.rst`/`.adoc` and exported PNG/SVG images are not seen. Nothing checks that a diagram shows the architecture.
@@ -45,10 +49,12 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## arch.adr: Significant design decisions are recorded, one file per decision.
 
+**Accepted when.** At least {min_records} design decisions are written down, one file each, in a decisions folder.
+
 **How we check.** Folders whose path or name matches `*adr`, `*adrs`, `*decisions`, `*decision-records` or `docs/architecture/decisions`. It counts the tracked `.md` files beneath them at any depth.
 
-- **Met:** {target*0.85} or more markdown files (target: {target}).
-- **Partially met:** {target*0.35} or more markdown files.
+- **Met:** {min_records} or more markdown files.
+- **Partially met:** {min_records:partial} or more markdown files.
 - **Not met:** Fewer.
 
 **What the check cannot see.** README and template files in the folder count as decision records, and content is not checked. A folder such as `design-decisions` for something unrelated counts. Records written as `.rst`/`.adoc`, or kept outside such folders, are missed.
@@ -68,6 +74,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [anthropic-claude-code-best-practices](../references/anthropic-claude-code-best-practices/), Keep CLAUDE.md short · supporting
 
 ## arch.structure: Source code is organised into modules, not a flat root.
+
+**Accepted when.** Code lives in folders, and at most {max_root_files} source files sit in the project root.
 
 **How we check.** Source files (by extension, excluding tests, `vendor/`, `third_party/`, `docs/`, `examples/`, `.github/`). It counts how many sit in the repo root and whether any sit in a subfolder.
 
@@ -90,10 +98,12 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## arch.fresh: The architecture document is maintained alongside the code.
 
+**Accepted when.** The architecture document was updated no more than {max_lag_days} days before the latest code change.
+
 **How we check.** The newest commit touching any arch.doc file is compared with the newest commit touching the first 2,000 source files.
 
-- **Met:** The architecture doc lags the code by no more than about {met_days} days (full score up to {grace_days} days, then a linear fade to 0 at {max_lag_days} days).
-- **Partially met:** A lag of about {met_days+1} to {partial_days} days, or unknown dates (scores 0.5).
+- **Met:** The architecture doc lags the code by no more than about {max_lag_days} days (full score up to {grace_days} days, then a linear fade to 0 at {zero_days} days).
+- **Partially met:** A lag of about {max_lag_days+1} to {partial_days} days, or unknown dates (scores 0.5).
 - **Not met:** A lag of more than about {partial_days} days, or no architecture doc.
 
 **What the check cannot see.** The newest matching file wins. Editing an unrelated `docs/*design*` page or fixing a typo counts as maintenance. Whether the content matches the code is not checked.
@@ -101,6 +111,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 **Our convention.** An architecture document that lags the code misleads people and agents more than no document; we use the same staleness rule as for docs.
 
 ## arch.boundaries: Module boundaries are explicit and enforced by tooling.
+
+**Accepted when.** A tool enforces module boundaries (import-linter, dependency-cruiser, ArchUnit or a workspace tool). Checked only for projects with more than {min_source_files} source files.
 
 **How we check.** Files anywhere named `.importlinter`, `importlinter.ini`, `.dependency-cruiser.*`, `nx.json`, `turbo.json`, `pnpm-workspace.yaml`, `go.work`, `lerna.json` or `*.sln`. Also a root `pyproject.toml` containing the text "importlinter" or "tach", and `ArchUnit`/`ArchRule`/`NetArchTest`/`deptry` text in up to 500 test files. Score: 0.5 per file found, plus 0.5 for a test hit.
 

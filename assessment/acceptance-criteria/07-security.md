@@ -5,6 +5,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## sec.no_secrets: No secrets or API keys are hard-coded in tracked files.
 
+**Accepted when.** No passwords, tokens or API keys are written in the tracked files.
+
 **How we check.** Every tracked, non-binary text file up to 500 KB at HEAD, line by line (lines over 2000 chars skipped). Skips lock files, `*.min.js`, `*.map`, `*.svg` and `fixture(s)/`, `testdata/`, `__snapshots__/` folders. Looks for AWS, GitHub, Anthropic, OpenAI, Slack, Google, Stripe-live tokens, private-key blocks, and "generic" quoted values of 16+ chars assigned to names like `api_key`, `password`, `client_secret`.
 
 - **Met:** No finding at all. Values that look like placeholders (contain `example`, `test`, `dummy`, `xxxx`, `${`, `process.env`, …) are ignored; generic values must mix letters and digits, have 6+ distinct characters, and are ignored entirely in test files.
@@ -29,6 +31,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## sec.no_sensitive_files: No credential files (.env, private keys, tfstate) are committed.
 
+**Accepted when.** No credential files (`.env`, private keys, Terraform state) are committed.
+
 **How we check.** Tracked files whose name (anywhere in the tree) matches `*.pem`, `*.key`, `*.p12`, `*.pfx`, `*.jks`, `*.keystore`, `id_rsa`, `id_ed25519`, `credentials.json`, `service-account*.json`, `*.tfstate`, `*.tfvars`, `.npmrc`, `.pypirc`, `.netrc`, `.env`, `.env.*`, `*.env`. Excludes paths containing `example`, ending in `.example/.sample/.template/.dist/.default(s)` or `.env.test`, and anything under `test(s)/`, `fixture(s)/`, `testdata/`, `example(s)/`, `sample(s)/`, `doc(s)/`.
 
 - **Met:** None of those files is committed.
@@ -48,6 +52,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [openssf-ai-code-assistant-guide](../references/openssf-ai-code-assistant-guide/), TL;DR > Be Security-Conscious · supporting
 
 ## sec.ci_scanning: CI scans code, dependencies and secrets on every change.
+
+**Accepted when.** CI runs at least two different security scanners (code, dependencies, secrets).
 
 **How we check.** The CI text: `.github/workflows/*.yml|yaml` plus scripts, `Makefile`, `noxfile.py`, `tox.ini`, `package.json`, `pyproject.toml` they call. Counts distinct tool names found anywhere in it: codeql, gitleaks, trufflehog, detect-secrets, trivy, snyk, semgrep, bandit, pip-audit, npm audit, osv-scanner, dependency-review, grype, zizmor, checkov, tfsec, safety check, govulncheck, cargo audit, scorecard.
 
@@ -75,6 +81,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## sec.dep_updates: Dependency updates are automated (Dependabot / Renovate).
 
+**Accepted when.** Dependency updates are automated with Dependabot or Renovate.
+
 **How we check.** Looks for `.github/dependabot.yml` / `.yaml`, any file named `renovate.json` or `.renovaterc*` anywhere, or `.github/renovate.json*`.
 
 - **Met:** Any of those files exists.
@@ -99,6 +107,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## sec.gitignore: .gitignore keeps env files and keys out of git.
 
+**Accepted when.** `.gitignore` keeps env files and keys out of git.
+
 **How we check.** Concatenates every tracked `.gitignore` in the repo (root and subfolders) and looks for an env rule (a line starting with `.env`, `*.env`, or `/.env` after a slash) and a key rule (`*.pem`, `*.key`, `*.p12`, or the text `.pem` / `.key` anywhere).
 
 - **Met:** Both an env rule and a key rule are present (0.7 + 0.3).
@@ -110,6 +120,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 **Our convention.** Ignoring `.env` and key files is the first line of defence against the committed-credential failures that `sec.no_sensitive_files` detects.
 
 ## sec.workflow_permissions: CI workflows run with least-privilege tokens.
+
+**Accepted when.** Nearly every CI workflow (85%) limits its token permissions, and none uses `pull_request_target`.
 
 **How we check.** Each `.github/workflows/*.yml|yaml` file: does it contain a `permissions:` line at any indentation (top-level or per job)? Also whether the word `pull_request_target` appears in any workflow.
 
@@ -138,6 +150,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## sec.env_template: Required configuration is documented in an .env.example template.
 
+**Accepted when.** Settings the code reads from the environment are listed in a template such as `.env.example`.
+
 **How we check.** Whether non-test source code (first 3000 source files, excluding `vendor/`, `third_party/`, `docs/`, `examples/`, `.github/`) reads env vars (`os.environ`, `getenv(`, `process.env.`, `dotenv`, `env::var`, `System.getenv`, `Environment.GetEnvironmentVariable`, case-insensitive), then looks anywhere for `.env.example`, `.env.sample`, `.env.template`, `*.env.example`, `.env.dist`.
 
 - **Met:** Code reads env vars and one of those template files exists.
@@ -163,6 +177,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## sec.precommit_secrets: A pre-commit hook blocks secrets before they are committed.
 
+**Accepted when.** A pre-commit hook blocks secrets before they are committed (gitleaks, detect-secrets and the like).
+
 **How we check.** Text of any `.pre-commit-config.yaml`, `lefthook.yml` or `.lefthook.yml` anywhere, plus files under root `.husky/`. Looks for gitleaks, detect-secrets, trufflehog, detect-private-key or ggshield.
 
 - **Met:** Any of those names appears.
@@ -182,6 +198,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [nist-ssdf](../references/nist-ssdf/), SP 800-218 PW.7.2 Ex.6, p.23 · supporting
 
 ## sec.policy: A SECURITY.md explains how to report vulnerabilities.
+
+**Accepted when.** A `SECURITY.md` says how to report a vulnerability.
 
 **How we check.** Any file named `SECURITY.md` (case-insensitive, anywhere in the tree), plus `.github/SECURITY.md` and `docs/SECURITY.md`.
 
@@ -204,6 +222,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > — [openssf-scorecard](../references/openssf-scorecard/), Security-Policy (remediation) · direct
 
 ## sec.codeowners: CODEOWNERS assigns reviewers for sensitive paths.
+
+**Accepted when.** A `CODEOWNERS` file assigns reviewers.
 
 **How we check.** Any file named `CODEOWNERS` anywhere in the tree (case-insensitive), plus `.github/CODEOWNERS`, `docs/CODEOWNERS`.
 

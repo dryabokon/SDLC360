@@ -6,6 +6,7 @@ import re
 
 from ..model import Checks, Dimension, ratio, short
 from ..repo import Repo
+from ._util import reach
 
 TEST_CMD = r"pytest|python -m unittest|tox|nox|npm (run )?test|pnpm (run )?test|yarn test|jest|vitest|mocha|go test|cargo test|cargo nextest|mvn (-\S+ )*(test|verify)|gradlew? (test|check)|dotnet test|rspec|phpunit|make test|just test|uv run pytest|bun test|ctest"
 
@@ -17,18 +18,18 @@ def assess(repo: Repo):
         "test.present",
         "Automated tests exist",
         3,
-        min(1.0, len(tests) / repo.param("test.present", "target")),
+        reach(len(tests), repo.param("test.present", "min_files")),
         f"{len(tests)} test files",
         "Add a test suite (unit tests for core logic first).",
     )
     r = ratio(len(tests), len(src))
-    target_ratio = repo.param("test.ratio", "target_ratio")
+    min_ratio = repo.param("test.ratio", "min_ratio")
     c.add(
         "test.ratio",
         "Test-to-source file ratio",
         2,
-        min(1.0, r / target_ratio) if src else None,
-        f"{len(tests)} test / {len(src)} source files (ratio {r:.2f}; target ≥ {target_ratio:g})",
+        reach(r, min_ratio) if src else None,
+        f"{len(tests)} test / {len(src)} source files (ratio {r:.2f}; accepted from {min_ratio:g})",
         "Grow tests alongside features; aim for at least one test module per core module.",
     )
 
