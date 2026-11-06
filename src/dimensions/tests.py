@@ -17,17 +17,18 @@ def assess(repo: Repo):
         "test.present",
         "Automated tests exist",
         3,
-        min(1.0, len(tests) / 5),
+        min(1.0, len(tests) / repo.param("test.present", "target")),
         f"{len(tests)} test files",
         "Add a test suite (unit tests for core logic first).",
     )
     r = ratio(len(tests), len(src))
+    target_ratio = repo.param("test.ratio", "target_ratio")
     c.add(
         "test.ratio",
         "Test-to-source file ratio",
         2,
-        min(1.0, r / 0.4) if src else None,
-        f"{len(tests)} test / {len(src)} source files (ratio {r:.2f}; target ≥ 0.4)",
+        min(1.0, r / target_ratio) if src else None,
+        f"{len(tests)} test / {len(src)} source files (ratio {r:.2f}; target ≥ {target_ratio:g})",
         "Grow tests alongside features; aim for at least one test module per core module.",
     )
 

@@ -1,31 +1,28 @@
-# Assessment: what we expect and how we judge it
+# Assessment: which capabilities we look for and how we judge them
 
-Everything a person edits to change the assessment lives here. The code in `src/` only executes it.
+Everything that defines the assessment lives here. The code in `src/` only executes it.
 
-| Folder / file | What it says | Who edits it |
+| Folder / file | What it says | Who changes it, and how |
 |---|---|---|
-| [expectations.md](expectations.md) | **What we expect** from a project: one line per expectation, grouped by aspect, each with a priority (critical / important / nice) | anyone who disagrees with what is expected or how much it matters |
-| [acceptance-criteria/](acceptance-criteria/) | **How each expectation is judged**: what is checked, when it is met, partially met or not met, what the check cannot see, and why we expect it. One file per aspect | whoever changes a check, together with its rule in `src/dimensions/<aspect>.py` |
-| [references/](references/README.md) | **Why we expect it**: the published guidance (whitepapers, research reports, standards, specifications, engineering articles) that the criteria quote | whoever adds or replaces a reference |
+| [profiles/](profiles/) | **Which capabilities count for you**: on / off, priority, thresholds, your own capabilities. `standard.json` is the published baseline, `prototype.json` a relaxed example | anyone, in the **Capabilities** tab of the app (no file editing needed) |
+| [capabilities.md](capabilities.md) | **The catalog**: every capability, grouped by aspect, with its standard priority | whoever adds or rewords a scanner rule |
+| [acceptance-criteria/](acceptance-criteria/) | **How each capability is judged**: what is checked, when it is met, partially met or not met, what the check cannot see, and why we expect it. One file per aspect | whoever changes a rule in `src/dimensions/<aspect>.py`, in the same pull request |
+| [references/](references/README.md) | **Why we expect it**: published guidance (whitepapers, research reports, standards, specifications, engineering articles) that the criteria quote | whoever adds or replaces a reference |
 
-A changed text is applied to an existing run without re-scanning: `python sdlc.py render runs/<run-id>`.
-A changed rule in `src/dimensions/` takes effect at the next scan.
+In the app, **Apply to this run** re-judges the open run with a profile at once (on / off, priorities, your own
+capabilities). Changed thresholds take effect when the project is re-assessed, because the rules measure with them.
+From the command line: `python sdlc.py scan <target> --profile <name>` and `python sdlc.py render runs/<id> --profile <name>`.
 
-## Expectations
+## Thresholds in the texts
 
-```markdown
-## security                                          <- aspect
-- [sec.no_secrets] critical: No secrets are committed.   <- checked by the scanner rule with this id
-- [ ] important: Keys are rotated every quarter.        <- your own expectation, judged by a reviewer
-```
-
-- **critical**: without it the aspect is not healthy. Not met caps the aspect at 49, partially met at 74.
-- **important**: expected from a mature project. **nice**: a sign of high maturity.
-- Delete a line to drop an expectation. A project can bring its own list in `.sdlc360/expectations.md`.
+A rule with adjustable thresholds (for example the README length) quotes them in its acceptance criteria as
+`{target_words}`, `{target_words*0.85}` or `{max_root_files+1}`. The app and the report show the numbers of the
+profile in force, so the texts never disagree with the verdicts. The thresholds and their ranges are listed in
+`src/profiles.py → PARAMS`; a test fails when a rule or a text does not use one.
 
 ## Acceptance criteria
 
-One block per expectation. The heading repeats the expectation word for word (a test keeps the two in step).
+One block per capability. The heading repeats the capability word for word (a test keeps the two in step).
 
 ```markdown
 ## sec.no_secrets: No secrets are committed.
@@ -39,7 +36,7 @@ One block per expectation. The heading repeats the expectation word for word (a 
 
 **What the check cannot see.** Honest limits of the rule.
 
-**Known flaw.** Where the rule does not yet check what the expectation says. (optional; remove when fixed)
+**Known flaw.** Where the rule does not yet check what the capability says. (optional; remove when fixed)
 
 **Why we expect it.**
 
@@ -50,6 +47,6 @@ One block per expectation. The heading repeats the expectation word for word (a 
 
 - The citation line names the reference folder, the page or section, and how strong the support is:
   **direct** means the reference asks for this practice, **supporting** means it argues for the goal behind it.
-- An expectation without a published basis says so instead of quoting: `**Our convention.** why we expect it anyway.`
+- A capability without a published basis says so instead of quoting: `**Our convention.** why we expect it anyway.`
 - Tests fail when a check has no block, when a block has neither a quote nor a convention, or when a citation names a
   reference that is not in `references/`.

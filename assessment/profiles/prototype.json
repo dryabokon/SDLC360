@@ -1,0 +1,22 @@
+{
+  "name": "Prototype",
+  "description": "For early prototypes and experiments: safety and the basics stay strict, process and release rigour is relaxed. Google's New SDLC asks to make this boundary explicit (p. 45).",
+  "capabilities": {
+    "arch.adr": {"enabled": false},
+    "arch.boundaries": {"enabled": false},
+    "arch.fresh": {"priority": "nice"},
+    "doc.readme": {"params": {"target_words": 200}},
+    "doc.freshness": {"priority": "nice"},
+    "doc.standard_files": {"enabled": false},
+    "test.present": {"params": {"target": 3}},
+    "test.ratio": {"priority": "nice", "params": {"target_ratio": 0.2}},
+    "test.coverage": {"priority": "nice"},
+    "ci.cd": {"enabled": false},
+    "ci.hygiene": {"enabled": false},
+    "sec.policy": {"enabled": false},
+    "sec.codeowners": {"enabled": false},
+    "rep.provenance": {"enabled": false},
+    "cost.infra": {"enabled": false}
+  },
+  "custom": []
+}

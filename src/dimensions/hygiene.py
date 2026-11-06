@@ -88,17 +88,18 @@ def assess(repo: Repo):
         "Add PR and issue templates with checklists (tests, docs, changelog).",
     )
 
+    max_kb = repo.param("hyg.file_size", "max_kb")
     big = []
     for f in repo.source_files[:3000]:
         try:
             n = (repo.root / f).stat().st_size
         except OSError:
             continue
-        if n > 60_000:
+        if n > max_kb * 1000:
             big.append(f"{f} ({n // 1000} KB)")
     c.add(
         "hyg.file_size",
-        "No oversized source files (>60 KB)",
+        f"No oversized source files (>{max_kb:g} KB)",
         1,
         1 - min(1.0, len(big) / max(5, len(repo.source_files) * 0.05)),
         short(big, 4) if big else "none",

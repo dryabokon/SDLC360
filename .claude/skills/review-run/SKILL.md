@@ -1,6 +1,6 @@
 ---
 name: review-run
-description: Act as the SDLC360 reviewer, judging the checklist's own "- [ ]" expectations of a run and writing review.json with evidence. Use when a report shows "Awaiting review" items, or the user asks to review or verify an assessment.
+description: Act as the SDLC360 reviewer, judging the checklist's own "- [ ]" capabilities of a run and writing review.json with evidence. Use when a report shows "Awaiting review" items, or the user asks to review or verify an assessment.
 ---
 
 # Review a run
@@ -10,7 +10,7 @@ must work from evidence in the repository at the assessed commit.
 
 1. Open `runs/<id>/report.json`. Collect the checks with `status == "review"`; their ids look like
    `custom.<aspect>.<slug>`. Note `repo.head.sha` and `manifest.json → resolved_path`.
-2. For each expectation:
+2. For each capability:
    - Write down the acceptance criterion first ("met when ..."), then look for evidence in the repo at that commit:
      files, config, CI, git history.
    - Pick a verdict: `met`, `partial`, `unmet`, or `na` (does not apply to this project).

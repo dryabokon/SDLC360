@@ -12,6 +12,8 @@ ignore = ["E731", "SIM108", "B905"]
 [tool.ruff.lint.per-file-ignores]
 # detection vocabularies are long alternations; splitting them hurts readability
 "src/dimensions/*" = ["E501"]
+# test data (profile dicts) reads better on one line
+"tests/*" = ["E501"]
 
 [tool.ruff.format]
 quote-style = "double"

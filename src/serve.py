@@ -12,18 +12,22 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
+from . import profiles
+from .acceptance import method_for
+from .dimensions import DIMENSIONS
 from .render import render_app
 from .repo import check_target
-from .runner import DEFAULT_CACHE, DEFAULT_RUNS, RUN_ID_RE, list_projects, run_scan
+from .runner import DEFAULT_CACHE, DEFAULT_RUNS, RUN_ID_RE, list_projects, rerender, run_scan
 
 log = logging.getLogger("sdlc360")
 JOBS: dict[str, dict] = {}
 SCAN_LOCK = threading.Lock()  # one scan at a time: shared clone cache + CPU bound
 
 
-def _start_job(target: str, history: int, runs_dir: Path, cache_dir: Path) -> str:
+def _start_job(target: str, history: int, runs_dir: Path, cache_dir: Path, profile: str | None = None) -> str:
     jid = uuid.uuid4().hex[:12]
-    job: dict = {"id": jid, "target": target, "history": history, "status": "queued", "messages": [], "run_id": None, "error": None}
+    job: dict = {"id": jid, "target": target, "history": history, "profile": profile, "status": "queued", "messages": []}
+    job.update(run_id=None, error=None)
     JOBS[jid] = job
 
     def work() -> None:
@@ -31,7 +35,13 @@ def _start_job(target: str, history: int, runs_dir: Path, cache_dir: Path) -> st
             job["status"] = "running"
             try:
                 rd = run_scan(
-                    target, history_points=history, refresh=True, runs_dir=runs_dir, cache_dir=cache_dir, progress=lambda m: job["messages"].append(m)
+                    target,
+                    history_points=history,
+                    refresh=True,
+                    profile=profile,
+                    runs_dir=runs_dir,
+                    cache_dir=cache_dir,
+                    progress=lambda m: job["messages"].append(m),
                 )
                 job["run_id"], job["status"] = rd.name, "done"
             except Exception as e:
@@ -81,6 +91,19 @@ def browse(path: str | None, runs_dir: Path) -> dict:
         raise ValueError(f"No permission to read {p}") from e
     parent = str(p.parent) if p.parent != p else ""
     return {"path": str(p), "parent": parent, "git": (p / ".git").exists(), "dirs": dirs}
+
+
+def catalog(draft: dict | None = None) -> dict:
+    """The settings tab: catalog, thresholds and acceptance texts filled with the draft profile's thresholds."""
+    params = profiles.defaults()
+    if draft:
+        for cid, ov in profiles.validate(draft)["capabilities"].items():
+            if cid in params:
+                params[cid].update(ov.get("params", {}))
+    out = profiles.catalog_for_ui()
+    out["names"] = {d.id: d.name for d in DIMENSIONS}
+    out["methods"] = {c["id"]: method_for(c["id"], params.get(c["id"])) for its in out["aspects"].values() for c in its}
+    return out
 
 
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "[::1]"}
@@ -133,7 +156,14 @@ def make_handler(runs_dir: Path, cache_dir: Path):
                     return self._json(browse(q or None, runs_dir))
                 except ValueError as e:
                     return self._json({"error": str(e)}, 400)
+            if path == "/api/profiles":
+                return self._json(profiles.list_profiles())
             parts = path.split("/")
+            if len(parts) == 4 and parts[1:3] == ["api", "profiles"]:
+                try:
+                    return self._json(profiles.load(parts[3]))
+                except ValueError as e:
+                    return self._json({"error": str(e)}, 404)
             if len(parts) == 4 and parts[1:3] == ["api", "runs"] and RUN_ID_RE.match(parts[3]):
                 f = runs_dir / parts[3] / "report.json"
                 if f.exists():
@@ -150,21 +180,48 @@ def make_handler(runs_dir: Path, cache_dir: Path):
                 self._json({"status": "stopping"})
                 threading.Thread(target=self.server.shutdown, daemon=True).start()
                 return
-            if urlparse(self.path).path != "/api/scan":
-                return self._json({"error": "not found"}, 404)
+            path = urlparse(self.path).path
             try:
                 body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0) or 0)) or b"{}")
+            except ValueError:
+                return self._json({"error": "bad request"}, 400)
+            if not isinstance(body, dict):
+                return self._json({"error": "bad request"}, 400)
+            parts = path.split("/")
+            try:
+                if path == "/api/catalog":
+                    return self._json(catalog(body.get("profile") if isinstance(body.get("profile"), dict) else None))
+                if len(parts) == 4 and parts[1:3] == ["api", "profiles"]:  # save (create or replace)
+                    return self._json(profiles.save(parts[3], body))
+                if len(parts) == 5 and parts[1:3] == ["api", "profiles"] and parts[4] == "delete":
+                    profiles.delete(parts[3])
+                    return self._json({"deleted": parts[3]})
+                if len(parts) == 5 and parts[1:3] == ["api", "runs"] and parts[4] == "apply" and RUN_ID_RE.match(parts[3]):
+                    run = runs_dir / parts[3]
+                    if not (run / "report.json").is_file():
+                        return self._json({"error": "run not found"}, 404)
+                    profiles.load(str(body.get("profile", "")))  # raises on an unknown id
+                    rerender(run, profile=str(body["profile"]))
+                    return self._send(200, (run / "report.json").read_bytes(), "application/json; charset=utf-8")
+            except ValueError as e:
+                return self._json({"error": str(e)}, 400)
+            if path != "/api/scan":
+                return self._json({"error": "not found"}, 404)
+            try:
                 target = str(body.get("target", "")).strip()
                 history = max(0, min(24, int(body.get("history", 8))))
-            except (ValueError, TypeError):
-                return self._json({"error": "bad request"}, 400)
+                profile = str(body["profile"]) if body.get("profile") else None
+                if profile:
+                    profiles.load(profile)
+            except (ValueError, TypeError) as e:
+                return self._json({"error": str(e) or "bad request"}, 400)
             try:
                 info = check_target(target)
             except ValueError as e:
                 return self._json({"error": str(e)}, 400)
             if any(j["status"] in ("queued", "running") for j in JOBS.values()):
                 return self._json({"error": "Another scan is still running - wait for it to finish."}, 409)
-            self._json({"job": _start_job(target, history, runs_dir, cache_dir), "kind": info["kind"], "display": info["display"]}, 202)
+            self._json({"job": _start_job(target, history, runs_dir, cache_dir, profile), "kind": info["kind"], "display": info["display"]}, 202)
 
     return Handler
 

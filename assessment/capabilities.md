@@ -1,19 +1,20 @@
-# SDLC 360° — expectations checklist
+# SDLC 360° — capability catalog
 
-This file is the contract between people and the assessor. Each line is an **expectation** about the project.
+Every capability the assessment knows, grouped by aspect, with its **standard** priority. This is the published
+baseline (the Standard profile). To switch capabilities off, change priorities or thresholds, or add your own, use
+the **Capabilities** tab in the app: it saves a profile in [profiles/](profiles/), and this file stays unchanged.
 
-    - [check.id] priority: expectation text     -> evaluated automatically by the scanner check with that id
-    - [ ] priority: expectation text            -> your own expectation; judged by the reviewer agent
+    - [check.id] priority: capability text     -> judged by the scanner rule with that id
+    - [ ] priority: capability text            -> your own capability; judged by a reviewer
 
 Priorities:
 
-- `critical` — without it the aspect cannot be considered healthy. **Gate:** if not met, the aspect score is capped
-  at 49 (Weak); if partially met, at 74 (Needs work) — no matter what else passes.
-- `important` — expected from a mature project.
-- `nice` — a sign of high maturity; missing it is not a problem.
+- `critical`: without it the aspect cannot be considered healthy. **Gate:** if not met, the aspect score is capped
+  at 49 (Weak); if partially met, at 74 (Needs work), no matter what else passes.
+- `important`: expected from a mature project.
+- `nice`: a sign of high maturity; missing it is not a problem.
 
-Delete a line to drop an expectation. Override per project by committing `.sdlc360/expectations.md`
-to the assessed repository, or pass `--checklist <file>` to `python sdlc.py scan`.
+Edit this file when a scanner rule is added, removed or reworded (with its block in `acceptance-criteria/`).
 
 ## architecture
 - [arch.doc] critical: An architecture document describes components, data flow and boundaries.

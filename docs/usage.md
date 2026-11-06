@@ -22,9 +22,9 @@ Pick a project in the header, or enter a GitHub URL / `owner/repo` / choose a lo
 python sdlc.py scan https://github.com/encode/httpx --open   # or owner/repo, or D:/path/to/repo
 python sdlc.py scan . --no-history                           # quick: skip re-scoring past commits
 python sdlc.py scan owner/repo --history 8 --months 12       # Dynamics: 8 past commits over 12 months
-python sdlc.py scan owner/repo --checklist my-checklist.md   # another set of expectations
+python sdlc.py scan owner/repo --profile prototype          # another profile (assessment/profiles/)
 python sdlc.py list                                          # projects and their runs
-python sdlc.py render runs/<run-id>                          # re-apply checklist / acceptance / review.json, no re-scan
+python sdlc.py render runs/<run-id> --profile <name>         # re-apply a profile / acceptance / review.json, no re-scan
 python sdlc.py serve --port 8360 --open                      # the web app in the foreground
 ```
 
@@ -34,9 +34,9 @@ python sdlc.py serve --port 8360 --open                      # the web app in th
    place and never written to; for history a throw-away `git clone --shared` is used.
 2. **Run the scanner rules** of the ten aspects on the current commit. Each rule records a score 0–1, the evidence
    it found and a recommendation.
-3. **Apply the checklist** (`assessment/expectations.md`, or `.sdlc360/expectations.md` in the assessed repository):
-   which expectations count and their priority (`critical` / `important` / `nice`). An unmet critical expectation
-   caps its aspect at 49, a partially met one at 74.
+3. **Apply the profile** (`--profile`, default *Standard*; a repository may bring `.sdlc360/capabilities.md`):
+   which capabilities count, their priority (`critical` / `important` / `nice`) and the thresholds the rules use.
+   An unmet critical capability caps its aspect at 49, a partially met one at 74.
 4. **Dynamics**: re-score a sample of past commits and compute weekly velocity and test / doc discipline.
 5. **Write a run folder** and render a self-contained HTML report.
 
@@ -50,7 +50,7 @@ Every scan writes `runs/<UTC yyyymmdd-HHMMSS>_<name>/`:
 | `report.json` | raw scanner output (`auto_checks`) plus the final, checklist-applied scores |
 | `report.html` | the dashboard; opens offline |
 | `scan.log` | what was scanned and how long each aspect took |
-| `review.json` | optional reviewer verdicts for your own expectations ([format](reviewer-verdicts.md)) |
+| `review.json` | optional reviewer verdicts for your own capabilities ([format](reviewer-verdicts.md)) |
 
 To reproduce a run, execute its `manifest.json → reproduce` command with the tool at `manifest.json → tool.git_sha`.
 A failed scan still leaves a manifest with `"status": "failed"` and the error.
@@ -62,8 +62,8 @@ other repositories to have a `runs/` folder.
 
 | What | Where |
 |---|---|
-| Expectations and priorities | `assessment/expectations.md`, or `.sdlc360/expectations.md` committed in the assessed repository |
-| How each expectation is judged | `assessment/acceptance-criteria/` (texts) and `src/dimensions/<aspect>.py` (rules) |
+| Capabilities on / off, priorities, thresholds, your own capabilities | the **Capabilities** tab, saved as `assessment/profiles/<name>.json`; the catalog is `assessment/capabilities.md` |
+| How each capability is judged | `assessment/acceptance-criteria/` (texts) and `src/dimensions/<aspect>.py` (rules) |
 | Published basis | `assessment/references/` ([index](../assessment/references/README.md)); `python assessment/references/fetch.py` restores local copies |
 | Reviewer verdicts | `runs/<id>/review.json` ([format](reviewer-verdicts.md)) |
 | Secrets | `.env` (git-ignored, template `.env.example`) holds `GH_PAT` for maintainers only; scans need no secrets |

@@ -1,6 +1,6 @@
-# Code hygiene: how each expectation is judged
+# Code hygiene: how each capability is judged
 
-Expectations and their priorities are in [expectations.md](../expectations.md).
+Capabilities and their priorities are in [capabilities.md](../capabilities.md).
 How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## hyg.lint: A linter is configured.
@@ -80,7 +80,7 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## hyg.file_size: No oversized source files.
 
-**How we check.** On-disk size of the first 3000 source files (tests, vendor/, third_party/, docs/, examples/ and .github/ excluded). Files over 60,000 bytes are oversized. Score = 1 − min(1, oversized / D), where D = max(5, 5% of all source files).
+**How we check.** On-disk size of the first 3000 source files (tests, vendor/, third_party/, docs/, examples/ and .github/ excluded). Files over {max_kb} KB ({max_kb*1000} bytes) are oversized. Score = 1 − min(1, oversized / D), where D = max(5, 5% of all source files).
 
 - **Met:** Up to 100 source files: none oversized. Over 100: oversized files are at most 0.75% of source files.
 - **Partially met:** Up to 100 source files: 1–3 oversized. Over 100: more than 0.75% and at most 3.25%.
@@ -88,7 +88,7 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **What the check cannot see.** Generated or minified source (bundled `.js`, protobuf stubs) counts. Big non-source files (JSON, notebooks, markdown) and tests are ignored. A repo with no source files is Met.
 
-**Our convention.** Very large files hurt human review and overflow agent context budgets (see S04 on limited attention).
+**Our convention.** Very large files hurt human review and overflow agent context budgets (see anthropic-context-engineering on limited attention).
 
 ## hyg.editor: .editorconfig / .gitattributes keep formatting consistent.
 

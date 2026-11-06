@@ -13,7 +13,8 @@ flowchart LR
     Runner --> Scanner["src/scanner.py<br/>scan() + finalize()"]
     Runner --> History["src/history.py<br/>velocity, past-commit scores"]
     Scanner --> Dims["src/dimensions/*<br/>10 aspects of checks"]
-    Scanner --> Checklist["src/checklist.py<br/>assessment/expectations.md"]
+    Scanner --> Profiles["src/profiles.py<br/>assessment/profiles/*.json, thresholds"]
+    Profiles --> Checklist["src/checklist.py<br/>assessment/capabilities.md"]
     Scanner --> Acceptance["src/acceptance.py<br/>assessment/acceptance-criteria/*.md, assessment/references/"]
     Runner --> Render["src/render.py<br/>src/template.html"]
     Render --> Runs[("runs/&lt;id&gt;/")]
@@ -24,11 +25,12 @@ flowchart LR
 |---|---|---|
 | `repo.py` | Validate and resolve a target, then index files (`git ls-files` plus untracked files on disk) | The only module that runs git on the target. Read-only for local repos |
 | `dimensions/*` | Scanner rules: `assess(repo) -> [Check]` with score 0..1 or `None` (N/A), evidence and recommendation | Pure functions of `Repo`. No I/O besides reading |
-| `checklist.py` | Parse the expectations markdown: ids, priorities, custom items | No knowledge of scanners |
+| `checklist.py` | Parse the capability catalog: ids, standard priorities, custom items | No knowledge of scanners |
+| `profiles.py` | Profiles (overrides of the catalog) and `PARAMS`, the adjustable thresholds; validation on save | Writes only `assessment/profiles/<id>.json`; `standard` is read-only |
 | `scanner.py` | `scan()` runs all aspects and keeps raw `auto_checks`. `finalize()` applies checklist, review and the critical gate | `finalize()` is idempotent and needs no repo |
 | `history.py` | Weekly velocity, and re-scoring of sampled past commits in temporary worktrees or shared clones | Never writes into a user's `.git` |
 | `runner.py` | Orchestrates a scan and writes `manifest.json`, `report.json`, `report.html` and `scan.log` | Owns the run-folder contract |
-| `serve.py` | JSON API plus app page. One scan at a time. Read-only folder browser | Binds to 127.0.0.1 and rejects foreign `Host` / `Origin` |
+| `serve.py` | JSON API plus app page. One scan at a time. Read-only folder browser. Saves profiles, applies one to a run | Binds to 127.0.0.1 and rejects foreign `Host` / `Origin` |
 | `template.html` | The whole UI. Static mode embeds a report, app mode fetches from the API | Renders only; no scoring logic |
 
 ## Data flow of a scan
@@ -52,9 +54,9 @@ sequenceDiagram
 ## Scoring
 
 - A check's score `s ∈ [0, 1]` maps to a verdict: Met (s ≥ 0.85), Partially met (s ≥ 0.35), Not met, or N/A.
-- An aspect score is the priority-weighted mean of its applicable expectations (critical 5, important 3, nice 1),
+- An aspect score is the priority-weighted mean of its applicable capabilities (critical 5, important 3, nice 1),
   plus an optional reviewer adjustment of ±20.
-- **Critical gate**: an unmet critical expectation caps the aspect at 49; a partially met one caps it at 74.
+- **Critical gate**: an unmet critical capability caps the aspect at 49; a partially met one caps it at 74.
 - Overall = the unweighted mean of the aspects that apply (not N/A).
 
 The report keeps raw scanner output (`auto_checks`) separate from final `checks`. A changed checklist or a new

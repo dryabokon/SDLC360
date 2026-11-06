@@ -15,11 +15,11 @@ It answers questions like:
 
 ## What makes it trustworthy
 
-- **Every verdict shows its evidence.** For each expectation you see what we expected, what we found (file and line,
+- **Every verdict shows its evidence.** For each capability you see what we expected, what we found (file and line,
   linked to the exact commit), the verdict, how it was checked and what the check cannot see.
 - **No guessing, no LLM.** The checks are analytical rules over the files and git history of one commit. The same
   commit always gets the same verdicts, and every scan is kept as a reproducible run.
-- **Expectations are not our invention.** Each one cites published guidance verbatim: Google's *New SDLC* and DORA's
+- **Capabilities are not our invention.** Each one cites published guidance verbatim: Google's *New SDLC* and DORA's
   research on AI-assisted delivery, NIST's secure development framework, OWASP's agentic risks, OpenSSF Scorecard,
   Anthropic's agent guidance and the AGENTS.md and Agent Skills standards. The few that rest on our own judgement
   say so. See [the references](assessment/references/README.md).
@@ -43,8 +43,8 @@ Ten aspects, in the order a project is built: design, build, verify, deliver, op
 | CI/CD | Are pull requests gated, releases automated, workflows pinned, fast and bounded? |
 | Cost | Are LLM tokens and cloud spend tracked and capped? (not applicable when there are none) |
 
-Each aspect is a checklist of expectations with a priority: **critical**, **important** or **nice to have**.
-An unmet critical expectation caps its aspect at 49 out of 100, whatever else passes.
+Each aspect is a checklist of capabilities with a priority: **critical**, **important** or **nice to have**.
+An unmet critical capability caps its aspect at 49 out of 100, whatever else passes.
 
 ## Your journey
 
@@ -68,18 +68,18 @@ Local folders are only read, never changed.
 
 <details><summary><b>3 · Read the assessment</b></summary>
 
-The **Overview** shows all aspects at once. Each aspect tab is a checklist: ID, criticality, the expectation and
+The **Overview** shows all aspects at once. Each aspect tab is a checklist: ID, criticality, the capability and
 its status. Click a row to see what we expected, what we found, the verdict, how it was checked, its limits and the
 published basis for it.
 
-![An aspect: the checklist on the left, the selected expectation on the right](docs/images/aspect.png)
+![An aspect: the checklist on the left, the selected capability on the right](docs/images/aspect.png)
 </details>
 
 <details><summary><b>4 · Decide what to fix</b></summary>
 
-**Recommendations** lists every open expectation across all aspects, critical first, with what to do.
+**Recommendations** lists every open capability across all aspects, critical first, with what to do.
 
-![Recommendations: open expectations, critical first](docs/images/recommendations.png)
+![Recommendations: open capabilities, critical first](docs/images/recommendations.png)
 </details>
 
 <details><summary><b>5 · See how the project evolves</b></summary>
@@ -101,23 +101,24 @@ The tab **How it works** in the app explains the same on one page.
 
 ![How it works: components, where to change what, how scores are computed, sources](docs/images/how-it-works.png)
 
-| You want to change | Edit |
+| You want to change | Where |
 |---|---|
-| **What we expect** and how important it is | [`assessment/expectations.md`](assessment/expectations.md), or commit `.sdlc360/expectations.md` to the assessed repository |
-| **How an expectation is judged**: met / partially / not met, limits, basis | [`assessment/acceptance-criteria/`](assessment/acceptance-criteria/), one file per aspect |
-| **An expectation of your own** that no rule checks | add `- [ ] important: …` to the checklist; a reviewer records the verdict ([review.json](docs/reviewer-verdicts.md)) |
+| **Which capabilities count**, how important each is, and the thresholds (for example the README length or the test-to-code ratio) | the **Capabilities** tab: pick a profile (*Standard*, *Prototype*) or save your own |
+| **How a capability is judged**: met / partially / not met, limits, basis | [`assessment/acceptance-criteria/`](assessment/acceptance-criteria/), one file per aspect |
+| **A capability of your own** that no rule checks | **Capabilities** tab → *Add your own capability*, with when it is met; a reviewer records the verdict ([review.json](docs/reviewer-verdicts.md)) |
 | **Why we expect it** | [`assessment/references/`](assessment/references/README.md) |
 
-Everything a person edits sits in [`assessment/`](assessment/README.md), with a short guide to the format.
-A changed expectation or acceptance text is applied to an existing run without re-scanning:
-`python sdlc.py render runs/<run-id>`.
+Profiles are saved in [`assessment/profiles/`](assessment/profiles/); everything else that defines the assessment
+sits next to them in [`assessment/`](assessment/README.md). **Apply to this run** re-judges the open run at once;
+changed thresholds take effect at the next **Re-assess**. From the command line:
+`python sdlc.py scan <target> --profile prototype`, `python sdlc.py render runs/<run-id> --profile <name>`.
 
 ## How it works
 
 ```mermaid
 flowchart LR
     R["Repository<br/>GitHub or local folder"] -->|scan| S["Scanner<br/>10 aspects, analytical rules"]
-    E["Expectations<br/>assessment/expectations.md"] -->|what counts| S
+    E["Profile<br/>Capabilities tab"] -->|what counts, thresholds| S
     A["Acceptance criteria<br/>assessment/acceptance-criteria/"] -->|how it is judged| S
     Src["References<br/>assessment/references/"] -->|basis| A
     S --> Run["Run folder<br/>runs/&lt;id&gt;/"]

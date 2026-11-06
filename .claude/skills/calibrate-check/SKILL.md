@@ -1,6 +1,6 @@
 ---
 name: calibrate-check
-description: Fix a wrong SDLC360 verdict (false positive or false negative) or add a new check, with a regression test. Use when a report marks something Met or Not met incorrectly, or a new expectation needs a scanner rule.
+description: Fix a wrong SDLC360 verdict (false positive or false negative) or add a new check, with a regression test. Use when a report marks something Met or Not met incorrectly, or a new capability needs a scanner rule.
 ---
 
 # Calibrate or add a check
@@ -14,7 +14,7 @@ description: Fix a wrong SDLC360 verdict (false positive or false negative) or a
    - `assessment/acceptance-criteria/<NN-aspect>.md`: how it is checked, met / partially / not met, what the check
      cannot see, and under **Why we expect it** a verbatim quote from `assessment/references/` (or an
      **Our convention.** paragraph saying why we expect it anyway). Format: `assessment/README.md`;
-   - `assessment/expectations.md`: the expectation line with a priority (one or two `critical` items per aspect);
+   - `assessment/capabilities.md`: the capability line with a priority (one or two `critical` items per aspect);
    - `tests/unit/test_checklist.py::test_default_checklist_is_consistent` must stay green.
 5. **Check for collateral damage.** Run `pytest`, then re-scan one or two reference repositories from
    [docs/calibration.md](../../../docs/calibration.md) and compare verdicts with the previous run.

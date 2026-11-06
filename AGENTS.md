@@ -7,7 +7,7 @@ in `.claude/skills/<name>/SKILL.md`.
 ## What this is
 
 SDLC360 scans a git repository (GitHub or local) and assesses ten aspects of its engineering maturity against a
-markdown checklist of expectations. Output: a run folder in `runs/` with `report.html`. Stdlib-only Python 3.12.
+markdown checklist of capabilities. Output: a run folder in `runs/` with `report.html`. Stdlib-only Python 3.12.
 Read `README.md` first, then `docs/architecture.md`.
 
 ## Commands
@@ -21,10 +21,13 @@ Read `README.md` first, then `docs/architecture.md`.
 ## Layout
 
 - `sdlc.py`: CLI entry point; `src/cli.py` defines the commands.
-- `assessment/`: what people edit, format in `assessment/README.md`. `expectations.md` (what we expect, priority),
+- `assessment/`: defines the assessment, see `assessment/README.md`. `capabilities.md` (catalog, standard priority),
+  `profiles/<name>.json` (overrides edited in the Capabilities tab; `standard` is read-only),
   `acceptance-criteria/<NN-aspect>.md` (how each one is judged, quotes), `references/<name>/` (published basis).
+- `src/profiles.py`: profiles and `PARAMS`, the thresholds a profile may change. A rule reads them with
+  `repo.param(check_id, key)`, never a literal; its acceptance text quotes them as `{key}`.
 - `src/dimensions/<aspect>.py`: scanner rules. A check id (`sec.no_secrets`) must have a block in
-  `assessment/acceptance-criteria/` and usually a line in `assessment/expectations.md`. Quotes must be verbatim from
+  `assessment/acceptance-criteria/` and usually a line in `assessment/capabilities.md`. Quotes must be verbatim from
   `assessment/references/`.
 - `src/scanner.py`: `scan()` produces raw `auto_checks`; `finalize()` applies checklist, review and the critical gate.
   `finalize()` must stay idempotent: re-rendering a run never re-scans.

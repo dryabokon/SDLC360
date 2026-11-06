@@ -1,4 +1,4 @@
-"""Run all dimensions against a repo and build the report dict; apply the expectations checklist and an optional review."""
+"""Run all aspects against a repo and build the report dict; apply the capability list (profile) and an optional review."""
 
 from __future__ import annotations
 
@@ -10,9 +10,9 @@ from datetime import UTC, datetime
 from . import __version__
 from .acceptance import method_for
 from .checklist import CRITICAL_CAP, PRIORITY_WEIGHT, priority_from_weight
-from .checklist import resolve as resolve_checklist
 from .dimensions import DIMENSIONS
 from .model import band, grade
+from .profiles import resolve as resolve_checklist
 from .repo import Repo
 
 REVIEW_SCORES = {"met": 1.0, "partial": 0.5, "unmet": 0.0, "na": None}
@@ -28,6 +28,8 @@ def status_of(score: float | None, pending: bool = False) -> str:
 
 def scan(repo: Repo, only: list[str] | None = None, checklist: dict | None = None) -> dict:
     t0 = time.perf_counter()
+    checklist = checklist or resolve_checklist(repo.root)
+    repo.params = checklist.get("params") or {}
     dims = []
     for d in DIMENSIONS:
         if only and d.id not in only:
@@ -70,7 +72,8 @@ def scan(repo: Repo, only: list[str] | None = None, checklist: dict | None = Non
             "test_files": len(repo.test_files),
             "languages": dict(list(repo.languages.items())[:8]),
         },
-        "checklist": checklist or resolve_checklist(repo.root),
+        "checklist": checklist,
+        "scan_params": repo.params,  # thresholds the scanner rules used; a profile change needs a re-scan to alter them
         "dimensions": dims,
         "elapsed_s": round(time.perf_counter() - t0, 2),
     }
@@ -83,13 +86,13 @@ def _weighted(checks: list[dict]) -> float | None:
     return round(100 * sum(c["weight"] * c["score"] for c in scored) / total, 1) if total else None
 
 
-def apply_checklist(dim: dict, items: list[dict] | None, verdicts: dict) -> list[dict]:
+def apply_checklist(dim: dict, items: list[dict] | None, verdicts: dict, params: dict | None = None) -> list[dict]:
     raw = {c["id"]: c for c in dim.get("auto_checks", [])}
     if not items:  # dimension not in checklist: keep the scanner's own checks, derive a priority from their weight
         out = []
         for c in raw.values():
             prio = priority_from_weight(c["weight"])
-            out.append(dict(c, priority=prio, weight=PRIORITY_WEIGHT[prio], source="auto", method=method_for(c["id"])))
+            out.append(dict(c, priority=prio, weight=PRIORITY_WEIGHT[prio], source="auto", method=method_for(c["id"], (params or {}).get(c["id"]))))
         return out
     out = []
     for it in items:
@@ -109,8 +112,8 @@ def apply_checklist(dim: dict, items: list[dict] | None, verdicts: dict) -> list
                     "recommendation": v.get("recommendation", ""),
                     "source": "review",
                     "method": {
-                        "looks_at": "Your own expectation from the checklist, judged by the reviewer agent.",
-                        "met_when": v.get("criteria", "The reviewer records a verdict with evidence in review.json."),
+                        "looks_at": "Your own capability, judged by a reviewer (person or agent) who records the verdict in review.json.",
+                        "met_when": it.get("met_when") or v.get("criteria") or "The reviewer records a verdict with evidence.",
                     },
                 }
             )
@@ -124,14 +127,14 @@ def apply_checklist(dim: dict, items: list[dict] | None, verdicts: dict) -> list
                     weight=it["weight"],
                     status=status_of(c["score"]),
                     source="auto",
-                    method=method_for(c["id"]),
+                    method=method_for(c["id"], (params or {}).get(c["id"])),
                 )
             )
     return out
 
 
 def critical_cap(checks: list[dict]) -> tuple[float | None, list[str]]:
-    """The `critical` gate: lowest cap imposed by unmet / partially met critical expectations."""
+    """The `critical` gate: lowest cap imposed by unmet / partially met critical capabilities."""
     caps = [(CRITICAL_CAP[c["status"]], c["id"]) for c in checks if c.get("priority") == "critical" and c["status"] in CRITICAL_CAP]
     if not caps:
         return None, []
@@ -143,12 +146,14 @@ def finalize(report: dict, review: dict | None = None) -> dict:
     """(Re)compute checks and scores from raw scanner output + checklist + review. Idempotent."""
     review = review or report.get("review") or {}
     rdims = review.get("dimensions", {}) if isinstance(review, dict) else {}
-    verdicts = review.get("expectations", {}) if isinstance(review, dict) else {}
+    verdicts = (review.get("capabilities") or review.get("expectations") or {}) if isinstance(review, dict) else {}  # key before 0.4
     items = (report.get("checklist") or {}).get("items", {})
+    wanted, used = (report.get("checklist") or {}).get("params") or {}, report.get("scan_params") or {}
+    report["thresholds_changed"] = sorted(cid for cid in wanted if cid in used and wanted[cid] != used[cid])  # take effect at the next scan
     for d in report["dimensions"]:
         if "auto_checks" not in d:  # report@1 compatibility
             d["auto_checks"] = d.pop("checks")
-        d["checks"] = apply_checklist(d, items.get(d["id"]), verdicts)
+        d["checks"] = apply_checklist(d, items.get(d["id"]), verdicts, report.get("scan_params"))
         auto = _weighted([c for c in d["checks"] if c["source"] == "auto"])
         base = _weighted(d["checks"])
         r = rdims.get(d["id"], {})
@@ -170,7 +175,7 @@ def finalize(report: dict, review: dict | None = None) -> dict:
 
 
 def top_actions(report: dict, n: int = 10) -> list[dict]:
-    """Rank unmet expectations by recoverable points weighted by how weak their dimension is."""
+    """Rank unmet capabilities by recoverable points weighted by how weak their dimension is."""
     acts = []
     for d in report["dimensions"]:
         checks = [c for c in d["checks"] if c["score"] is not None]

@@ -28,7 +28,7 @@ def assess(repo: Repo):
         "arch.diagrams",
         "Diagrams as code (Mermaid / PlantUML / C4 / draw.io)",
         2,
-        min(1.0, total / 2),
+        min(1.0, total / repo.param("arch.diagrams", "target")),
         [f"markdown with diagrams: {short(mermaid, 3)}", f"diagram files: {short(diagram_files, 3)}"],
         "Add a Mermaid/C4 context + container diagram in the architecture doc so it renders on GitHub and diffs in PRs.",
     )
@@ -39,14 +39,15 @@ def assess(repo: Repo):
         "arch.adr",
         "Design decision records",
         2,
-        min(1.0, len(adrs) / 3),
+        min(1.0, len(adrs) / repo.param("arch.adr", "target")),
         f"{len(adrs)} decision records in {short(adr_dirs, 2)}" if adrs else "no design-decisions folder",
         "Record significant design decisions, one file each (docs/design-decisions/NN-title.md: context, decision, consequences).",
     )
 
     top = sorted({f.split("/")[0] for f in repo.source_files if "/" in f})
     root_src = [f for f in repo.source_files if "/" not in f]
-    organized: float | None = 1.0 if (top and len(root_src) <= 5) else (0.6 if len(root_src) <= 15 else 0.3)
+    max_root = repo.param("arch.structure", "max_root_files")
+    organized: float | None = 1.0 if (top and len(root_src) <= max_root) else (0.6 if len(root_src) <= 3 * max_root else 0.3)
     if not repo.source_files:
         organized = None
     c.add(
@@ -69,13 +70,20 @@ def assess(repo: Repo):
         "arch.boundaries",
         "Module boundaries are explicit / enforced",
         1,
-        min(1.0, 0.5 * len(boundaries) + (0.5 if archunit else 0)) if len(repo.source_files) > 50 else None,
+        min(1.0, 0.5 * len(boundaries) + (0.5 if archunit else 0))
+        if len(repo.source_files) > repo.param("arch.boundaries", "min_source_files")
+        else None,
         short(boundaries) if boundaries else "no workspace/boundary tooling",
         "Enforce layering with import-linter / dependency-cruiser / ArchUnit, or a workspace tool.",
     )
 
     if arch:
-        fs, msg = freshness_score(repo.last_modified(arch), repo.last_modified(repo.source_files[:2000]))
+        fs, msg = freshness_score(
+            repo.last_modified(arch),
+            repo.last_modified(repo.source_files[:2000]),
+            repo.param("arch.fresh", "grace_days"),
+            repo.param("arch.fresh", "max_lag_days"),
+        )
         c.add(
             "arch.fresh",
             "Architecture doc maintained with the code",

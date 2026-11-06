@@ -22,6 +22,7 @@ def cmd_scan(a: argparse.Namespace) -> int:
         history_months=a.months,
         refresh=a.refresh,
         checklist=a.checklist,
+        profile=a.profile,
         runs_dir=Path(a.runs_dir),
         cache_dir=Path(a.cache_dir),
     )
@@ -32,7 +33,7 @@ def cmd_scan(a: argparse.Namespace) -> int:
 
 
 def cmd_render(a: argparse.Namespace) -> int:
-    html = rerender(Path(a.run_dir), Path(a.review) if a.review else None, a.checklist)
+    html = rerender(Path(a.run_dir), Path(a.review) if a.review else None, a.checklist, a.profile)
     print(str(html))
     if a.open:
         webbrowser.open(html.resolve().as_uri())
@@ -77,7 +78,8 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--history", type=int, default=8, help="historical commits to re-score for the Dynamics view (default 8)")
     s.add_argument("--months", type=int, default=12, help="history window in months (default 12)")
     s.add_argument("--no-history", action="store_true", help="skip historical re-scoring")
-    s.add_argument("--checklist", help="expectations markdown (default: repo .sdlc360/expectations.md, else assessment/expectations.md)")
+    s.add_argument("--profile", help="profile id from assessment/profiles/ (default: the repo's .sdlc360/capabilities.md, else standard)")
+    s.add_argument("--checklist", help="a capabilities markdown file instead of a profile")
     s.add_argument("--refresh", action="store_true", help="git fetch a cached clone before scanning")
     s.add_argument("--open", action="store_true", help="open the HTML report when done")
     s.set_defaults(func=cmd_scan)
@@ -85,7 +87,8 @@ def main(argv: list[str] | None = None) -> int:
     r = sub.add_parser("render", help="re-render a run (merging review.json if present)")
     r.add_argument("run_dir")
     r.add_argument("--review", help="path to review JSON (default: <run_dir>/review.json)")
-    r.add_argument("--checklist", help="re-apply a different expectations checklist")
+    r.add_argument("--profile", help="re-apply another profile (thresholds need a re-scan)")
+    r.add_argument("--checklist", help="re-apply a capabilities markdown file")
     r.add_argument("--open", action="store_true")
     r.set_defaults(func=cmd_render)
 

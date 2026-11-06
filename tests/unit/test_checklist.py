@@ -1,7 +1,8 @@
 from pathlib import Path
 
 from src.acceptance import criteria, references
-from src.checklist import DEFAULT_CHECKLIST, PRIORITY_WEIGHT, parse, priority_from_weight, resolve
+from src.checklist import CATALOG, PRIORITY_WEIGHT, parse, priority_from_weight
+from src.profiles import resolve
 
 SAMPLE = """
 # title
@@ -31,19 +32,20 @@ def test_priority_from_weight():
     assert [priority_from_weight(w) for w in (5, 4, 3, 2, 1, 0.5)] == ["critical", "critical", "important", "important", "nice", "nice"]
 
 
-def test_resolve_prefers_explicit_then_repo_file_then_default(tmp_path: Path):
-    assert resolve(tmp_path)["origin"] == "default"
+def test_resolve_prefers_explicit_then_profile_then_repo_file_then_standard(tmp_path: Path):
+    assert resolve(tmp_path)["profile"]["id"] == "standard"
     (tmp_path / ".sdlc360").mkdir()
-    (tmp_path / ".sdlc360" / "expectations.md").write_text("## docs\n- [doc.readme] critical: README\n", encoding="utf-8")
+    (tmp_path / ".sdlc360" / "expectations.md").write_text("## docs\n- [doc.readme] critical: README\n", encoding="utf-8")  # name before 0.4
     assert resolve(tmp_path)["origin"] == "repository"
+    assert resolve(tmp_path, profile="prototype")["profile"]["id"] == "prototype"
     explicit = tmp_path / "mine.md"
     explicit.write_text("## docs\n", encoding="utf-8")
     assert resolve(tmp_path, explicit)["origin"] == "explicit"
 
 
 def test_default_checklist_is_consistent():
-    """Every expectation in the bundled checklist names a documented check, once, with 1-2 critical items per aspect."""
-    items = parse(DEFAULT_CHECKLIST.read_text(encoding="utf-8"))
+    """Every capability in the bundled checklist names a documented check, once, with 1-2 critical items per aspect."""
+    items = parse(CATALOG.read_text(encoding="utf-8"))
     ids = [i["id"] for its in items.values() for i in its]
     assert len(ids) == len(set(ids))
     acc = criteria()
@@ -65,7 +67,7 @@ def test_acceptance_blocks_are_complete_and_justified():
 
 
 def test_acceptance_has_no_orphans():
-    items = parse(DEFAULT_CHECKLIST.read_text(encoding="utf-8"))
+    items = parse(CATALOG.read_text(encoding="utf-8"))
     ids = {i["id"] for its in items.values() for i in its}
     assert not set(criteria()) - ids, "acceptance blocks for checks that are not in the checklist"
 
@@ -76,12 +78,12 @@ def test_sources_have_metadata():
             assert meta.get(key), f"{sid}: missing {key}"
 
 
-def test_acceptance_headings_repeat_the_expectation_text():
-    """The heading of each acceptance block is the expectation as written in expectations.md, so the two never drift."""
-    items = parse(DEFAULT_CHECKLIST.read_text(encoding="utf-8"))
+def test_acceptance_headings_repeat_the_capability_text():
+    """The heading of each acceptance block is the capability as written in capabilities.md, so the two never drift."""
+    items = parse(CATALOG.read_text(encoding="utf-8"))
     text = {i["id"]: i["text"] for its in items.values() for i in its}
     acc = criteria()
-    assert not [cid for cid in acc if acc[cid]["expectation"] != text.get(cid)], "edit both files when you reword an expectation"
+    assert not [cid for cid in acc if acc[cid]["capability"] != text.get(cid)], "edit both files when you reword a capability"
 
 
 def test_reference_ids_are_their_folder_names():

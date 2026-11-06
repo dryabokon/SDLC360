@@ -21,7 +21,7 @@ Scores below are from 2026-11-06 with the default checklist and history 6.
 | Textualize/rich | 50.8 | same |
 
 No repository is green on every aspect. Skills and cost tracking matter mostly for agentic projects, so libraries
-score lower there. The `runs/` folder expectation was removed from the default checklist on 2026-11-06: it is a
+score lower there. The `runs/` folder capability was removed from the default checklist on 2026-11-06: it is a
 team convention, and reproducibility is now judged by lockfiles, pinned toolchains, entry points and provenance.
 
 ## False positives fixed during calibration

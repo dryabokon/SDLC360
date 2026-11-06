@@ -1,15 +1,15 @@
-# Documentation: how each expectation is judged
+# Documentation: how each capability is judged
 
-Expectations and their priorities are in [expectations.md](../expectations.md).
+Capabilities and their priorities are in [capabilities.md](../capabilities.md).
 How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## doc.readme: The README explains what the project is and how to start.
 
 **How we check.** Root-level files matching `README*` (any case or extension). If there are several, it takes the first in sorted order. It counts word tokens (`\w+` runs, so code and URLs count too).
 
-- **Met:** A root README with at least 340 words (words/400 >= 0.85).
-- **Partially met:** A root README with 140 to 339 words.
-- **Not met:** No root README, or one with fewer than 140 words.
+- **Met:** A root README with at least {target_words*0.85} words (85% of the target of {target_words}).
+- **Partially met:** A root README with at least {target_words*0.35} words.
+- **Not met:** No root README, or one with fewer than {target_words*0.35} words.
 
 **What the check cannot see.** Only length is measured. Pasted logs, badges, licence text or code blocks raise the count. A README in a subfolder is ignored. A translated `README.ja.md` sorts before `README.md` and can be the one measured.
 
@@ -51,9 +51,9 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **How we check.** The newest commit touching the root README or any docs page (as found by doc.docs_dir) is compared with the newest commit touching the first 2,000 source files.
 
-- **Met:** Docs were last changed no more than about 80 days before the code (full score up to 30 days, then a linear fade to 0 at 365 days).
-- **Partially met:** Docs lag the code by about 81 to 248 days. Also when either date is unknown (for example no source files or no history), which scores 0.5.
-- **Not met:** Docs lag the code by more than about 248 days, or there is no README and no docs page.
+- **Met:** Docs were last changed no more than about {met_days} days before the code (full score up to {grace_days} days, then a linear fade to 0 at {max_lag_days} days).
+- **Partially met:** Docs lag the code by about {met_days+1} to {partial_days} days. Also when either date is unknown (for example no source files or no history), which scores 0.5.
+- **Not met:** Docs lag the code by more than about {partial_days} days, or there is no README and no docs page.
 
 **What the check cannot see.** Only the single newest doc touch counts, so a typo fix anywhere resets the clock. It does not check that docs changed in the same commits or PRs as the code they describe.
 
@@ -71,9 +71,9 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **How we check.** It counts `.md`, `.mdx`, `.rst` and `.adoc` files at any depth under the root `docs/`, `doc/`, `documentation/` or `website/docs/`.
 
-- **Met:** 3 or more pages.
-- **Partially met:** Exactly 2 pages.
-- **Not met:** 0 or 1 page (1/3 = 0.33).
+- **Met:** {target*0.85} or more pages (target: {target}).
+- **Partially met:** {target*0.35} or more pages.
+- **Not met:** Fewer.
 
 **What the check cannot see.** Only the count matters, so empty stubs and ADRs count. Docs in nested packages, other folder names, wikis or external sites are not seen.
 
@@ -101,9 +101,9 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **How we check.** If there is any Python source, it takes up to 400 `.py` source files. It counts `def` and `class` headers with a non-underscore name whose `:` ends the line, then checks whether the next line opens a `"""` or `'''` docstring. Without Python, it takes up to 400 `.ts`, `.tsx`, `.js`, `.go`, `.rs`, `.java`, `.cs` or `.kt` files. A file counts if it contains `/**`, a `///` line or `// Capitalword `.
 
-- **Met:** Python: at least 51% of the counted definitions have docstrings. Other languages: at least 42.5% of files have a doc comment.
-- **Partially met:** Python: 21% to 50%. Other languages: 17.5% to 42.4%.
-- **Not met:** Python below 21%. Other languages below 17.5%.
+- **Met:** Python: at least {target_share*0.85}% of the counted definitions have docstrings (target: {target_share}%). Other languages: at least 42.5% of files have a doc comment.
+- **Partially met:** Python: at least {target_share*0.35}%. Other languages: 17.5% to 42.4%.
+- **Not met:** Python below {target_share*0.35}%. Other languages below 17.5%.
 - **Not applicable:** Python source exists but no definition header matched. If the repo has neither Python nor the listed languages, the check is not produced and drops out of the report.
 
 **What the check cannot see.** Multi-line signatures (common after black or ruff format), one-line defs and headers with trailing comments are skipped entirely. Prefixed docstrings (`r"""`) are missed. Any comment starting `// TODO ` counts as a doc comment. `.jsx`, `.rb`, `.php` and C/C++ are never examined.

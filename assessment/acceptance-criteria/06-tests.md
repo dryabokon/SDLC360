@@ -1,15 +1,15 @@
-# Tests: how each expectation is judged
+# Tests: how each capability is judged
 
-Expectations and their priorities are in [expectations.md](../expectations.md).
+Capabilities and their priorities are in [capabilities.md](../capabilities.md).
 How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## test.present: The project has an automated test suite.
 
 **How we check.** Tracked source-extension files under a `test/`, `tests/`, `__tests__/`, `spec/`, `specs/`, `e2e/` or `integration_test(s)/` folder, or named `test_*`, `*_test.*`, `*.test.*`, `*.spec.*` or `*test(s).cs/java/kt`. It counts files.
 
-- **Met:** 5 or more test files.
-- **Partially met:** 2 to 4 test files.
-- **Not met:** 0 or 1 test file.
+- **Met:** {target*0.85} or more test files (target: {target}).
+- **Partially met:** {target*0.35} or more test files.
+- **Not met:** Fewer.
 
 **What the check cannot see.** It counts files, not tests: `conftest.py`, helpers, fixtures and empty files count. Vendored tests count. Names such as `latest.java` or `contest.cs` count as tests. Whether the tests run or pass is not checked.
 
@@ -57,9 +57,9 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **How we check.** The number of test files (as in test.present) divided by the number of source files.
 
-- **Met:** A ratio of 0.34 or more (ratio/0.4 >= 0.85).
-- **Partially met:** A ratio of 0.14 to 0.33.
-- **Not met:** A ratio below 0.14.
+- **Met:** A ratio of {target_ratio*0.85} or more (85% of the target ratio {target_ratio}).
+- **Partially met:** A ratio of {target_ratio*0.35} or more.
+- **Not met:** A ratio below {target_ratio*0.35}.
 - **Not applicable:** No source files.
 
 **What the check cannot see.** It counts files, not lines or tests. Vendored tests inflate the ratio. Shell scripts count as source. One large test file per many modules looks weak even if coverage is high.

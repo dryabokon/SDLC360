@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import re
@@ -11,8 +12,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from . import __version__
-from .checklist import resolve as resolve_checklist
 from .history import score_history, velocity
+from .profiles import STANDARD, defaults
+from .profiles import checklist as profile_checklist
+from .profiles import resolve as resolve_checklist
 from .render import render_html
 from .repo import Repo, resolve_target, run_git
 from .scanner import finalize, scan
@@ -54,6 +57,7 @@ def run_scan(
     history_months: int = 12,
     refresh: bool = False,
     checklist: str | None = None,
+    profile: str | None = None,
     runs_dir: Path = DEFAULT_RUNS,
     cache_dir: Path = DEFAULT_CACHE,
     progress: Callable[[str], None] | None = None,
@@ -72,15 +76,15 @@ def run_scan(
         log.info("scanning %s (%s) -> %s", source, root, run_dir)
         say("scanning HEAD")
         repo = Repo(root, source)
-        cl = resolve_checklist(root, checklist)
-        log.info("checklist: %s (%s)", cl["path"], cl["origin"])
+        cl = resolve_checklist(root, checklist, profile)
+        log.info("capabilities: %s (%s)", cl["path"], (cl.get("profile") or {}).get("name", cl["origin"]))
         report = scan(repo, only=only, checklist=cl)
         for d in report["dimensions"]:
             log.info("  %-24s %6s  %s  (%.2fs)", d["name"], d["score"], d["grade"], d["elapsed_s"])
         say("computing velocity")
         hist = {"velocity": velocity(repo), "scores": []}
         if history_points > 1 and repo.is_git:
-            pts = score_history(repo, lambda r: scan(r, only=only), history_points, history_months, say)
+            pts = score_history(repo, lambda r: scan(r, only=only, checklist=cl), history_points, history_months, say)
             pts.append(
                 {
                     "sha": repo.head.get("sha"),
@@ -102,13 +106,21 @@ def run_scan(
             "resolved_path": str(root),
             "source": source,
             "target_head": repo.head,
-            "options": {"only": only, "history_points": history_points, "history_months": history_months, "checklist": cl["path"]},
+            "options": {
+                "only": only,
+                "history_points": history_points,
+                "history_months": history_months,
+                "checklist": cl["path"],
+                "profile": (cl.get("profile") or {}).get("id"),
+            },
             "tool": self_version(),
             "python": sys.version.split()[0],
             "started_at": started.isoformat(timespec="seconds"),
             "finished_at": datetime.now(UTC).isoformat(timespec="seconds"),
             "outputs": ["manifest.json", "report.json", "report.html", "scan.log"],
-            "reproduce": f"python sdlc.py scan {target}" + (f" --ref {repo.head['sha']}" if repo.head.get("sha") else ""),
+            "reproduce": f"python sdlc.py scan {target}"
+            + (f" --ref {repo.head['sha']}" if repo.head.get("sha") else "")
+            + (f" --profile {cl['profile']['id']}" if cl.get("profile") else ""),
         }
         (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
         write_outputs(run_dir, report)
@@ -134,10 +146,21 @@ def run_scan(
         fh.close()
 
 
-def rerender(run_dir: Path, review_path: Path | None = None, checklist: str | None = None) -> Path:
+def rerender(run_dir: Path, review_path: Path | None = None, checklist: str | None = None, profile: str | None = None) -> Path:
+    """Re-apply capabilities (profile), acceptance texts and review.json to a run, without re-scanning."""
     report = json.loads((run_dir / "report.json").read_text(encoding="utf-8"))
-    if checklist or (report.get("checklist") or {}).get("origin", "default") in ("default", "explicit", "none"):  # pick up edits to the default file
-        report["checklist"] = resolve_checklist(Path(report["repo"]["source"]) if Path(report["repo"]["source"]).is_dir() else None, checklist)
+    report.setdefault("scan_params", defaults())  # runs before 0.4 used the standard thresholds
+    old = report.get("checklist") or {}
+    src = Path(report["repo"]["source"])
+    if checklist or profile:
+        report["checklist"] = resolve_checklist(src if src.is_dir() else None, checklist, profile)
+    elif old.get("origin") == "profile":  # pick up edits to the same profile
+        with contextlib.suppress(ValueError):  # a profile deleted since: keep the snapshot
+            report["checklist"] = profile_checklist(old["profile"]["id"])
+    elif old.get("origin", "default") in ("default", "none"):  # runs before 0.4
+        report["checklist"] = profile_checklist(STANDARD)
+    elif old.get("origin") == "explicit" and old.get("path") and Path(old["path"]).is_file():
+        report["checklist"] = resolve_checklist(None, old["path"])
     rp = review_path or run_dir / "review.json"
     review = json.loads(rp.read_text(encoding="utf-8")) if rp.exists() else None
     return write_outputs(run_dir, finalize(report, review))
@@ -172,6 +195,7 @@ def list_projects(runs_dir: Path = DEFAULT_RUNS) -> list[dict]:
                 "score": rep["overall"]["score"],
                 "grade": rep["overall"]["grade"],
                 "reviewed": bool(rep.get("review")),
+                "profile": ((rep.get("checklist") or {}).get("profile") or {}).get("id"),
             }
         )
     return sorted(projects.values(), key=lambda p: p["runs"][0]["generated_at"], reverse=True)

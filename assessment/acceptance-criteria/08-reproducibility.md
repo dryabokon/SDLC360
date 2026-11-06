@@ -1,6 +1,6 @@
-# Reproducibility: how each expectation is judged
+# Reproducibility: how each capability is judged
 
-Expectations and their priorities are in [expectations.md](../expectations.md).
+Capabilities and their priorities are in [capabilities.md](../capabilities.md).
 How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## rep.lockfile: Dependencies are locked to exact versions.

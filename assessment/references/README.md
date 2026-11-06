@@ -1,8 +1,8 @@
 # References
 
-Published guidance that the SDLC360 expectations are built on: whitepapers, research reports, standards,
+Published guidance that the SDLC360 capabilities are built on: whitepapers, research reports, standards,
 specifications and engineering articles. The acceptance criteria in [../acceptance-criteria/](../acceptance-criteria/)
-quote them verbatim under **Why we expect it**, or say **Our convention** when an expectation is our own judgement.
+quote them verbatim under **Why we expect it**, or say **Our convention** when a capability is our own judgement.
 
 | Reference | Title | Publisher | Published | Licence | Stored | Quoted |
 |---|---|---|---|---|---|---|
@@ -20,13 +20,13 @@ quote them verbatim under **Why we expect it**, or say **Our convention** when a
 | [openssf-scorecard](openssf-scorecard/) | OpenSSF Scorecard: check documentation | OpenSSF | living document (main branch) | Apache-2.0 | in git | 12 |
 | [google-ml-test-score](google-ml-test-score/) | The ML Test Score: A Rubric for ML Production Readiness and Technical Debt Reduction | Google; IEEE Big Data 2017 | 2017 | © 2017 IEEE, personal use only | fetch.py → local/ | 3 |
 
-57 of 71 expectations are backed by at least one reference; 14 are our conventions:
+57 of 71 capabilities are backed by at least one reference; 14 are our conventions:
 `arch.fresh`, `doc.readme_sections`, `doc.links`, `doc.docs_dir`, `doc.inline`, `hyg.file_size`, `hyg.editor`, `hyg.templates`, `test.framework`, `sec.gitignore`, `ci.stages`, `cost.infra`, `cost.ci`, `cost.documented`.
 
 ## What is in a folder
 
 `README.md` is the card: metadata in the frontmatter (title, publisher, authors, dates, licence, URL, files with
-SHA-256), the key points, and which expectations quote it. Next to it lies the original, if its licence allows.
+SHA-256), the key points, and which capabilities quote it. Next to it lies the original, if its licence allows.
 
 - **In git**: originals whose licence allows redistribution and that are small (NIST public domain, OWASP CC BY-SA,
   OpenSSF / AGENTS.md / Agent Skills under Apache-2.0 or MIT).
@@ -39,7 +39,7 @@ SHA-256), the key points, and which expectations quote it. Next to it lies the o
 Retrieved 2026-11-06. To add a reference: create `<publisher-topic>/README.md` with the same frontmatter (`id` is the
 folder name), then quote it in an acceptance criteria file as shown in [../README.md](../README.md#acceptance-criteria).
 
-## Candidate expectations proposed by the sources (not adopted yet)
+## Candidate capabilities proposed by the sources (not adopted yet)
 
 Practices the sources ask for that the checklist does not cover yet. Each needs a decision and an analytical rule
 before it is added.
@@ -90,5 +90,5 @@ before it is added.
 - openssf-scorecard · Vulnerabilities · "An open vulnerability is readily exploited by attackers and should be fixed as soon as possible." → Locked dependencies have no known open vulnerabilities (e.g. osv-scanner is clean, or ignores are justified in osv-scanner.toml).
 - openssf-scorecard · SBOM · "An SBOM can give users information about what dependencies your project has which allows them to identify vulnerabilities in the software supply chain." → An SBOM is produced in CI and attached to releases.
 - google-ml-test-score · Infra 4, p.5 · "Model quality is validated before attempting to serve it" → ML repos gate model promotion on an automated evaluation step with explicit quality thresholds.
-- google-ml-test-score · Data 1, p.2 · "Feature expectations are captured in a schema" → ML or data repos define a data schema or validation (e.g. pandera, Great Expectations, TFDV) that is checked automatically.
+- google-ml-test-score · Data 1, p.2 · "Feature capabilities are captured in a schema" → ML or data repos define a data schema or validation (e.g. pandera, Great Capabilities, TFDV) that is checked automatically.
 - google-ml-test-score · Infra 2, p.4 · "a simple unit test to generate random input data, and train the model for a single step of gradient descent is quite powerful" → Training code has a fast smoke test (one training step on random data) that runs in CI.

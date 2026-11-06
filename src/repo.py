@@ -162,6 +162,14 @@ class Repo:
         self.root = root
         self.source = source or str(root)
         self.is_git = (root / ".git").exists()
+        self.params: dict[str, dict] = {}  # thresholds in force (profiles.PARAMS), set by scanner.scan()
+
+    def param(self, check_id: str, key: str) -> float:
+        from .profiles import PARAMS  # late import: profiles -> checklist only, keeps repo.py free of cycles
+
+        if key in self.params.get(check_id, {}):
+            return float(self.params[check_id][key])
+        return float(next(p.default for p in PARAMS[check_id] if p.key == key))
 
     # ---------- file index ----------
     @cached_property

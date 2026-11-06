@@ -1,0 +1,6 @@
+{
+  "name": "Standard",
+  "description": "The published baseline: every capability of the catalog with its standard priority and thresholds. Read-only; save a copy to change it.",
+  "capabilities": {},
+  "custom": []
+}

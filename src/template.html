@@ -218,6 +218,28 @@ svg text{fill:var(--ink-2);font-size:12px}svg .tick{fill:var(--faint);font-size:
 #tip{position:fixed;pointer-events:none;z-index:30;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:8px;
   padding:7px 9px;font-size:12px;box-shadow:0 6px 24px rgba(0,0,0,.18);opacity:0;transition:opacity .08s;max-width:280px}
 #tip .row{display:flex;justify-content:space-between;gap:14px;color:var(--muted)}#tip .row b{color:var(--text)}
+/* capabilities (profiles) */
+.capbar{flex-direction:row;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px}
+.capdesc{flex:1;min-width:220px;font-size:12px}
+.fld{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}.fld>span{white-space:nowrap}
+select,.txt{height:30px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);padding:0 8px;font:inherit}
+textarea.txt{height:auto;min-height:52px;padding:6px 8px;resize:vertical}
+select:focus,.txt:focus,.prm input:focus{outline:2px solid var(--series-1);outline-offset:-1px}
+.capdesc .txt{width:100%}
+#cap-msg{font-size:12px}#cap-msg.err,.err{color:var(--bad-text)}
+.captab select{height:26px;font-size:12px;padding:0 4px;width:100%}
+.captab tr.off td{color:var(--faint)}.captab tr.off td:nth-child(3){text-decoration:line-through}
+.captab input[type=checkbox]{width:15px;height:15px;accent-color:var(--series-1);cursor:pointer}
+.chg{display:inline-block;min-width:16px;padding:0 5px;border-radius:8px;background:var(--series-1);color:#fff;font-size:10.5px;font-weight:600;text-align:center;line-height:16px}
+.cid .chg{background:none;color:var(--series-1);padding:0;min-width:0;font-size:14px}
+.prms{display:grid;gap:8px;margin:2px 0 10px;padding:10px;background:var(--fill);border-radius:8px}
+.prm{display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:4px 10px;color:var(--ink-2)}
+.prm input{height:28px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--text);padding:0 6px;font:inherit;text-align:right}
+.prm em{grid-column:1/-1;font-style:normal;font-size:11px;color:var(--faint);margin-top:-2px}
+.own{display:grid;grid-template-columns:minmax(0,1fr) 130px 30px;gap:6px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.own textarea{grid-column:1/-1}
+#cap-add{margin-top:8px}
+.add form select{height:32px;max-width:150px}
 .hidden{display:none!important}
 @media (max-width:1100px){.dimgrid{grid-template-columns:1fr}.detail{position:static;max-height:none}.ov{grid-template-columns:1fr 1fr}.ov>.card:last-child{grid-column:1/-1}.fill,.dyn{height:auto}
   .ov>.card,.dyn>.card{min-height:380px}.dyn{grid-template-columns:1fr;grid-template-rows:none}.cols2{grid-template-columns:1fr}}
@@ -243,18 +265,19 @@ svg text{fill:var(--ink-2);font-size:12px}svg .tick{fill:var(--faint);font-size:
       <div class="add"><h3>Assess a project</h3>
         <form id="add-form"><input id="target" placeholder="https://github.com/owner/repo   or   D:\path\to\git-folder" autocomplete="off" spellcheck="false">
           <button class="icon-btn" type="button" id="browse-btn" title="Choose a local folder">Browse…</button>
+          <select id="scan-profile" title="Profile: which capabilities count, their priorities and thresholds"></select>
           <button class="icon-btn pri" type="submit" id="scan-btn" disabled>Assess</button></form>
         <div class="hint" id="hint">GitHub repository or a local folder that is a git repository.</div>
         <div id="progress"></div>
         <div class="how" id="how"><b>What happens when you press Assess</b><ol>
           <li>GitHub repos are cloned into a local cache; local folders are read in place and never modified.</li>
-          <li>About 70 automated checks run on the latest commit and are matched to the expectations checklist.</li>
+          <li>About 70 automated checks run on the latest commit and are judged against the chosen profile of capabilities.</li>
           <li>The same checks re-run on 8 past commits, and git history is measured, for the Dynamics view.</li></ol>
           Runs locally, takes 1–2 minutes, no AI involved. The result is saved as a new run in <code>runs/</code>.</div>
       </div>
     </div>
   </div>
-  <nav class="tabs" id="tabs"><button data-v="assessment" class="on" type="button">Assessment</button><button data-v="recommendations" type="button">Recommendations</button><button data-v="dynamics" type="button">Dynamics</button><button data-v="guide" type="button">How it works</button></nav>
+  <nav class="tabs" id="tabs"><button data-v="assessment" class="on" type="button">Assessment</button><button data-v="recommendations" type="button">Recommendations</button><button data-v="dynamics" type="button">Dynamics</button><button data-v="capabilities" type="button">Capabilities</button><button data-v="guide" type="button">How it works</button></nav>
   <span class="spacer"></span>
   <button class="icon-btn" id="theme" type="button" aria-label="Toggle theme"></button>
 </header>
@@ -265,6 +288,7 @@ svg text{fill:var(--ink-2);font-size:12px}svg .tick{fill:var(--faint);font-size:
 </section>
 <section class="view" id="v-recommendations"><div class="pane" id="rec-pane"></div></section>
 <section class="view" id="v-dynamics"><div class="pane" id="dyn-pane"></div></section>
+<section class="view" id="v-capabilities"><div class="pane" id="cap-pane"></div></section>
 <section class="view" id="v-guide"><div class="pane" id="guide-pane"></div></section>
 <section class="view" id="v-empty"><div class="empty" id="empty"></div></section>
 <div id="tip" role="tooltip"></div>
@@ -317,17 +341,18 @@ function bindDim(node, d) { node.addEventListener("mouseenter", (e) => showTip(e
 /* ---------- routing: #assessment/<sub> | #dynamics ---------- */
 let state = { view: "assessment", sub: "overview" };
 function go(view, sub) { state.view = view; if (sub) state.sub = sub; history.replaceState(null, "", `#${state.view}${state.view === "assessment" ? "/" + state.sub : ""}`); render(); }
-(function parseHash() { const [v, s] = location.hash.slice(1).split("/"); if (["dynamics", "assessment", "recommendations", "guide"].includes(v)) state.view = v; if (s) state.sub = s; })();
+(function parseHash() { const [v, s] = location.hash.slice(1).split("/"); if (["dynamics", "assessment", "recommendations", "capabilities", "guide"].includes(v)) state.view = v; if (s) state.sub = s; })();
 document.querySelectorAll("#tabs button").forEach((b) => b.onclick = () => go(b.dataset.v));
 
-const VIEWS = ["assessment", "recommendations", "dynamics", "guide", "empty"];
+const VIEWS = ["assessment", "recommendations", "dynamics", "capabilities", "guide", "empty"];
+const FREE_VIEWS = ["guide", "capabilities"];  // work without an open report
 function render() {
   hideTip();
-  if (!REPORT && state.view !== "guide") { showEmpty(); return; }
-  document.querySelectorAll("#tabs button").forEach((b) => { b.classList.toggle("on", b.dataset.v === state.view); b.hidden = !REPORT && b.dataset.v !== "guide"; });
+  if (!REPORT && !FREE_VIEWS.includes(state.view)) { showEmpty(); return; }
+  document.querySelectorAll("#tabs button").forEach((b) => { b.classList.toggle("on", b.dataset.v === state.view); b.hidden = (!REPORT && !FREE_VIEWS.includes(b.dataset.v)) || (b.dataset.v === "capabilities" && MODE !== "app"); });
   $("#tabs").classList.remove("hidden");
   for (const v of VIEWS) $("#v-" + v).classList.toggle("on", v === state.view);
-  if (state.view === "guide") renderGuide();
+  if (state.view === "guide") renderGuide(); else if (state.view === "capabilities") renderCapabilitiesView();
   else if (state.view === "assessment") renderAssessment(); else if (state.view === "recommendations") renderRecommendations(); else renderDynamics();
 }
 
@@ -373,15 +398,15 @@ function renderRecommendations() {
     <div class="card"><h3>Overall maturity</h3>
       <div style="display:flex;align-items:center;gap:14px;margin:10px 0 6px"><div class="big">${fmt(o.score)}<small> /100</small></div>
         <span class="grade" style="border-color:${bandColor(o.band)}">${o.grade}</span></div>
-      <div class="legend" style="margin-bottom:12px"><span><span class="dot" style="background:${bandColor(o.band)}"></span>${BANDS[o.band]}</span><span>${acts.length} open expectations</span></div>
+      <div class="legend" style="margin-bottom:12px"><span><span class="dot" style="background:${bandColor(o.band)}"></span>${BANDS[o.band]}</span><span>${acts.length} open capabilities</span></div>
       <div class="sumtx">${rv.summary ? `<p style="margin:0 0 8px">${esc(rv.summary)}</p>` : ""}
         <h3 style="margin:4px 0 2px">${rv.strengths ? "Strengths" : "Strong aspects"}</h3>${ul(strong)}
         <h3 style="margin:4px 0 2px">${rv.risks ? "Risks" : "Weak aspects"}</h3>${ul(weak)}</div></div>
-    <div class="card" style="padding:4px 4px"><table class="chk"><thead><tr><th style="width:36px">#</th><th>Open expectation · what to do</th><th style="width:120px">Priority</th><th style="width:140px">Aspect</th><th style="width:110px">Status</th><th class="num" style="width:90px" title="Points this aspect gains when the expectation is fully met">Gain</th></tr></thead><tbody>
+    <div class="card" style="padding:4px 4px"><table class="chk"><thead><tr><th style="width:36px">#</th><th>Open capability · what to do</th><th style="width:120px">Priority</th><th style="width:140px">Aspect</th><th style="width:110px">Status</th><th class="num" style="width:90px" title="Points this aspect gains when the capability is fully met">Gain</th></tr></thead><tbody>
       ${acts.map((a, i) => `<tr class="row" data-d="${a.d.id}"><td class="muted">${i + 1}</td>
         <td><div class="ex">${esc(a.c.title)}</div>${a.c.recommendation ? `<div class="muted" style="font-size:12px;margin-top:2px">→ ${esc(a.c.recommendation)}</div>` : ""}</td>
         <td>${prio(a.c.priority)}</td><td class="muted">${esc(a.d.name)}</td><td>${verdict(a.c.status)}</td><td class="num delta up">+${fmt(a.gain)}</td></tr>`).join("")
-        || `<tr><td></td><td class="muted">Every expectation is met.</td></tr>`}
+        || `<tr><td></td><td class="muted">Every capability is met.</td></tr>`}
     </tbody></table></div></div>`;
   $("#rec-pane").querySelectorAll("tr.row").forEach((tr) => tr.onclick = () => go("assessment", tr.dataset.d));
 }
@@ -445,11 +470,11 @@ function dimension(d) {
   $("#assess-pane").innerHTML = `
     <div class="card dimhead" style="padding:10px 14px">
       <div style="flex:1;min-width:260px"><h2 style="font-size:15px">${esc(d.name)}</h2><div class="muted" style="font-size:12px">${esc(d.description)}</div></div>
-      <div style="text-align:right"><div style="font-size:13px;font-weight:600">${cnt("pass")} of ${assessed} expectations met</div>
+      <div style="text-align:right"><div style="font-size:13px;font-weight:600">${cnt("pass")} of ${assessed} capabilities met</div>
         <div class="muted" style="font-size:11.5px">${cnt("partial")} partially · ${cnt("fail")} not met${cnt("review") ? " · " + cnt("review") + " awaiting review" : ""}${cnt("na") ? " · " + cnt("na") + " n/a" : ""}</div></div>
       <div class="num" style="font-size:30px">${fmt(d.score)}<small> /100</small></div><span class="grade" style="border-color:${bandColor(d.band)};width:36px;height:36px;font-size:18px">${d.grade}</span>
     </div>
-    ${d.capped_by && d.capped_by.length ? `<div class="gate"><b>Critical gate:</b> ${d.capped_by.length === 1 ? "a critical expectation is" : d.capped_by.length + " critical expectations are"} not fully met, so this aspect is capped at ${fmt(d.score)} (would be ${fmt(d.uncapped_score)}).</div>` : ""}
+    ${d.capped_by && d.capped_by.length ? `<div class="gate"><b>Critical gate:</b> ${d.capped_by.length === 1 ? "a critical capability is" : d.capped_by.length + " critical capabilities are"} not fully met, so this aspect is capped at ${fmt(d.score)} (would be ${fmt(d.uncapped_score)}).</div>` : ""}
     ${d.review_notes && d.review_notes.length ? `<div class="note" style="margin-top:12px">${d.adjust ? `<b>${d.adjust > 0 ? "+" : ""}${d.adjust}</b> reviewer adjustment · ` : ""}${d.review_notes.map(esc).join(" ")}</div>` : ""}
     <div class="dimgrid">
       <div class="card" style="padding:0"><table class="cktab" id="cktab" tabindex="0" style="outline:none">
@@ -461,7 +486,7 @@ function dimension(d) {
       </table></div>
       <div class="card detail" id="ckdetail"></div>
     </div>
-    <div class="foot">Expectations and priorities come from <code>assessment/expectations.md</code> or the repository's <code>.sdlc360/expectations.md</code>. Use ↑ ↓ to move through the checks.</div>`;
+    <div class="foot">Capabilities, priorities and thresholds: profile <b>${esc(profileName(REPORT))}</b> (change in the <b>Capabilities</b> tab). Use ↑ ↓ to move through the checks.</div>`;
   const rows = document.querySelectorAll("#cktab tbody tr");
   const select = (i) => { SEL[d.id] = i; rows.forEach((r) => r.classList.toggle("sel", +r.dataset.i === i)); $("#ckdetail").innerHTML = checkDetail(d.checks[i]); };
   rows.forEach((r) => r.onclick = () => { select(+r.dataset.i); $("#cktab").focus({ preventScroll: true }); });
@@ -505,11 +530,11 @@ function evidenceItem(e) {
 }
 function whyText(c) {
   const pct = c.score == null ? null : Math.round(c.score * 100);
-  return { pass: ["Met · 100%", "Everything this expectation requires was found at the assessed commit."],
+  return { pass: ["Met · 100%", "Everything this capability requires was found at the assessed commit."],
     partial: [`Partially met · ${pct}%`, "Some of the required signals were found, others are missing."],
     fail: [`Not met · ${pct}%`, "The required signals were not found at the assessed commit."],
-    na: ["Not applicable", "This expectation does not apply to this project, so it is left out of the score."],
-    review: ["Awaiting review", "This is your own expectation. The reviewer agent has not judged it yet."] }[c.status];
+    na: ["Not applicable", "This capability does not apply to this project, so it is left out of the score."],
+    review: ["Awaiting review", "This is your own capability. The reviewer agent has not judged it yet."] }[c.status];
 }
 function basisHtml(m) {
   const items = (m.basis || []).map((b) => `<li><a class="fl" href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.title)}</a>`
@@ -540,37 +565,180 @@ function checkDetail(c) {
     </tbody></table>`;
 }
 
+/* =================== CAPABILITIES: profiles edited in the app =================== */
+const CAP = { list: [], id: null, saved: null, draft: null, cat: null, aspect: null, sel: null, msg: "", err: false, delArm: false, timer: null };
+const PRIOS = ["critical", "important", "nice"];
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const plain = (t) => esc(t).replace(/`([^`]+)`/g, "<code>$1</code>");
+function capNorm(p) { const c = {}; Object.keys(p.capabilities || {}).sort().forEach((k) => { const v = p.capabilities[k], o = {};
+    if (v.enabled === false) o.enabled = false; if (v.priority) o.priority = v.priority; if (v.params && Object.keys(v.params).length) o.params = v.params;
+    if (Object.keys(o).length) c[k] = o; });
+  return JSON.stringify({ name: p.name, description: p.description || "", capabilities: c, custom: p.custom || [] }); }
+const capDirty = () => CAP.saved && CAP.draft && capNorm(CAP.saved) !== capNorm(CAP.draft);
+function capSay(msg, err = false) { CAP.msg = msg; CAP.err = err; const m = $("#cap-msg"); if (m) { m.textContent = msg; m.className = err ? "err" : "muted"; } }
+function profileName(r) { const c = (r && r.checklist) || {}; return c.profile ? c.profile.name : c.origin === "repository" ? "the repository's .sdlc360/capabilities.md" : c.origin === "explicit" ? "a custom file" : "Standard"; }
+function runProfile() { return REPORT && REPORT.checklist && REPORT.checklist.profile ? REPORT.checklist.profile.id : null; }
+
+function capOpen(id) {
+  return Promise.all([api("/api/profiles"), api(`/api/profiles/${encodeURIComponent(id)}`)]).then(([list, prof]) => {
+    CAP.list = list; CAP.id = id; CAP.saved = prof; CAP.draft = clone({ name: prof.name, description: prof.description, capabilities: prof.capabilities, custom: prof.custom });
+    CAP.delArm = false; store("sdlc360-profile", id); return capCatalog();
+  });
+}
+function capCatalog() {
+  return api("/api/catalog", { profile: CAP.draft }).then((cat) => { CAP.cat = cat; capSay(CAP.msg === "Thresholds are not valid" ? "" : CAP.msg); renderCapabilities(); })
+    .catch((e) => { capSay(e.message, true); });
+}
+function renderCapabilitiesView() {
+  if (MODE !== "app") { $("#cap-pane").innerHTML = `<div class="empty">Profiles are edited in the app: <code>./start.sh</code>.</div>`; return; }
+  const want = CAP.id || runProfile() || store("sdlc360-profile") || "standard";
+  if (!CAP.cat) capOpen(want).catch(() => capOpen("standard")); else renderCapabilities();
+}
+function capOverride(cid) { return CAP.draft.capabilities[cid] || (CAP.draft.capabilities[cid] = {}); }
+function capClean(cid) { const o = CAP.draft.capabilities[cid]; if (!o) return;
+  if (o.params && !Object.keys(o.params).length) delete o.params; if (!Object.keys(o).length) delete CAP.draft.capabilities[cid]; }
+function paramValue(cid, p) { const o = CAP.draft.capabilities[cid]; return o && o.params && o.params[p.key] != null ? o.params[p.key] : p.default; }
+function paramSummary(cid) { return (CAP.cat.params[cid] || []).map((p) => `${fmtNum(paramValue(cid, p))}${p.unit === "%" ? "%" : p.unit ? " " + p.unit : ""}`).join(" · "); }
+const fmtNum = (v) => (Math.round(v * 100) / 100).toString();
+function changed(cid) { return !!CAP.draft.capabilities[cid]; }
+
+function renderCapabilities() {
+  const cat = CAP.cat, d = CAP.draft, builtin = CAP.saved.builtin, aspects = Object.keys(cat.aspects);
+  if (!CAP.aspect || !cat.aspects[CAP.aspect]) CAP.aspect = aspects[0];
+  const caps = cat.aspects[CAP.aspect];
+  if (!CAP.sel || !caps.some((c) => c.id === CAP.sel)) CAP.sel = caps[0] && caps[0].id;
+  const runName = REPORT ? REPORT.repo.source.replace(/^github\.com\//, "").replace(/^.*[\\/](?=[^\\/]+$)/, "") : "";
+  const nChanged = (a) => cat.aspects[a].filter((c) => changed(c.id)).length + d.custom.filter((c) => c.aspect === a).length;
+  const off = (cid) => (d.capabilities[cid] || {}).enabled === false;
+  $("#cap-pane").innerHTML = `
+  <div class="card capbar">
+    <label class="fld"><span>Profile</span><select id="cap-prof">${CAP.list.map((p) => `<option value="${esc(p.id)}" ${p.id === CAP.id ? "selected" : ""}>${esc(p.name)}${p.builtin ? " (read-only)" : ""}</option>`).join("")}</select></label>
+    <div class="capdesc">${builtin ? `<span class="muted">${esc(d.description)}</span>`
+      : `<input id="cap-desc" class="txt" value="${esc(d.description)}" placeholder="What this profile is for" maxlength="300">`}</div>
+    <span id="cap-msg" class="${CAP.err ? "err" : "muted"}">${esc(CAP.msg)}</span>
+    ${builtin ? "" : `<button class="icon-btn pri" id="cap-save" type="button" ${capDirty() ? "" : "disabled"}>Save</button>`}
+    <input id="cap-newname" class="txt" placeholder="New profile name" maxlength="60" style="width:170px">
+    <button class="icon-btn" id="cap-copy" type="button">Save as new</button>
+    ${builtin ? "" : `<button class="icon-btn" id="cap-del" type="button">${CAP.delArm ? "Click again to delete" : "Delete"}</button>`}
+  </div>
+  <div class="note" style="margin-top:10px">${builtin ? "<b>Standard</b> is the published baseline and cannot be changed: adjust anything below, then <b>Save as new</b>. " : ""}
+    Switching capabilities off, priorities and your own capabilities apply to a run at once; changed <b>thresholds</b> take effect at the next assessment.
+    ${REPORT ? `<br>The open run of <b>${esc(runName)}</b> is judged with <b>${esc(profileName(REPORT))}</b>.
+<button class="ghost" style="visibility:visible;margin-left:6px" id="cap-apply" type="button" ${capDirty() ? "disabled title='Save first'" : ""}>Apply “${esc(CAP.saved.name)}” to this run</button>` : ""}
+    ${REPORT && (REPORT.thresholds_changed || []).length ? `<br><b>Thresholds changed</b> for ${REPORT.thresholds_changed.map((x) => `<code>${esc(x)}</code>`).join(", ")}: press <b>Re-assess</b> on the project to apply them.` : ""}</div>
+  <nav class="subnav capnav" id="cap-aspects" style="position:static;padding:8px 0 0;margin-top:6px">${aspects.map((a) => { const n = nChanged(a);
+    return `<button data-a="${a}" class="${a === CAP.aspect ? "on" : ""}">${esc(cat.names[a] || a)}${n ? ` <span class="chg">${n}</span>` : ""}</button>`; }).join("")}</nav>
+  <div class="dimgrid">
+    <div class="card" style="padding:0"><table class="cktab captab" id="cap-tab">
+      <colgroup><col style="width:44px"><col style="width:170px"><col><col style="width:116px"><col style="width:110px"></colgroup>
+      <thead><tr><th>On</th><th>ID</th><th>Capability</th><th>Priority</th><th>Thresholds</th></tr></thead>
+      <tbody>${caps.map((c) => { const o = d.capabilities[c.id] || {};
+        return `<tr data-id="${c.id}" class="${c.id === CAP.sel ? "sel" : ""} ${off(c.id) ? "off" : ""}">
+        <td><input type="checkbox" data-on="${c.id}" ${off(c.id) ? "" : "checked"} aria-label="Assess ${esc(c.id)}"></td>
+        <td class="cid">${esc(c.id)}${changed(c.id) ? ` <span class="chg" title="Differs from Standard">•</span>` : ""}</td><td>${esc(c.text)}</td>
+        <td><select data-prio="${c.id}" ${off(c.id) ? "disabled" : ""}>${PRIOS.map((p) => `<option value="${p}" ${(o.priority || c.priority) === p ? "selected" : ""}>${PRIO_LABEL[p]}</option>`).join("")}</select></td>
+        <td class="muted" style="font-size:12px">${paramSummary(c.id) || "–"}</td></tr>`; }).join("")}</tbody></table></div>
+    <div class="card detail" id="cap-detail">${capDetail(caps.find((c) => c.id === CAP.sel))}</div>
+  </div>
+  <div class="card" style="margin-top:12px"><h3>Your own capabilities in ${esc(cat.names[CAP.aspect] || CAP.aspect)}</h3>
+    <p class="muted" style="margin:4px 0 8px">No rule checks these: a reviewer (a person or an agent) records the verdict in <code>review.json</code>. Say plainly when one is met.</p>
+    <div id="cap-own">${d.custom.map((c, i) => c.aspect !== CAP.aspect ? "" : `<div class="own" data-i="${i}">
+      <input class="txt" data-f="text" value="${esc(c.text)}" maxlength="300" placeholder="The capability, e.g. Keys are rotated every quarter.">
+      <select data-f="priority">${PRIOS.map((p) => `<option value="${p}" ${c.priority === p ? "selected" : ""}>${PRIO_LABEL[p]}</option>`).join("")}</select>
+      <button class="icon-btn" type="button" data-rm="${i}" title="Remove">✕</button>
+      <textarea class="txt" data-f="met_when" maxlength="1000" placeholder="Met when… e.g. the runbook shows a rotation in the last 90 days.">${esc(c.met_when)}</textarea></div>`).join("")}</div>
+    <div><button class="icon-btn" type="button" id="cap-add">+ Add your own capability</button></div>
+  </div>
+  <div class="foot">Profiles are saved as <code>assessment/profiles/&lt;name&gt;.json</code> in SDLC360 (commit them to share). The rules themselves and their texts live in <code>src/dimensions/</code> and <code>assessment/acceptance-criteria/</code>.</div>`;
+  capBind();
+}
+function capDetail(c) {
+  if (!c) return "";
+  const m = CAP.cat.methods[c.id] || {}, ps = CAP.cat.params[c.id] || [], o = CAP.draft.capabilities[c.id] || {};
+  const row = (k, v) => v ? `<tr><th>${k}</th><td>${v}</td></tr>` : "";
+  const inputs = ps.map((p) => `<label class="fld prm"><span>${esc(p.label)}</span><input type="number" data-param="${p.key}" min="${p.min}" max="${p.max}" step="${p.step}" value="${paramValue(c.id, p)}">
+    <em>${esc(p.unit)}${paramValue(c.id, p) !== p.default ? ` · standard ${fmtNum(p.default)}` : ""}</em></label>`).join("");
+  return `<div style="display:flex;gap:8px;align-items:center"><span class="cid" style="font:11.5px ui-monospace,Consolas,monospace;color:var(--muted)">${esc(c.id)}</span>${prio(o.priority || c.priority)}
+      ${changed(c.id) ? `<button class="ghost" style="visibility:visible;margin-left:auto" id="cap-reset" type="button">Reset to Standard</button>` : ""}</div>
+    <h2>${esc(c.text)}</h2>
+    ${inputs ? `<div class="prms">${inputs}</div>` : `<div class="muted" style="font-size:12px;margin-bottom:6px">This rule has no adjustable thresholds.</div>`}
+    <table class="kv"><tbody>
+      ${row("Met when", plain(m.met_when || ""))}${row("Partially met", plain(m.partial_when || ""))}${row("Not met", plain(m.not_met_when || ""))}
+      ${row("Not applicable", plain(m.na_when || ""))}${row("How checked", plain(m.looks_at || ""))}
+      ${row("Limits", m.limits ? `<span class="muted">${plain(m.limits)}</span>` : "")}${row("Known flaw", m.known_gap ? `<span class="muted">${plain(m.known_gap)}</span>` : "")}
+      ${row("Why", basisHtml(m))}
+      ${row("Standard", `${PRIO_LABEL[c.priority]}`)}
+    </tbody></table>`;
+}
+function capBind() {
+  const d = CAP.draft, rerender = () => { renderCapabilities(); };
+  $("#cap-prof").onchange = (e) => { if (capDirty()) capSay("Unsaved changes were discarded."); capOpen(e.target.value); };
+  const desc = $("#cap-desc"); if (desc) desc.oninput = () => { d.description = desc.value; const s = $("#cap-save"); if (s) s.disabled = !capDirty(); };
+  $("#cap-aspects").querySelectorAll("button").forEach((b) => b.onclick = () => { CAP.aspect = b.dataset.a; CAP.sel = null; rerender(); });
+  $("#cap-tab").querySelectorAll("tbody tr").forEach((tr) => tr.onclick = (e) => { if (e.target.closest("input,select")) return; CAP.sel = tr.dataset.id; rerender(); });
+  $("#cap-tab").querySelectorAll("[data-on]").forEach((cb) => cb.onchange = () => { const id = cb.dataset.on, o = capOverride(id);
+    if (cb.checked) delete o.enabled; else o.enabled = false; capClean(id); rerender(); });
+  $("#cap-tab").querySelectorAll("[data-prio]").forEach((s) => s.onchange = () => { const id = s.dataset.prio, std = CAP.cat.aspects[CAP.aspect].find((c) => c.id === id).priority, o = capOverride(id);
+    if (s.value === std) delete o.priority; else o.priority = s.value; capClean(id); rerender(); });
+  $("#cap-detail").querySelectorAll("[data-param]").forEach((inp) => inp.onchange = () => {
+    const id = CAP.sel, p = CAP.cat.params[id].find((x) => x.key === inp.dataset.param), v = Number(inp.value), o = capOverride(id);
+    o.params = o.params || {}; if (inp.value === "" || v === p.default) delete o.params[p.key]; else o.params[p.key] = v; capClean(id);
+    clearTimeout(CAP.timer); CAP.timer = setTimeout(capCatalog, 150); });
+  const reset = $("#cap-reset"); if (reset) reset.onclick = () => { delete d.capabilities[CAP.sel]; capCatalog(); };
+  $("#cap-own").querySelectorAll(".own").forEach((row) => { const c = d.custom[+row.dataset.i];
+    row.querySelectorAll("[data-f]").forEach((f) => f.oninput = f.onchange = () => { c[f.dataset.f] = f.value; const s = $("#cap-save"); if (s) s.disabled = !capDirty(); }); });
+  $("#cap-own").querySelectorAll("[data-rm]").forEach((b) => b.onclick = () => { d.custom.splice(+b.dataset.rm, 1); rerender(); });
+  $("#cap-add").onclick = () => { d.custom.push({ aspect: CAP.aspect, text: "", priority: "important", met_when: "" }); rerender();
+    const all = $("#cap-own").querySelectorAll('[data-f="text"]'); if (all.length) all[all.length - 1].focus(); };
+  const ownOk = () => d.custom.every((c) => c.text.trim()) || (capSay("Give each of your own capabilities a text, or remove it.", true), false);
+  const save = $("#cap-save");
+  if (save) save.onclick = () => { if (!ownOk()) return;
+    api(`/api/profiles/${encodeURIComponent(CAP.id)}`, d).then(() => { capSay("Saved."); return capOpen(CAP.id); }).catch((e) => capSay(e.message, true)); };
+  $("#cap-copy").onclick = () => { const name = $("#cap-newname").value.trim(); if (!ownOk()) return;
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
+    if (!id) return capSay("Type a name for the new profile first.", true);
+    if (CAP.list.some((p) => p.id === id)) return capSay(`A profile “${id}” already exists: pick another name.`, true);
+    api(`/api/profiles/${id}`, Object.assign(clone(d), { name })).then(() => { capSay(`Saved as “${name}”.`); return capOpen(id); }).catch((e) => capSay(e.message, true)); };
+  const del = $("#cap-del");
+  if (del) del.onclick = () => { if (!CAP.delArm) { CAP.delArm = true; del.textContent = "Click again to delete"; return; }
+    api(`/api/profiles/${encodeURIComponent(CAP.id)}/delete`, {}).then(() => { capSay(`Deleted “${CAP.saved.name}”.`); return capOpen("standard"); }).catch((e) => capSay(e.message, true)); };
+  const apply = $("#cap-apply");
+  if (apply) apply.onclick = () => { if (!CURRENT_RUN) return;
+    api(`/api/runs/${encodeURIComponent(CURRENT_RUN)}/apply`, { profile: CAP.id }).then((rep) => { REPORT = rep; capSay(`Applied to the open run: overall ${fmt(rep.overall.score)}.`);
+      return api("/api/projects").then((ps) => { PROJECTS = ps; renderProjects(); renderProfileSelect(); renderCapabilities(); }); }).catch((e) => capSay(e.message, true)); };
+}
+
 /* =================== HOW IT WORKS =================== */
 function renderGuide() {
   const r = REPORT, cl = (r && r.checklist) || {}, h = (r && r.repo.head) || {};
   const nExp = r ? r.dimensions.reduce((n, d) => n + d.checks.length, 0) : 0;
-  const cur = r ? `<p class="muted">This report: <b>${esc(r.repo.source)}</b>${h.sha ? ` at commit <code>${esc(h.sha.slice(0, 8))}</code>` : ""}, ${nExp} expectations from
-    <code>${esc(cl.path ? cl.path.replace(/^.*[\\/](assessment|\.sdlc360)[\\/]/, "$1/") : "built-in checks")}</code> (${esc(cl.origin || "default")}), assessed ${fdate(r.generated_at)}.</p>` : "";
+  const cur = r ? `<p class="muted">This report: <b>${esc(r.repo.source)}</b>${h.sha ? ` at commit <code>${esc(h.sha.slice(0, 8))}</code>` : ""}, ${nExp} capabilities from
+    <code>${esc(cl.path ? cl.path.replace(/^.*[\\/](assessment|\.sdlc360)[\\/]/, "$1/") : "built-in checks")}</code> (profile ${esc(profileName(r))}), assessed ${fdate(r.generated_at)}.</p>` : "";
   const src = SOURCES.map((x) => `<tr><td><code>${esc(x.id)}</code></td><td><a class="fl" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a><div class="muted">${esc(x.publisher)} · ${esc(x.published)}</div></td><td class="num">${x.cited}</td></tr>`).join("");
   $("#guide-pane").innerHTML = `<div class="guide">
   <div class="card wide"><h2>What SDLC360 does</h2>
-    <p>It reads a git repository and tells you, aspect by aspect, whether the project meets the expectations we hold for a well-run,
+    <p>It reads a git repository and tells you, aspect by aspect, whether the project meets the capabilities we hold for a well-run,
     AI-assisted codebase, with the evidence for every verdict. No LLM is involved: the same commit always gets the same verdicts.</p>${cur}
     <svg id="gsvg" viewBox="0 0 1240 420" role="img" aria-label="How SDLC360 works: components and data flow"></svg></div>
   <div class="card"><h3>Your journey</h3><ol>
     <li><b>Pick a project</b> in the header, or add one: a GitHub URL, <code>owner/repo</code>, or a local git folder (folder picker). Local folders are read in place and never changed.</li>
     <li><b>Scan.</b> The scanner checks the current commit against the checklist, re-scores a few past commits for Dynamics, and stores everything as a run in <code>runs/</code>.</li>
     <li><b>Assessment</b>: the overview shows all aspects; each aspect tab is a checklist. Click a row to see what we expected, what we found, the verdict, how it was checked, its limits and the published basis for it.</li>
-    <li><b>Recommendations</b>: every open expectation, critical first, with what to do.</li>
+    <li><b>Recommendations</b>: every open capability, critical first, with what to do.</li>
     <li><b>Dynamics</b>: how the score, delivery pace and test / doc discipline changed over the last months.</li>
     <li><b>Fix and re-assess.</b> After changes, press <b>Re-assess</b>: a new run appears next to the old one.</li></ol></div>
   <div class="card"><h3>Where to change what</h3><table><thead><tr><th>You want to change</th><th>Edit</th><th>Takes effect</th></tr></thead><tbody>
-    <tr><td><b>What we expect</b> and how important it is (critical / important / nice)</td><td><code>assessment/expectations.md</code>, or <code>.sdlc360/expectations.md</code> committed in the assessed repo</td><td>re-render a run: <code>python sdlc.py render runs/&lt;id&gt;</code>, no re-scan</td></tr>
-    <tr><td><b>How an expectation is judged</b>: met / partially / not met, limits, basis</td><td><code>assessment/acceptance-criteria/&lt;aspect&gt;.md</code>; the rule itself in <code>src/dimensions/&lt;aspect&gt;.py</code></td><td>texts: re-render; rule: next scan</td></tr>
-    <tr><td><b>Your own expectation</b> with no scanner rule</td><td>a <code>- [ ] important: …</code> line in the checklist; the verdict goes into <code>runs/&lt;id&gt;/review.json</code></td><td>re-render (shown as <i>Awaiting review</i> until judged)</td></tr>
+    <tr><td><b>Which capabilities count</b>, how important each is (critical / important / nice) and the thresholds</td><td>the <b>Capabilities</b> tab: a profile (<code>assessment/profiles/&lt;name&gt;.json</code>); the full list is <code>assessment/capabilities.md</code></td><td>on / off and priority: <i>Apply to this run</i>; thresholds: re-assess</td></tr>
+    <tr><td><b>How a capability is judged</b>: met / partially / not met, limits, basis</td><td><code>assessment/acceptance-criteria/&lt;aspect&gt;.md</code>; the rule itself in <code>src/dimensions/&lt;aspect&gt;.py</code></td><td>texts: re-render; rule: next scan</td></tr>
+    <tr><td><b>Your own capability</b> with no scanner rule</td><td>the <b>Capabilities</b> tab, <i>Add your own capability</i>, with when it is met; the verdict goes into <code>runs/&lt;id&gt;/review.json</code></td><td>re-render (shown as <i>Awaiting review</i> until judged)</td></tr>
     <tr><td><b>Why we expect it</b>: published references</td><td><code>assessment/references/</code>, quoted in the acceptance criteria</td><td>re-render</td></tr></tbody></table></div>
   <div class="card"><h3>How verdicts become scores</h3><ol>
     <li>Each check scores 0–1: <b>Met</b> from 0.85, <b>Partially met</b> from 0.35, otherwise <b>Not met</b>; <b>Not applicable</b> when the practice does not apply (e.g. cost tracking without LLM calls).</li>
-    <li>An aspect score is the mean of its applicable expectations, weighted by priority: critical 5, important 3, nice 1.</li>
-    <li><b>Critical gate</b>: an unmet critical expectation caps its aspect at 49, a partially met one at 74, whatever else passes.</li>
+    <li>An aspect score is the mean of its applicable capabilities, weighted by priority: critical 5, important 3, nice 1.</li>
+    <li><b>Critical gate</b>: an unmet critical capability caps its aspect at 49, a partially met one at 74, whatever else passes.</li>
     <li>The overall score is the mean of the applicable aspects. Grades: A ≥ 90, B ≥ 80, C ≥ 65, D ≥ 50.</li></ol></div>
-  <div class="card"><h3>Why these expectations: references</h3>
-    <p class="muted">Each expectation cites published guidance verbatim, or is marked as our own convention. Copies and licences: <code>assessment/references/</code>.</p>
+  <div class="card"><h3>Why these capabilities: references</h3>
+    <p class="muted">Each capability cites published guidance verbatim, or is marked as our own convention. Copies and licences: <code>assessment/references/</code>.</p>
     <table><thead><tr><th>Reference</th><th>Title</th><th class="num">Cited by</th></tr></thead><tbody>${src || `<tr><td colspan="3" class="muted">No references bundled in this report.</td></tr>`}</tbody></table></div>
   </div>`;
   drawGuide();
@@ -596,14 +764,14 @@ function drawGuide() {
   arrow("M890,105H968", "render", 929, 97);
   // bottom row: what people edit
   tx(150, 258, "k", "WHAT PEOPLE EDIT");
-  box(150, 270, 250, 130, "Expectations", ["what we want, with priority", "critical · important · nice", "", "~assessment/expectations.md", "~or .sdlc360/expectations.md"], "", "WHAT");
+  box(150, 270, 250, 130, "Capabilities", ["what we want, with priority", "critical · important · nice", "", "~Capabilities tab: profiles", "~assessment/profiles/"], "", "WHAT");
   box(495, 270, 250, 130, "Acceptance criteria", ["how each one is judged", "met / partially / not met, limits", "", "~assessment/acceptance-criteria/"], "", "HOW");
   box(840, 270, 250, 130, "References", ["why we expect it", "DORA, NIST, OWASP, OpenSSF, …", "", "~assessment/references/"], "", "WHY");
   arrow("M275,270C275,230 360,222 380,192", "decides what counts", 300, 226);
   arrow("M620,270C620,232 520,224 500,192", "explains verdicts", 590, 228);
   arrow("M840,335H747", "cited as basis", 793, 327);
   box(1100, 210, 130, 50, "Reviewer", ["~review.json"], "dash", "OPTIONAL");
-  arrow("M1100,235C1000,235 880,225 862,192", "own expectations", 985, 222, true);
+  arrow("M1100,235C1000,235 880,225 862,192", "own capabilities", 985, 222, true);
 }
 
 /* =================== DYNAMICS =================== */
@@ -720,7 +888,7 @@ function spark(svg, pts) {
 }
 
 /* =================== PROJECTS =================== */
-let PROJECTS = [], current = null;
+let PROJECTS = [], current = null, CURRENT_RUN = null;
 const panel = $("#panel"), pickBtn = $("#pick-btn");
 function setProjectName() { $("#proj-name").textContent = REPORT ? REPORT.repo.source.replace(/^github\.com\//, "").replace(/^.*[\\/](?=[^\\/]+$)/, "") : "Choose project"; }
 if (MODE === "static") { $("#pick-caret").remove(); pickBtn.disabled = true; }
@@ -728,7 +896,7 @@ else {
   pickBtn.onclick = (e) => { e.stopPropagation(); const on = !panel.classList.contains("on"); panel.classList.toggle("on", on); pickBtn.setAttribute("aria-expanded", on); };
   document.addEventListener("click", (e) => { if (!$("#picker").contains(e.target)) panel.classList.remove("on"); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") panel.classList.remove("on"); });
-  $("#add-form").onsubmit = (e) => { e.preventDefault(); const t = $("#target").value.trim(); if (looksValid(t) && !scanning) startScan(t); };
+  $("#add-form").onsubmit = (e) => { e.preventDefault(); const t = $("#target").value.trim(); if (looksValid(t) && !scanning) startScan(t, $("#scan-profile").value || null); };
   $("#target").addEventListener("input", validate);
 }
 function api(url, body) { return fetch(url, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {})
@@ -740,12 +908,17 @@ function renderProjects() {
       <button class="ghost" type="button" data-rescan="${i}" title="Assess again at the latest commit">Re-assess</button><span class="s">${fmt(r.score)}</span></div>`; }).join("")
     : `<div class="muted" style="padding:4px 8px 8px">Nothing assessed yet — add a project below.</div>`;
   $("#proj-list").querySelectorAll(".proj").forEach((row) => row.onclick = (e) => {
-    const p = PROJECTS[+row.dataset.i]; if (e.target.closest("[data-rescan]")) { e.stopPropagation(); startScan(p.target); return; }
+    const p = PROJECTS[+row.dataset.i]; if (e.target.closest("[data-rescan]")) { e.stopPropagation(); startScan(p.target, p.runs[0].profile); return; }
     panel.classList.remove("on"); loadProject(p); });
 }
-function loadProject(p) { current = p; store("sdlc360-project", p.source);
+function loadProject(p) { current = p; CURRENT_RUN = p.runs[0].id; store("sdlc360-project", p.source);
   return api(`/api/runs/${encodeURIComponent(p.runs[0].id)}`).then((rep) => { REPORT = rep; setProjectName(); renderProjects(); render(); }); }
+function renderProfileSelect() {
+  return api("/api/profiles").then((ps) => { const sel = $("#scan-profile"), want = store("sdlc360-profile") || "standard";
+    sel.innerHTML = ps.map((p) => `<option value="${esc(p.id)}" ${p.id === want ? "selected" : ""}>${esc(p.name)}</option>`).join(""); }).catch(() => {});
+}
 function refreshProjects() {
+  renderProfileSelect();
   return api("/api/projects").then((ps) => { PROJECTS = ps; renderProjects();
     const want = store("sdlc360-project"), p = ps.find((x) => x.source === want) || ps[0];
     if (p) return loadProject(p); setProjectName(); render(); });
@@ -759,7 +932,7 @@ function validate() {
     : !looksValid(t) ? "Use https://github.com/owner/repo, owner/repo, or a full local path."
     : isLocal(t) ? "Local folder — read in place, never modified." : "GitHub repository — cloned into the local cache.";
 }
-const STEPS = ["Fetch the repository", "Check the latest commit against expectations", "Measure activity from git history", "Re-score past commits", "Save the run"];
+const STEPS = ["Fetch the repository", "Check the latest commit against capabilities", "Measure activity from git history", "Re-score past commits", "Save the run"];
 function stepOf(m) { return !m || m.startsWith("resolving") ? 0 : m.startsWith("scanning") ? 1 : m.startsWith("computing") ? 2 : m.startsWith("history") ? 3 : m === "done" ? 5 : 0; }
 function showSteps(target, msgs, history) {
   const last = msgs.at(-1) || "", cur = stepOf(last), hm = /history (\d+)\/(\d+)/.exec(last);
@@ -767,9 +940,9 @@ function showSteps(target, msgs, history) {
     `<li class="${i < cur ? "done" : i === cur ? "run" : ""}"><span class="mk">${i < cur ? "✓" : i === cur ? "›" : "·"}</span>${s}${i === 3 ? ` <span class="muted">(${hm ? hm[1] + " of " + hm[2] : (history || 8) + " commits"})</span>` : ""}</li>`).join("")}</ol>`;
 }
 function setBusy(b) { scanning = b; $("#target").disabled = b; $("#how").classList.toggle("hidden", b); validate(); }
-function startScan(target) {
+function startScan(target, profile) {
   $("#progress").innerHTML = ""; panel.classList.add("on");
-  api("/api/scan", { target, history: 8 }).then(({ job: id, display }) => {
+  api("/api/scan", { target, history: 8, profile: profile || undefined }).then(({ job: id, display }) => {
     setBusy(true); showSteps(display || target, [], 8);
     const poll = () => api(`/api/jobs/${id}`).then((j) => {
       if (j.status === "done") { setBusy(false); $("#progress").innerHTML = ""; $("#target").value = ""; validate();
@@ -806,10 +979,10 @@ if (MODE === "app") {
   $("#fs-use").onclick = () => fsState.git && fsUse(fsState.path);
   $("#fsdlg").onclick = (e) => { if (e.target.id === "fsdlg") fsClose(); };
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("#fsdlg").classList.contains("on")) { e.stopPropagation(); fsClose(); } }, true);
-} else $("#browse-btn").remove();
+} else { $("#browse-btn").remove(); $("#scan-profile").remove(); }
 
 function showEmpty() {
-  document.querySelectorAll("#tabs button").forEach((b) => { b.hidden = b.dataset.v !== "guide"; b.classList.remove("on"); });
+  document.querySelectorAll("#tabs button").forEach((b) => { b.hidden = !FREE_VIEWS.includes(b.dataset.v) || (b.dataset.v === "capabilities" && MODE !== "app"); b.classList.remove("on"); });
   for (const v of VIEWS) $("#v-" + v).classList.toggle("on", v === "empty");
   $("#empty").innerHTML = `<h2>Assess a repository</h2>Point the assessment at a GitHub repository (<code>https://github.com/owner/repo</code> or <code>owner/repo</code>)
     or a local folder that is a git repository. Each scan is stored as a run under <code>runs/</code>.

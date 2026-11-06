@@ -1,6 +1,6 @@
-# Architecture: how each expectation is judged
+# Architecture: how each capability is judged
 
-Expectations and their priorities are in [expectations.md](../expectations.md).
+Capabilities and their priorities are in [capabilities.md](../capabilities.md).
 How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## arch.doc: An architecture document describes components, data flow and boundaries.
@@ -29,9 +29,9 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **How we check.** The first 400 tracked `.md`/`.mdx` files are searched for a code fence opening with `mermaid`, `plantuml`, `d2`, `dot` or `graphviz`. It also counts `*.puml`, `*.plantuml`, `*.drawio`, `*.excalidraw`, `*.d2`, `*.mmd`, `*.dsl` and `*.c4` files anywhere. The total is the number of markdown files with a fence plus the number of diagram files.
 
-- **Met:** A total of 2 or more.
-- **Partially met:** A total of exactly 1.
-- **Not met:** Zero.
+- **Met:** A total of {target*0.85} or more (target: {target}).
+- **Partially met:** A total of {target*0.35} or more.
+- **Not met:** Fewer.
 
 **What the check cannot see.** A markdown file counts once, however many diagrams it holds. Any `.dsl` file counts, Structurizr or not. Diagrams in `.rst`/`.adoc` and exported PNG/SVG images are not seen. Nothing checks that a diagram shows the architecture.
 
@@ -47,9 +47,9 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **How we check.** Folders whose path or name matches `*adr`, `*adrs`, `*decisions`, `*decision-records` or `docs/architecture/decisions`. It counts the tracked `.md` files beneath them at any depth.
 
-- **Met:** 3 or more markdown files.
-- **Partially met:** Exactly 2.
-- **Not met:** 0 or 1.
+- **Met:** {target*0.85} or more markdown files (target: {target}).
+- **Partially met:** {target*0.35} or more markdown files.
+- **Not met:** Fewer.
 
 **What the check cannot see.** README and template files in the folder count as decision records, and content is not checked. A folder such as `design-decisions` for something unrelated counts. Records written as `.rst`/`.adoc`, or kept outside such folders, are missed.
 
@@ -71,9 +71,9 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **How we check.** Source files (by extension, excluding tests, `vendor/`, `third_party/`, `docs/`, `examples/`, `.github/`). It counts how many sit in the repo root and whether any sit in a subfolder.
 
-- **Met:** At least one source file in a subfolder and at most 5 source files in the root.
-- **Partially met:** 6 to 15 source files in the root, or all code in the root with at most 15 files.
-- **Not met:** More than 15 source files in the root (score 0.3).
+- **Met:** At least one source file in a subfolder and at most {max_root_files} source files in the root.
+- **Partially met:** {max_root_files+1} to {max_root_files*3} source files in the root, or all code in the root with at most {max_root_files*3} files.
+- **Not met:** More than {max_root_files*3} source files in the root (score 0.3).
 - **Not applicable:** No source files at all.
 
 **What the check cannot see.** `.sh` and `.ps1` count as source, so root helper scripts count against the repo. One nested file (for example `scripts/x.sh`) is enough. A flat `src/` holding hundreds of files is Met. Module cohesion is not judged.
@@ -92,9 +92,9 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **How we check.** The newest commit touching any arch.doc file is compared with the newest commit touching the first 2,000 source files.
 
-- **Met:** The architecture doc lags the code by no more than about 80 days.
-- **Partially met:** A lag of about 81 to 248 days, or unknown dates (scores 0.5).
-- **Not met:** A lag of more than about 248 days, or no architecture doc.
+- **Met:** The architecture doc lags the code by no more than about {met_days} days (full score up to {grace_days} days, then a linear fade to 0 at {max_lag_days} days).
+- **Partially met:** A lag of about {met_days+1} to {partial_days} days, or unknown dates (scores 0.5).
+- **Not met:** A lag of more than about {partial_days} days, or no architecture doc.
 
 **What the check cannot see.** The newest matching file wins. Editing an unrelated `docs/*design*` page or fixing a typo counts as maintenance. Whether the content matches the code is not checked.
 
@@ -107,7 +107,7 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 - **Met:** Two or more of those files, or one file plus a test hit.
 - **Partially met:** Exactly one file, or only a test hit.
 - **Not met:** Nothing found.
-- **Not applicable:** 50 or fewer source files.
+- **Not applicable:** {min_source_files} or fewer source files.
 
 **What the check cannot see.** Whether the rules are run in CI or actually enforced is not checked. deptry is usually configured in `pyproject.toml`, not tests, so it is rarely seen there.
 

@@ -61,7 +61,7 @@ def test_finalize_caps_partial_critical_at_74():
 
 
 def test_review_verdicts_and_adjust_are_applied():
-    review = {"expectations": {"custom.x.mine": {"status": "met", "note": "seen"}}, "dimensions": {"x": {"adjust": 50, "notes": ["n"]}}}
+    review = {"capabilities": {"custom.x.mine": {"status": "met", "note": "seen"}}, "dimensions": {"x": {"adjust": 50, "notes": ["n"]}}}
     d = finalize(_report(1.0), review)["dimensions"][0]
     mine = d["checks"][2]
     assert mine["status"] == "pass" and mine["evidence"] == ["seen"]

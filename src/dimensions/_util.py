@@ -92,14 +92,14 @@ def days_between(a: datetime | None, b: datetime | None) -> float | None:
     return (b - a).total_seconds() / 86400
 
 
-def freshness_score(doc_time: datetime | None, code_time: datetime | None) -> tuple[float, str]:
-    """1.0 if doc updated within 30 days of last code change, decays to 0 at 365 days behind."""
+def freshness_score(doc_time: datetime | None, code_time: datetime | None, grace: float = 30, zero_at: float = 365) -> tuple[float, str]:
+    """1.0 if doc updated within `grace` days of the last code change, decays linearly to 0 at `zero_at` days behind."""
     lag = days_between(doc_time, code_time)
     if lag is None:
         return 0.5, "freshness unknown (no history)"
-    if lag <= 30:
+    if lag <= grace:
         return 1.0, f"docs updated within {max(lag, 0):.0f} days of last code change"
-    s = max(0.0, 1 - (lag - 30) / 335)
+    s = max(0.0, 1 - (lag - grace) / max(1.0, zero_at - grace))
     return s, f"docs lag code by {lag:.0f} days"
 
 

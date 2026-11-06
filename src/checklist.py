@@ -1,11 +1,11 @@
-"""Expectations checklist: a human-editable markdown file mapping expectations to automated checks.
+"""Capability catalog: a markdown file mapping capabilities to automated checks (assessment/capabilities.md).
 
-    ## <dimension-id>
-    - [check.id] critical: expectation text     -> scored by the scanner
-    - [ ] important: expectation text           -> custom; judged by the reviewer agent via review.json
+    ## <aspect-id>
+    - [check.id] critical: capability text     -> scored by the scanner
+    - [ ] important: capability text           -> your own; judged by a reviewer via review.json
 
 Priorities are categorical on purpose (no false precision). Their numeric weights and the `critical` gate
-live here, in one place.
+live here, in one place. Profiles (src/profiles.py) adjust the catalog per use.
 """
 
 from __future__ import annotations
@@ -14,12 +14,12 @@ import re
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_CHECKLIST = PROJECT_ROOT / "assessment" / "expectations.md"
-REPO_CHECKLIST = ".sdlc360/expectations.md"
+CATALOG = PROJECT_ROOT / "assessment" / "capabilities.md"
+REPO_CHECKLIST = (".sdlc360/capabilities.md", ".sdlc360/expectations.md")  # the second: name before 0.4
 
 PRIORITIES = ("critical", "important", "nice")
 PRIORITY_WEIGHT = {"critical": 5.0, "important": 3.0, "nice": 1.0}
-# critical gate: an aspect cannot score above these caps while a critical expectation is not / partially met
+# critical gate: an aspect cannot score above these caps while a critical capability is not / partially met
 CRITICAL_CAP = {"fail": 49.0, "partial": 74.0}
 
 ITEM_RE = re.compile(r"^\s*[-*]\s*\[([^\]]*)\]\s*(?:(critical|important|nice)\s*:\s*)?(.+?)\s*$", re.I)
@@ -60,11 +60,3 @@ def parse(text: str) -> dict[str, list[dict]]:
             }
         )
     return out
-
-
-def resolve(repo_root: Path | None = None, explicit: str | Path | None = None) -> dict:
-    """Pick the checklist: explicit file > repo's .sdlc360/expectations.md > bundled default."""
-    for cand, origin in ((explicit, "explicit"), (repo_root / REPO_CHECKLIST if repo_root else None, "repository"), (DEFAULT_CHECKLIST, "default")):
-        if cand and Path(cand).is_file():
-            return {"origin": origin, "path": str(cand), "items": parse(Path(cand).read_text(encoding="utf-8"))}
-    return {"origin": "none", "path": None, "items": {}}

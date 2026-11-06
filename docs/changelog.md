@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0 (2026-11-06)
+
+- **Capabilities** instead of "expectations": the catalog is `assessment/capabilities.md`.
+- **Profiles**, edited in the new **Capabilities** tab: switch capabilities off, change priorities, set thresholds,
+  add your own capabilities with "met when" in plain words. Saved as `assessment/profiles/<name>.json`; *Standard* is
+  the read-only baseline, *Prototype* a relaxed example. **Apply to this run** re-judges the open run at once.
+- Thresholds of twelve rules (README length, docs pages, docstring share, test files, test ratio, file size, root
+  files, diagrams, decision records, freshness of docs and architecture, size for boundary tooling) are parameters.
+  The acceptance texts quote the numbers in force. A changed threshold is flagged until the project is re-assessed.
+- `scan --profile`, `render --profile`; the manifest records the profile and the `reproduce` command includes it.
+- `review.json` uses the key `capabilities` (`expectations` is still read).
+
 ## 0.3.0 (2026-11-06)
 
 - Everything a person edits is in one folder, `assessment/`, with a guide: `expectations.md` (was

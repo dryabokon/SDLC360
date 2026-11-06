@@ -19,7 +19,7 @@ def assess(repo: Repo):
         "doc.readme",
         "README present and substantial",
         3,
-        0.0 if not readme else min(1.0, words / 400),
+        0.0 if not readme else min(1.0, words / repo.param("doc.readme", "target_words")),
         f"{readme}: {words} words" if readme else "no root README",
         "Write a README with purpose, quick start, usage, configuration, testing and contribution sections.",
     )
@@ -48,7 +48,7 @@ def assess(repo: Repo):
         "doc.docs_dir",
         "Dedicated docs folder",
         1.5,
-        min(1.0, len(docs) / 3),
+        min(1.0, len(docs) / repo.param("doc.docs_dir", "target")),
         f"{len(docs)} doc pages" + (f": {short(docs, 3)}" if docs else ""),
         "Create docs/ with guides beyond the README (architecture, operations, decisions).",
     )
@@ -84,7 +84,12 @@ def assess(repo: Repo):
     )
 
     doc_files = ([readme] if readme else []) + docs
-    fs, msg = freshness_score(repo.last_modified(doc_files), repo.last_modified(repo.source_files[:2000]))
+    fs, msg = freshness_score(
+        repo.last_modified(doc_files),
+        repo.last_modified(repo.source_files[:2000]),
+        repo.param("doc.freshness", "grace_days"),
+        repo.param("doc.freshness", "max_lag_days"),
+    )
     c.add(
         "doc.freshness",
         "Docs updated alongside code",
@@ -107,7 +112,7 @@ def assess(repo: Repo):
             "doc.inline",
             "Inline API docs (docstrings / doc comments)",
             1,
-            min(1.0, (n_doc / n_def) / 0.6) if n_def else None,
+            min(1.0, (n_doc / n_def) / (repo.param("doc.inline", "target_share") / 100)) if n_def else None,
             f"{n_doc}/{n_def} Python defs have docstrings",
             "Document public modules, classes and functions.",
         )

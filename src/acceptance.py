@@ -1,7 +1,7 @@
-"""Acceptance criteria: how each expectation is judged, in plain language.
+"""Acceptance criteria: how each capability is judged, in plain language.
 
 One markdown file per aspect in assessment/acceptance-criteria/. They hold the "how checked / when met" texts shown
-next to the evidence, and the published basis (assessment/references/) that justifies each expectation:
+next to the evidence, and the published basis (assessment/references/) that justifies each capability:
 
     ## sec.no_secrets: No secrets are committed.
 
@@ -13,7 +13,7 @@ next to the evidence, and the published basis (assessment/references/) that just
     - **Not applicable:** ...                       (optional)
 
     **What the check cannot see.** limits of the rule
-    **Known flaw.** where the rule does not yet check what the expectation says   (optional)
+    **Known flaw.** where the rule does not yet check what the capability says   (optional)
 
     **Why we expect it.**
 
@@ -29,6 +29,8 @@ from __future__ import annotations
 import re
 from functools import lru_cache
 from pathlib import Path
+
+from .profiles import defaults, fill
 
 ROOT = Path(__file__).resolve().parent.parent
 CRITERIA = ROOT / "assessment" / "acceptance-criteria"
@@ -72,7 +74,7 @@ def parse(text: str) -> dict[str, dict]:
     for line in text.splitlines():
         h = HEADING_RE.match(line)
         if h:
-            cur = {"basis": [], "expectation": h.group(2).strip()}
+            cur = {"basis": [], "capability": h.group(2).strip()}
             out[h.group(1)] = cur
             field, quote = None, []
             continue
@@ -111,9 +113,10 @@ def criteria() -> dict[str, dict]:
     return out
 
 
-def method_for(check_id: str) -> dict:
-    """Acceptance block for a check, with basis entries resolved to their reference metadata."""
-    c = dict(criteria().get(check_id, {}))
+def method_for(check_id: str, params: dict | None = None) -> dict:
+    """Acceptance block for a check, thresholds filled in, basis entries resolved to their reference metadata."""
+    values = params or defaults().get(check_id, {})
+    c: dict = {k: fill(v, values) if isinstance(v, str) else v for k, v in criteria().get(check_id, {}).items()}
     refs = references()
     c["basis"] = [
         dict(b, title=refs.get(b["source"], {}).get("title", b["source"]), url=refs.get(b["source"], {}).get("url", "")) for b in c.get("basis", [])
