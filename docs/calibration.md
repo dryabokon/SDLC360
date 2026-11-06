@@ -35,3 +35,8 @@ libraries score lower by design (see `adr/0003-checklist-and-critical-gate.md`).
 - `.agents/skills` is recognised as a skills location.
 - Identifiers such as `oauth_client_secret` are no longer taken for secret values.
 - Absolute paths in docs (`/opt/...`) are no longer reported as broken links.
+
+## False negatives found by scanning SDLC360 itself
+
+- A flow-style tag trigger (`tags: ["v*"]`) is now recognised as a release trigger.
+- Pinned `requirements-*.txt` variants (for example `requirements-dev.txt`) now count as a lockfile.

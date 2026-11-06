@@ -56,3 +56,19 @@ def test_root_start_script_is_an_entry_point(make_repo):
 
     checks = {c.id: c for c in assess(Repo(make_repo({"start.sh": "#!/usr/bin/env bash\n", "app.py": ""})))}
     assert checks["run.entrypoints"].score == 1.0
+
+
+def test_tag_trigger_in_flow_and_block_style(make_repo):
+    from src.dimensions.cicd import assess
+
+    for tags in ('tags: ["v*"]', "tags:\n      - 'v*'"):
+        wf = f"on:\n  push:\n    {tags}\njobs:\n  r:\n    steps:\n      - run: gh release create x\n"
+        checks = {c.id: c for c in assess(Repo(make_repo({".github/workflows/release.yml": wf}, name=f"r{len(tags)}")))}
+        assert "tag/release trigger: True" in checks["ci.cd"].evidence
+
+
+def test_pinned_requirements_variant_counts_as_lockfile(make_repo):
+    from src.dimensions.runs import assess
+
+    checks = {c.id: c for c in assess(Repo(make_repo({"requirements-dev.txt": "pytest==9.2.0\n", "app.py": ""})))}
+    assert checks["run.lockfile"].score == 1.0

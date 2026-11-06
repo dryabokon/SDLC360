@@ -60,7 +60,7 @@ def assess(repo: Repo):
     )
 
     cd = sorted(set(m.lower() for m in re.findall(DEPLOY, txt, re.I)))[:6]
-    tags = re.search(r"tags:\s*\n?\s*-?\s*['\"]?v?\*|release:\s*\n\s*types", txt)
+    tags = re.search(r"\btags:\s*(\[\s*['\"]?[\w*.-]|\n\s*-\s*['\"]?[\w*.-])|\brelease:\s*\n\s*types", txt)
     c.add(
         "ci.cd",
         "Release / deploy automation (CD)",

@@ -72,7 +72,7 @@ def assess(repo: Repo):
         "Pipfile.lock",
         "pdm.lock",
         "requirements*.lock",
-        "requirements.txt",
+        "requirements*.txt",
         "package-lock.json",
         "pnpm-lock.yaml",
         "yarn.lock",
