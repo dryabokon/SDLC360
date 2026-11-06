@@ -1,18 +1,27 @@
-"""Acceptance criteria: how each expectation is judged, in plain language (checklists/acceptance.md).
+"""Acceptance criteria: how each expectation is judged, in plain language.
 
-The file is the single source of truth for "how checked / when met" texts shown next to the evidence, and for the
-external basis (docs/sources/) that justifies each expectation.
+One markdown file per aspect in assessment/acceptance-criteria/. They hold the "how checked / when met" texts shown
+next to the evidence, and the published basis (assessment/references/) that justifies each expectation:
 
-    ## security
-    ### sec.no_secrets
-    - **Checks:** what the scanner looks at
-    - **Met:** …          - **Partially met:** …     - **Not met:** …
-    - **Not applicable:** …  (optional)
-    - **Limits:** what the heuristic cannot see
-    - **Basis:**
-      - S09 · PW.1.3 · "verbatim quote"
-    - **Convention:** why we expect it without an external basis (instead of Basis)
-    - **Known gap:** where the scanner does not yet check what the expectation says
+    ## sec.no_secrets: No secrets are committed.
+
+    **How we check.** what the scanner looks at
+
+    - **Met:** ...
+    - **Partially met:** ...
+    - **Not met:** ...
+    - **Not applicable:** ...                       (optional)
+
+    **What the check cannot see.** limits of the rule
+    **Known flaw.** where the rule does not yet check what the expectation says   (optional)
+
+    **Why we expect it.**
+
+    > verbatim quote
+    >
+    > — [nist-ssdf](../references/nist-ssdf/), PW.1.3, p. 20 · direct
+
+    **Our convention.** why we expect it without a published basis (instead of quotes)
 """
 
 from __future__ import annotations
@@ -22,28 +31,28 @@ from functools import lru_cache
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-ACCEPTANCE = ROOT / "checklists" / "acceptance.md"
-SOURCES = ROOT / "docs" / "sources"
+CRITERIA = ROOT / "assessment" / "acceptance-criteria"
+REFERENCES = ROOT / "assessment" / "references"
 
-FIELDS = {
-    "checks": "looks_at",
-    "met": "met_when",
-    "partially met": "partial_when",
-    "not met": "not_met_when",
-    "not applicable": "na_when",
-    "limits": "limits",
-    "convention": "convention",
-    "known gap": "known_gap",
+PARAGRAPHS = {
+    "how we check": "looks_at",
+    "what the check cannot see": "limits",
+    "known flaw": "known_gap",
+    "our convention": "convention",
+    "why we expect it": "basis",
 }
-FIELD_RE = re.compile(r"^- \*\*([A-Za-z ]+):\*\*\s*(.*)$")
-BASIS_RE = re.compile(r"^\s+- (S\d\d) · ([^·]+?) · (.+)$")
+VERDICTS = {"met": "met_when", "partially met": "partial_when", "not met": "not_met_when", "not applicable": "na_when"}
+HEADING_RE = re.compile(r"^## ([\w.-]+):\s*(.*)$")
+PARAGRAPH_RE = re.compile(r"^\*\*([A-Za-z ]+)\.\*\*\s*(.*)$")
+VERDICT_RE = re.compile(r"^- \*\*([A-Za-z ]+):\*\*\s*(.*)$")
+CITATION_RE = re.compile(r"^>\s*— \[([\w.-]+)\]\([^)]*\),?\s*(.*?)\s*·\s*(direct|supporting)\s*$")
 
 
 @lru_cache(maxsize=1)
-def sources() -> dict[str, dict]:
-    """S01.. -> {id, title, publisher, published, url, license} from docs/sources/<NN-slug>/SOURCE.md frontmatter."""
+def references() -> dict[str, dict]:
+    """<folder> -> {id, title, publisher, published, url, license, ...} from assessment/references/<folder>/README.md."""
     out = {}
-    for md in sorted(SOURCES.glob("[0-9][0-9]-*/SOURCE.md")):
+    for md in sorted(REFERENCES.glob("*/README.md")):
         meta: dict[str, str] = {"folder": md.parent.name}
         text = md.read_text(encoding="utf-8")
         front = text.split("---", 2)[1] if text.startswith("---") else ""
@@ -51,7 +60,7 @@ def sources() -> dict[str, dict]:
             m = re.match(r"^(\w+):\s*(.+)$", line)
             if m and m.group(1) != "files":
                 meta[m.group(1)] = m.group(2).strip()
-        out["S" + md.parent.name[:2]] = meta
+        out[md.parent.name] = meta
     return out
 
 
@@ -59,41 +68,55 @@ def parse(text: str) -> dict[str, dict]:
     out: dict[str, dict] = {}
     cur: dict | None = None
     field: str | None = None
+    quote: list[str] = []
     for line in text.splitlines():
-        if line.startswith("### "):
-            cur = {"basis": []}
-            out[line[4:].split()[0]] = cur
+        h = HEADING_RE.match(line)
+        if h:
+            cur = {"basis": [], "expectation": h.group(2).strip()}
+            out[h.group(1)] = cur
+            field, quote = None, []
+            continue
+        if cur is None:
+            continue
+        if line.startswith(">"):
+            c = CITATION_RE.match(line)
+            if c:
+                cur["basis"].append({"source": c.group(1), "locator": c.group(2).strip(), "strength": c.group(3), "quote": " ".join(quote)})
+                quote = []
+            elif line[1:].strip():
+                quote.append(line[1:].strip())
             field = None
             continue
-        if cur is None or line.startswith("## "):
-            cur = None if line.startswith("## ") else cur
-            continue
-        m = FIELD_RE.match(line)
-        if m:
-            label, value = m.group(1).strip().lower(), m.group(2).strip()
-            field = "basis" if label == "basis" else FIELDS.get(label)
-            if field and field != "basis":
-                cur[field] = value
-            continue
-        b = BASIS_RE.match(line)
-        if b and field == "basis":
-            cur["basis"].append({"source": b.group(1), "locator": b.group(2).strip(), "quote": b.group(3).strip()})
-        elif line.startswith("  ") and line.strip() and field and field != "basis":
+        p = PARAGRAPH_RE.match(line)
+        v = VERDICT_RE.match(line)
+        if p and p.group(1).lower() in PARAGRAPHS:
+            field = PARAGRAPHS[p.group(1).lower()]
+            if field != "basis":
+                cur[field] = p.group(2).strip()
+        elif v and v.group(1).lower() in VERDICTS:
+            field = VERDICTS[v.group(1).lower()]
+            cur[field] = v.group(2).strip()
+        elif line.strip() and field and field != "basis":
             cur[field] = (cur.get(field, "") + " " + line.strip()).strip()  # wrapped continuation line
+        elif not line.strip() and field and not field.endswith("_when"):
+            field = None
     return out
 
 
 @lru_cache(maxsize=1)
 def criteria() -> dict[str, dict]:
-    return parse(ACCEPTANCE.read_text(encoding="utf-8")) if ACCEPTANCE.exists() else {}
+    out: dict[str, dict] = {}
+    for md in sorted(CRITERIA.glob("*.md")):
+        out.update(parse(md.read_text(encoding="utf-8")))
+    return out
 
 
 def method_for(check_id: str) -> dict:
-    """Acceptance block for a check, with basis entries resolved to their source metadata."""
+    """Acceptance block for a check, with basis entries resolved to their reference metadata."""
     c = dict(criteria().get(check_id, {}))
-    src = sources()
+    refs = references()
     c["basis"] = [
-        dict(b, title=src.get(b["source"], {}).get("title", b["source"]), url=src.get(b["source"], {}).get("url", "")) for b in c.get("basis", [])
+        dict(b, title=refs.get(b["source"], {}).get("title", b["source"]), url=refs.get(b["source"], {}).get("url", "")) for b in c.get("basis", [])
     ]
     c.setdefault("looks_at", "")
     c.setdefault("met_when", "")

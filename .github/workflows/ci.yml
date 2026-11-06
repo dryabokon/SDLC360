@@ -3,9 +3,9 @@ name: ci
 on:
   push:
     branches: [main]
-    paths-ignore: ["**.md", "docs/**"]
+    paths-ignore: ["*.md", "docs/**"]  # root docs only: assessment/*.md is tested
   pull_request:
-    paths-ignore: ["**.md", "docs/**"]
+    paths-ignore: ["*.md", "docs/**"]  # root docs only: assessment/*.md is tested
   workflow_dispatch:
 
 permissions:

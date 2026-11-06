@@ -37,11 +37,11 @@ def assess(repo: Repo):
     adrs = [f for f in repo.files if any(f.lower().startswith(d + "/") for d in adr_dirs) and f.lower().endswith(".md")]
     c.add(
         "arch.adr",
-        "Architecture Decision Records",
+        "Design decision records",
         2,
         min(1.0, len(adrs) / 3),
-        f"{len(adrs)} ADRs in {short(adr_dirs, 2)}" if adrs else "no ADR directory",
-        "Record significant decisions as ADRs (docs/adr/NNNN-title.md: context, decision, consequences).",
+        f"{len(adrs)} decision records in {short(adr_dirs, 2)}" if adrs else "no design-decisions folder",
+        "Record significant design decisions, one file each (docs/design-decisions/NN-title.md: context, decision, consequences).",
     )
 
     top = sorted({f.split("/")[0] for f in repo.source_files if "/" in f})
@@ -82,7 +82,7 @@ def assess(repo: Repo):
             1.5,
             fs,
             msg,
-            "Review the architecture doc when adding/removing modules; date it and link ADRs.",
+            "Review the architecture doc when adding/removing modules; date it and link the design decisions.",
         )
     else:
         c.add("arch.fresh", "Architecture doc maintained with the code", 1.5, 0.0, "no architecture doc")

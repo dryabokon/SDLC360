@@ -25,4 +25,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
-        run: gh release create "$TAG" dist/* --title "$TAG" --notes-file CHANGELOG.md
+        run: gh release create "$TAG" dist/* --title "$TAG" --notes-file docs/changelog.md

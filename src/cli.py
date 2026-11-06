@@ -77,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--history", type=int, default=8, help="historical commits to re-score for the Dynamics view (default 8)")
     s.add_argument("--months", type=int, default=12, help="history window in months (default 12)")
     s.add_argument("--no-history", action="store_true", help="skip historical re-scoring")
-    s.add_argument("--checklist", help="expectations markdown (default: repo .sdlc360/expectations.md, else checklists/default.md)")
+    s.add_argument("--checklist", help="expectations markdown (default: repo .sdlc360/expectations.md, else assessment/expectations.md)")
     s.add_argument("--refresh", action="store_true", help="git fetch a cached clone before scanning")
     s.add_argument("--open", action="store_true", help="open the HTML report when done")
     s.set_defaults(func=cmd_scan)

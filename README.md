@@ -22,7 +22,7 @@ It answers questions like:
 - **Expectations are not our invention.** Each one cites published guidance verbatim: Google's *New SDLC* and DORA's
   research on AI-assisted delivery, NIST's secure development framework, OWASP's agentic risks, OpenSSF Scorecard,
   Anthropic's agent guidance and the AGENTS.md and Agent Skills standards. The few that rest on our own judgement
-  say so. See [the sources](docs/sources/README.md).
+  say so. See [the references](assessment/references/README.md).
 - **Calibrated on well-run open-source projects.** For example, `pydantic/pydantic-ai` scores 91 (A). Each false
   alarm found on such projects became a fix and a regression test ([calibration](docs/calibration.md)).
 
@@ -103,12 +103,13 @@ The tab **How it works** in the app explains the same on one page.
 
 | You want to change | Edit |
 |---|---|
-| **What we expect** and how important it is | [`checklists/default.md`](checklists/default.md), or commit `.sdlc360/expectations.md` to the assessed repository |
-| **How an expectation is judged**: met / partially / not met, limits, basis | [`checklists/acceptance.md`](checklists/acceptance.md) |
-| **An expectation of your own** that no rule checks | add `- [ ] important: …` to the checklist; a reviewer records the verdict ([review.json](docs/review.md)) |
-| **Why we expect it** | [`docs/sources/`](docs/sources/README.md) |
+| **What we expect** and how important it is | [`assessment/expectations.md`](assessment/expectations.md), or commit `.sdlc360/expectations.md` to the assessed repository |
+| **How an expectation is judged**: met / partially / not met, limits, basis | [`assessment/acceptance-criteria/`](assessment/acceptance-criteria/), one file per aspect |
+| **An expectation of your own** that no rule checks | add `- [ ] important: …` to the checklist; a reviewer records the verdict ([review.json](docs/reviewer-verdicts.md)) |
+| **Why we expect it** | [`assessment/references/`](assessment/references/README.md) |
 
-A changed checklist or acceptance text is applied to an existing run without re-scanning:
+Everything a person edits sits in [`assessment/`](assessment/README.md), with a short guide to the format.
+A changed expectation or acceptance text is applied to an existing run without re-scanning:
 `python sdlc.py render runs/<run-id>`.
 
 ## How it works
@@ -116,9 +117,9 @@ A changed checklist or acceptance text is applied to an existing run without re-
 ```mermaid
 flowchart LR
     R["Repository<br/>GitHub or local folder"] -->|scan| S["Scanner<br/>10 aspects, analytical rules"]
-    E["Expectations<br/>checklists/default.md"] -->|what counts| S
-    A["Acceptance criteria<br/>checklists/acceptance.md"] -->|how it is judged| S
-    Src["Sources<br/>docs/sources/"] -->|basis| A
+    E["Expectations<br/>assessment/expectations.md"] -->|what counts| S
+    A["Acceptance criteria<br/>assessment/acceptance-criteria/"] -->|how it is judged| S
+    Src["References<br/>assessment/references/"] -->|basis| A
     S --> Run["Run folder<br/>runs/&lt;id&gt;/"]
     Rev["Reviewer (optional)<br/>review.json"] -.-> Run
     Run --> D["Dashboard<br/>Assessment · Recommendations · Dynamics"]
@@ -127,7 +128,7 @@ flowchart LR
 ## For developers
 
 - Setup, command line, run folders, configuration and testing: [docs/usage.md](docs/usage.md).
-- Architecture and design decisions: [docs/architecture.md](docs/architecture.md), [docs/adr/](docs/adr/).
-- Contributing: [CONTRIBUTING.md](CONTRIBUTING.md). Coding agents follow [AGENTS.md](AGENTS.md).
+- Architecture and design decisions: [docs/architecture.md](docs/architecture.md), [docs/design-decisions/](docs/design-decisions/).
+- Contributing: [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md). Coding agents follow [AGENTS.md](AGENTS.md).
 - Tests: `.venv/Scripts/python -m pytest --cov` (unit and integration, run in CI on Linux and Windows).
 - Configuration: `.env` (template `.env.example`) is for maintainers only; a scan needs no secrets.

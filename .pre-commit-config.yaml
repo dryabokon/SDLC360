@@ -5,9 +5,9 @@ repos:
       - id: check-yaml
       - id: check-toml
       - id: end-of-file-fixer
-        exclude: ^(runs/|docs/sources/)
+        exclude: ^(runs/|assessment/references/)
       - id: trailing-whitespace
-        exclude: ^(runs/|docs/sources/)
+        exclude: ^(runs/|assessment/references/)
       - id: detect-private-key
       - id: check-added-large-files
         args: [--maxkb=1500]

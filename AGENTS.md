@@ -21,9 +21,11 @@ Read `README.md` first, then `docs/architecture.md`.
 ## Layout
 
 - `sdlc.py`: CLI entry point; `src/cli.py` defines the commands.
-- `src/dimensions/<aspect>.py`: scanner rules. A check id (`sec.no_secrets`) must also appear in
-  `checklists/acceptance.md` (how it is checked, when it is met, limits, published basis) and usually in
-  `checklists/default.md`. Basis quotes must be verbatim from `docs/sources/`.
+- `assessment/`: what people edit, format in `assessment/README.md`. `expectations.md` (what we expect, priority),
+  `acceptance-criteria/<NN-aspect>.md` (how each one is judged, quotes), `references/<name>/` (published basis).
+- `src/dimensions/<aspect>.py`: scanner rules. A check id (`sec.no_secrets`) must have a block in
+  `assessment/acceptance-criteria/` and usually a line in `assessment/expectations.md`. Quotes must be verbatim from
+  `assessment/references/`.
 - `src/scanner.py`: `scan()` produces raw `auto_checks`; `finalize()` applies checklist, review and the critical gate.
   `finalize()` must stay idempotent: re-rendering a run never re-scans.
 - `src/runner.py`: one scan = one run folder; `src/serve.py`: local web app; `src/template.html`: the whole UI.
@@ -31,7 +33,7 @@ Read `README.md` first, then `docs/architecture.md`.
 
 ## Conventions
 
-- You must not add runtime dependencies: stdlib only (`docs/adr/0001-stdlib-only.md`). Dev tools go in
+- You must not add runtime dependencies: stdlib only (`docs/design-decisions/01-standard-library-only.md`). Dev tools go in
   `requirements-dev.txt`, pinned with `==`.
 - You must never write into a scanned local repository: read files in place, use `git clone --shared` for history.
 - A changed heuristic needs a test. A fixed false positive gets a regression test in `tests/unit/test_heuristics.py`.

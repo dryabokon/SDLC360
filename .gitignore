@@ -26,5 +26,5 @@ htmlcov/
 .idea/
 .vscode/
 
-# downloaded sources that are not committed (licence / size): python docs/sources/fetch.py
-docs/sources/*/local/
+# downloaded sources that are not committed (licence / size): python assessment/references/fetch.py
+assessment/references/*/local/

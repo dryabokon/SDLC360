@@ -56,7 +56,7 @@ def assess(repo: Repo):
     std = {
         "LICENSE": ["LICENSE*", "COPYING*"],
         "CONTRIBUTING": ["CONTRIBUTING*", ".github/CONTRIBUTING*"],
-        "CHANGELOG": ["CHANGELOG*", "CHANGES*", "HISTORY*", "RELEASES*"],
+        "CHANGELOG": ["CHANGELOG*", "CHANGES*", "HISTORY*", "RELEASES*", "docs/changelog*", "docs/changes*"],
     }
     have = [k for k, pats in std.items() if repo.find(*pats)]
     c.add(

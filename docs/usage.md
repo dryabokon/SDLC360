@@ -34,7 +34,7 @@ python sdlc.py serve --port 8360 --open                      # the web app in th
    place and never written to; for history a throw-away `git clone --shared` is used.
 2. **Run the scanner rules** of the ten aspects on the current commit. Each rule records a score 0–1, the evidence
    it found and a recommendation.
-3. **Apply the checklist** (`checklists/default.md`, or `.sdlc360/expectations.md` in the assessed repository):
+3. **Apply the checklist** (`assessment/expectations.md`, or `.sdlc360/expectations.md` in the assessed repository):
    which expectations count and their priority (`critical` / `important` / `nice`). An unmet critical expectation
    caps its aspect at 49, a partially met one at 74.
 4. **Dynamics**: re-score a sample of past commits and compute weekly velocity and test / doc discipline.
@@ -50,7 +50,7 @@ Every scan writes `runs/<UTC yyyymmdd-HHMMSS>_<name>/`:
 | `report.json` | raw scanner output (`auto_checks`) plus the final, checklist-applied scores |
 | `report.html` | the dashboard; opens offline |
 | `scan.log` | what was scanned and how long each aspect took |
-| `review.json` | optional reviewer verdicts for your own expectations ([review.md](review.md)) |
+| `review.json` | optional reviewer verdicts for your own expectations ([format](reviewer-verdicts.md)) |
 
 To reproduce a run, execute its `manifest.json → reproduce` command with the tool at `manifest.json → tool.git_sha`.
 A failed scan still leaves a manifest with `"status": "failed"` and the error.
@@ -62,10 +62,10 @@ other repositories to have a `runs/` folder.
 
 | What | Where |
 |---|---|
-| Expectations and priorities | `checklists/default.md`, or `.sdlc360/expectations.md` committed in the assessed repository |
-| How each expectation is judged | `checklists/acceptance.md` (texts) and `src/dimensions/<aspect>.py` (rules) |
-| Published basis | `docs/sources/` ([index](sources/README.md)); `python docs/sources/fetch.py` restores local copies |
-| Reviewer verdicts | `runs/<id>/review.json` ([format](review.md)) |
+| Expectations and priorities | `assessment/expectations.md`, or `.sdlc360/expectations.md` committed in the assessed repository |
+| How each expectation is judged | `assessment/acceptance-criteria/` (texts) and `src/dimensions/<aspect>.py` (rules) |
+| Published basis | `assessment/references/` ([index](../assessment/references/README.md)); `python assessment/references/fetch.py` restores local copies |
+| Reviewer verdicts | `runs/<id>/review.json` ([format](reviewer-verdicts.md)) |
 | Secrets | `.env` (git-ignored, template `.env.example`) holds `GH_PAT` for maintainers only; scans need no secrets |
 
 ## Testing

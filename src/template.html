@@ -461,7 +461,7 @@ function dimension(d) {
       </table></div>
       <div class="card detail" id="ckdetail"></div>
     </div>
-    <div class="foot">Expectations and priorities come from <code>checklists/default.md</code> or the repository's <code>.sdlc360/expectations.md</code>. Use ↑ ↓ to move through the checks.</div>`;
+    <div class="foot">Expectations and priorities come from <code>assessment/expectations.md</code> or the repository's <code>.sdlc360/expectations.md</code>. Use ↑ ↓ to move through the checks.</div>`;
   const rows = document.querySelectorAll("#cktab tbody tr");
   const select = (i) => { SEL[d.id] = i; rows.forEach((r) => r.classList.toggle("sel", +r.dataset.i === i)); $("#ckdetail").innerHTML = checkDetail(d.checks[i]); };
   rows.forEach((r) => r.onclick = () => { select(+r.dataset.i); $("#cktab").focus({ preventScroll: true }); });
@@ -513,7 +513,7 @@ function whyText(c) {
 }
 function basisHtml(m) {
   const items = (m.basis || []).map((b) => `<li><a class="fl" href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.title)}</a>`
-    + ` <span class="muted">· ${esc(b.locator)}</span><div class="muted" style="font-style:italic">${esc(b.quote)}</div></li>`);
+    + ` <span class="muted">· ${esc(b.locator)}${b.strength ? " · " + esc(b.strength) : ""}</span><div class="muted" style="font-style:italic">${esc(b.quote)}</div></li>`);
   if (items.length) return `<ul class="evl">${items.join("")}</ul>`;
   return m.convention ? `<span class="muted">Team convention: ${esc(m.convention)}</span>` : "";
 }
@@ -545,7 +545,7 @@ function renderGuide() {
   const r = REPORT, cl = (r && r.checklist) || {}, h = (r && r.repo.head) || {};
   const nExp = r ? r.dimensions.reduce((n, d) => n + d.checks.length, 0) : 0;
   const cur = r ? `<p class="muted">This report: <b>${esc(r.repo.source)}</b>${h.sha ? ` at commit <code>${esc(h.sha.slice(0, 8))}</code>` : ""}, ${nExp} expectations from
-    <code>${esc(cl.path ? cl.path.replace(/^.*[\\/](checklists|\.sdlc360)[\\/]/, "$1/") : "built-in checks")}</code> (${esc(cl.origin || "default")}), assessed ${fdate(r.generated_at)}.</p>` : "";
+    <code>${esc(cl.path ? cl.path.replace(/^.*[\\/](assessment|\.sdlc360)[\\/]/, "$1/") : "built-in checks")}</code> (${esc(cl.origin || "default")}), assessed ${fdate(r.generated_at)}.</p>` : "";
   const src = SOURCES.map((x) => `<tr><td><code>${esc(x.id)}</code></td><td><a class="fl" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a><div class="muted">${esc(x.publisher)} · ${esc(x.published)}</div></td><td class="num">${x.cited}</td></tr>`).join("");
   $("#guide-pane").innerHTML = `<div class="guide">
   <div class="card wide"><h2>What SDLC360 does</h2>
@@ -560,18 +560,18 @@ function renderGuide() {
     <li><b>Dynamics</b>: how the score, delivery pace and test / doc discipline changed over the last months.</li>
     <li><b>Fix and re-assess.</b> After changes, press <b>Re-assess</b>: a new run appears next to the old one.</li></ol></div>
   <div class="card"><h3>Where to change what</h3><table><thead><tr><th>You want to change</th><th>Edit</th><th>Takes effect</th></tr></thead><tbody>
-    <tr><td><b>What we expect</b> and how important it is (critical / important / nice)</td><td><code>checklists/default.md</code>, or <code>.sdlc360/expectations.md</code> committed in the assessed repo</td><td>re-render a run: <code>python sdlc.py render runs/&lt;id&gt;</code>, no re-scan</td></tr>
-    <tr><td><b>How an expectation is judged</b>: met / partially / not met, limits, basis</td><td><code>checklists/acceptance.md</code>; the rule itself in <code>src/dimensions/&lt;aspect&gt;.py</code></td><td>texts: re-render; rule: next scan</td></tr>
+    <tr><td><b>What we expect</b> and how important it is (critical / important / nice)</td><td><code>assessment/expectations.md</code>, or <code>.sdlc360/expectations.md</code> committed in the assessed repo</td><td>re-render a run: <code>python sdlc.py render runs/&lt;id&gt;</code>, no re-scan</td></tr>
+    <tr><td><b>How an expectation is judged</b>: met / partially / not met, limits, basis</td><td><code>assessment/acceptance-criteria/&lt;aspect&gt;.md</code>; the rule itself in <code>src/dimensions/&lt;aspect&gt;.py</code></td><td>texts: re-render; rule: next scan</td></tr>
     <tr><td><b>Your own expectation</b> with no scanner rule</td><td>a <code>- [ ] important: …</code> line in the checklist; the verdict goes into <code>runs/&lt;id&gt;/review.json</code></td><td>re-render (shown as <i>Awaiting review</i> until judged)</td></tr>
-    <tr><td><b>Why we expect it</b>: published sources</td><td><code>docs/sources/</code>, cited in <code>acceptance.md</code></td><td>re-render</td></tr></tbody></table></div>
+    <tr><td><b>Why we expect it</b>: published references</td><td><code>assessment/references/</code>, quoted in the acceptance criteria</td><td>re-render</td></tr></tbody></table></div>
   <div class="card"><h3>How verdicts become scores</h3><ol>
     <li>Each check scores 0–1: <b>Met</b> from 0.85, <b>Partially met</b> from 0.35, otherwise <b>Not met</b>; <b>Not applicable</b> when the practice does not apply (e.g. cost tracking without LLM calls).</li>
     <li>An aspect score is the mean of its applicable expectations, weighted by priority: critical 5, important 3, nice 1.</li>
     <li><b>Critical gate</b>: an unmet critical expectation caps its aspect at 49, a partially met one at 74, whatever else passes.</li>
     <li>The overall score is the mean of the applicable aspects. Grades: A ≥ 90, B ≥ 80, C ≥ 65, D ≥ 50.</li></ol></div>
-  <div class="card"><h3>Why these expectations: sources</h3>
-    <p class="muted">Each expectation cites published guidance verbatim, or is marked as our own convention. Copies and licences: <code>docs/sources/</code>.</p>
-    <table><thead><tr><th>Id</th><th>Source</th><th class="num">Cited by</th></tr></thead><tbody>${src || `<tr><td colspan="3" class="muted">No sources bundled in this report.</td></tr>`}</tbody></table></div>
+  <div class="card"><h3>Why these expectations: references</h3>
+    <p class="muted">Each expectation cites published guidance verbatim, or is marked as our own convention. Copies and licences: <code>assessment/references/</code>.</p>
+    <table><thead><tr><th>Reference</th><th>Title</th><th class="num">Cited by</th></tr></thead><tbody>${src || `<tr><td colspan="3" class="muted">No references bundled in this report.</td></tr>`}</tbody></table></div>
   </div>`;
   drawGuide();
 }
@@ -596,9 +596,9 @@ function drawGuide() {
   arrow("M890,105H968", "render", 929, 97);
   // bottom row: what people edit
   tx(150, 258, "k", "WHAT PEOPLE EDIT");
-  box(150, 270, 250, 130, "Expectations", ["what we want, with priority", "critical · important · nice", "", "~checklists/default.md", "~or .sdlc360/expectations.md"], "", "WHAT");
-  box(495, 270, 250, 130, "Acceptance criteria", ["how each one is judged", "met / partially / not met, limits", "", "~checklists/acceptance.md"], "", "HOW");
-  box(840, 270, 250, 130, "Sources", ["why we expect it", "DORA, NIST, OWASP, OpenSSF, …", "", "~docs/sources/<NN-slug>/"], "", "WHY");
+  box(150, 270, 250, 130, "Expectations", ["what we want, with priority", "critical · important · nice", "", "~assessment/expectations.md", "~or .sdlc360/expectations.md"], "", "WHAT");
+  box(495, 270, 250, 130, "Acceptance criteria", ["how each one is judged", "met / partially / not met, limits", "", "~assessment/acceptance-criteria/"], "", "HOW");
+  box(840, 270, 250, 130, "References", ["why we expect it", "DORA, NIST, OWASP, OpenSSF, …", "", "~assessment/references/"], "", "WHY");
   arrow("M275,270C275,230 360,222 380,192", "decides what counts", 300, 226);
   arrow("M620,270C620,232 520,224 500,192", "explains verdicts", 590, 228);
   arrow("M840,335H747", "cited as basis", 793, 327);

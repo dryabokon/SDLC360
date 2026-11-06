@@ -13,8 +13,8 @@ flowchart LR
     Runner --> Scanner["src/scanner.py<br/>scan() + finalize()"]
     Runner --> History["src/history.py<br/>velocity, past-commit scores"]
     Scanner --> Dims["src/dimensions/*<br/>10 aspects of checks"]
-    Scanner --> Checklist["src/checklist.py<br/>checklists/default.md"]
-    Scanner --> Acceptance["src/acceptance.py<br/>checklists/acceptance.md, docs/sources"]
+    Scanner --> Checklist["src/checklist.py<br/>assessment/expectations.md"]
+    Scanner --> Acceptance["src/acceptance.py<br/>assessment/acceptance-criteria/*.md, assessment/references/"]
     Runner --> Render["src/render.py<br/>src/template.html"]
     Render --> Runs[("runs/&lt;id&gt;/")]
     Repo --> Cache[(".cache/repos")]
@@ -67,4 +67,4 @@ The report keeps raw scanner output (`auto_checks`) separate from final `checks`
 - The secret scan covers HEAD only, not the history.
 - Historical points in Dynamics are scored with the rules of the tool version that produced the run.
 
-Decisions behind this design: [adr/](adr/).
+Decisions behind this design: [design-decisions/](design-decisions/).

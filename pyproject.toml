@@ -1,4 +1,4 @@
-# Tool configuration only: SDLC360 is run from source (python sdlc.py), runtime is stdlib-only (docs/adr/0001).
+# Tool configuration only: SDLC360 is run from source (python sdlc.py), runtime is stdlib-only (docs/design-decisions/01).
 
 [tool.ruff]
 line-length = 150

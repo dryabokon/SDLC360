@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from src.acceptance import criteria, sources
+from src.acceptance import criteria, references
 from src.checklist import DEFAULT_CHECKLIST, PRIORITY_WEIGHT, parse, priority_from_weight, resolve
 
 SAMPLE = """
@@ -47,7 +47,7 @@ def test_default_checklist_is_consistent():
     ids = [i["id"] for its in items.values() for i in its]
     assert len(ids) == len(set(ids))
     acc = criteria()
-    assert not [i for i in ids if i not in acc], "checks without an acceptance block in checklists/acceptance.md"
+    assert not [i for i in ids if i not in acc], "checks without a block in assessment/acceptance-criteria/"
     for section, its in items.items():
         crit = sum(i["priority"] == "critical" for i in its)
         assert 1 <= crit <= 2, section
@@ -55,13 +55,13 @@ def test_default_checklist_is_consistent():
 
 def test_acceptance_blocks_are_complete_and_justified():
     """Every acceptance block says how it is checked and when it is met, and is backed by a source or a stated convention."""
-    acc, src = criteria(), sources()
+    acc, src = criteria(), references()
     for cid, block in acc.items():
         assert block.get("looks_at") and block.get("met_when"), cid
         assert block["basis"] or block.get("convention"), f"{cid}: no Basis and no Convention"
         for b in block["basis"]:
-            assert b["source"] in src, f"{cid}: unknown source {b['source']}"
-            assert b["quote"].startswith('"') and b["quote"].endswith('"'), f"{cid}: quote must be verbatim in quotes"
+            assert b["source"] in src, f"{cid}: unknown reference {b['source']}"
+            assert b["quote"] and b["locator"], f"{cid}: a citation needs a quote and a page or section"
 
 
 def test_acceptance_has_no_orphans():
@@ -71,6 +71,19 @@ def test_acceptance_has_no_orphans():
 
 
 def test_sources_have_metadata():
-    for sid, meta in sources().items():
+    for sid, meta in references().items():
         for key in ("title", "publisher", "published", "url", "retrieved", "license"):
             assert meta.get(key), f"{sid}: missing {key}"
+
+
+def test_acceptance_headings_repeat_the_expectation_text():
+    """The heading of each acceptance block is the expectation as written in expectations.md, so the two never drift."""
+    items = parse(DEFAULT_CHECKLIST.read_text(encoding="utf-8"))
+    text = {i["id"]: i["text"] for its in items.values() for i in its}
+    acc = criteria()
+    assert not [cid for cid in acc if acc[cid]["expectation"] != text.get(cid)], "edit both files when you reword an expectation"
+
+
+def test_reference_ids_are_their_folder_names():
+    for folder, meta in references().items():
+        assert meta.get("id") == folder, folder

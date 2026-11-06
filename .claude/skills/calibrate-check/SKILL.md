@@ -11,10 +11,11 @@ description: Fix a wrong SDLC360 verdict (false positive or false negative) or a
    `make_repo` fixture that has the same shape. Assemble secrets at runtime (`"AKIA" + "..."`).
 3. **Fix the rule** in `src/dimensions/<aspect>.py`. Prefer a narrower pattern over a new exception list.
 4. **Keep the contract in sync** for a new or renamed check:
-   - `checklists/acceptance.md`: how it is checked, met / partially / not met, limits, and a verbatim **Basis**
-     quote from `docs/sources/` (or a **Convention** line saying why we expect it anyway);
-   - `checklists/default.md`: the expectation line with a priority (one or two `critical` items per aspect);
+   - `assessment/acceptance-criteria/<NN-aspect>.md`: how it is checked, met / partially / not met, what the check
+     cannot see, and under **Why we expect it** a verbatim quote from `assessment/references/` (or an
+     **Our convention.** paragraph saying why we expect it anyway). Format: `assessment/README.md`;
+   - `assessment/expectations.md`: the expectation line with a priority (one or two `critical` items per aspect);
    - `tests/unit/test_checklist.py::test_default_checklist_is_consistent` must stay green.
 5. **Check for collateral damage.** Run `pytest`, then re-scan one or two reference repositories from
    [docs/calibration.md](../../../docs/calibration.md) and compare verdicts with the previous run.
-6. Add a `CHANGELOG.md` line.
+6. Add a line to `docs/changelog.md`.

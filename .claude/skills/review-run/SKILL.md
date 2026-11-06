@@ -15,7 +15,7 @@ must work from evidence in the repository at the assessed commit.
      files, config, CI, git history.
    - Pick a verdict: `met`, `partial`, `unmet`, or `na` (does not apply to this project).
    - Note concrete evidence (`path:line`, command and output). No evidence means `unmet`, not `met`.
-3. Write `runs/<id>/review.json` in the format of [docs/review.md](../../../docs/review.md). Add `dimensions.<id>.adjust`
+3. Write `runs/<id>/review.json` in the format of [docs/reviewer-verdicts.md](../../../docs/reviewer-verdicts.md). Add `dimensions.<id>.adjust`
    only when an automated score is clearly wrong, and always with a note.
 4. Re-render and check the result: `python sdlc.py render runs/<id>`.
 
