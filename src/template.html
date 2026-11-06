@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<script>
+  (function () { try { var q = new URLSearchParams(location.search).get("theme"); var t = q || localStorage.getItem("sdlc360-theme");
+    if (t !== "light" && t !== "dark") t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.dataset.theme = t; } catch (e) {} })();
+</script>
+<style>
+:root{color-scheme:light;
+  --bg:#f6f6f5;--surface:#fff;--fill:#efefed;--text:#141414;--ink-2:#52514e;--muted:#6b6b6b;--faint:#a1a1a1;--line:#e6e6e4;
+  --grid:#ebeae6;--axis:#c3c2b7;--series-1:#2a78d6;--series-2:#eb6834;
+  --good:#0ca30c;--warning:#fab219;--serious:#ec835a;--critical:#d03b3b;--good-text:#006300;--bad-text:#b42a2a}
+:root[data-theme=dark]{color-scheme:dark;
+  --bg:#0e0e0e;--surface:#161616;--fill:#1f1f1f;--text:#ececec;--ink-2:#c3c2b7;--muted:#9b9b9b;--faint:#666;--line:#262626;
+  --grid:#242422;--axis:#383835;--series-1:#3987e5;--series-2:#d95926;--good-text:#30d158;--bad-text:#ff6961}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font:13px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;display:grid;grid-template-rows:46px minmax(0,1fr)}
+h1,h2,h3{margin:0;font-weight:600}h1{font-size:15px}
+h3{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+code{font:11.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--fill);padding:0 4px;border-radius:4px}
+button,input{font:inherit;color:inherit}.muted{color:var(--muted)}.spacer{flex:1}
+/* header */
+.topbar{border-bottom:1px solid var(--line);padding:0 16px;display:flex;align-items:center;gap:18px;white-space:nowrap}
+.tabs{display:flex;gap:2px;height:100%}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:0 12px;cursor:pointer;color:var(--muted);font-weight:600;height:100%}
+.tabs button.on{color:var(--text);border-bottom-color:var(--text)}
+.tabs button:hover{color:var(--text)}
+.icon-btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;height:30px;min-width:30px;padding:0 10px;cursor:pointer;display:inline-grid;place-items:center}
+.icon-btn:hover{border-color:var(--faint)}.icon-btn svg{width:15px;height:15px;fill:currentColor}
+.icon-btn.pri{background:var(--text);color:var(--surface);border-color:var(--text)}
+.icon-btn:disabled{opacity:.4;cursor:default}
+/* project picker */
+.picker{position:relative;height:100%;display:flex;align-items:center}
+.picker>button{background:none;border:1px solid transparent;border-radius:6px;height:30px;padding:0 8px;cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:600;max-width:360px}
+.picker>button:hover:not(:disabled){border-color:var(--line)}
+.picker>button:disabled{cursor:default}
+.picker>button .nm{overflow:hidden;text-overflow:ellipsis}
+.picker>button svg{width:12px;height:12px;fill:var(--muted);flex:none}
+.panel{position:absolute;top:42px;left:0;z-index:20;width:440px;background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  box-shadow:0 12px 40px rgba(0,0,0,.18);padding:6px;display:none;white-space:normal}
+.panel.on{display:block}
+.panel h3{padding:6px 8px 4px}
+#proj-list{max-height:min(330px,40vh);overflow:auto}
+.proj{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:7px 8px;border-radius:6px;cursor:pointer}
+.proj:hover,.proj.on{background:var(--fill)}
+.proj .n{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.proj .d{color:var(--muted);font-size:11.5px}
+.proj .s{font-weight:650}
+.ghost{border:1px solid var(--line);background:var(--surface);border-radius:6px;height:24px;padding:0 8px;font-size:11.5px;color:var(--muted);cursor:pointer;visibility:hidden}
+.proj:hover .ghost,.ghost:focus-visible{visibility:visible}.ghost:hover{color:var(--text);border-color:var(--faint)}
+.add{border-top:1px solid var(--line);margin-top:6px;padding:4px 8px 8px}
+.add h3{padding:6px 0 0}
+.add form{display:flex;gap:6px;margin-top:6px}
+.add input{flex:1;min-width:0;height:32px;border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:0 9px}
+.add input:focus{outline:2px solid var(--series-1);outline-offset:-1px}
+.add input:disabled{opacity:.6}
+.hint{font-size:11.5px;color:var(--muted);margin-top:6px}.hint.err{color:var(--bad-text)}
+.how{font-size:11.5px;color:var(--muted);margin:10px 0 0;padding:8px 10px;background:var(--fill);border-radius:6px}
+.how b{color:var(--ink-2);font-weight:600}
+.how ol{margin:4px 0 4px;padding-left:18px}
+.steps{list-style:none;padding:0;margin:10px 0 0;font-size:12px}
+.steps li{display:flex;align-items:center;gap:8px;padding:3px 0;color:var(--faint)}
+.steps li.done{color:var(--muted)}.steps li.run{color:var(--text);font-weight:600}
+.steps .mk{width:14px;display:inline-grid;place-items:center;flex:none}
+.steps li.done .mk{color:var(--good-text)}
+.job.err{color:var(--bad-text);font-size:12px;margin-top:8px}
+.spin{width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--series-1);border-radius:50%;animation:sp 0.8s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+/* views */
+.view{display:none;min-height:0;overflow:auto}.view.on{display:block}
+.subnav{display:flex;gap:4px;padding:8px 16px 0;overflow-x:auto;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:3}
+.subnav button{background:none;border:0;border-bottom:2px solid transparent;padding:6px 10px 8px;cursor:pointer;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap;font-size:12.5px}
+.subnav button.on{color:var(--text);border-bottom-color:var(--series-1);font-weight:600}
+.subnav button:hover{color:var(--text)}
+.pane{padding:12px 16px 16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;min-width:0;min-height:0;padding:12px 14px;display:flex;flex-direction:column}
+.chead{display:flex;align-items:center;gap:10px;margin-bottom:6px;min-height:22px;flex-wrap:wrap}
+.chart{flex:1;min-height:0;position:relative}
+.chart svg{position:absolute;inset:0;width:100%;height:100%}
+.fill{height:clamp(420px,calc(100vh - 46px - 41px - 28px),720px)}
+.ov{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;min-height:420px}
+.recs{display:grid;grid-template-columns:320px minmax(0,1fr);gap:12px;align-items:start}
+.recs .big{font-size:44px;font-weight:700;line-height:1;letter-spacing:-.02em}.recs .big small{font-size:15px;color:var(--muted);font-weight:500}
+.chk{width:100%;border-collapse:collapse}
+.chk th{text-align:left;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line)}
+.chk td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.chk tr.row{cursor:pointer}.chk tr.row:hover td{background:var(--fill)}
+.chk tr.det td{padding:0 10px 10px 10px;border-bottom:1px solid var(--line)}.chk tr.det{display:none}.chk tr.det.on{display:table-row}
+.chk tr.row.on td{border-bottom:0}
+.chk .num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.chk .ex{font-weight:600}.chk .id{font:11px ui-monospace,Consolas,monospace;color:var(--faint)}
+.prio{display:inline-block;font-size:11px;font-weight:600;padding:0 7px;border-radius:10px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.prio.critical{color:var(--text);border-color:var(--text)}
+.prio.nice{border-style:dashed;color:var(--faint)}
+.gate{margin-top:12px;border-left:2px solid var(--critical);background:var(--fill);padding:6px 9px;border-radius:0 6px 6px 0;font-size:12px;color:var(--ink-2)}
+.dimgrid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:12px;margin-top:12px;align-items:start}
+.rag{display:inline-block;width:10px;height:10px;border-radius:50%;flex:none;vertical-align:middle}
+.rag.pass{background:var(--good)}.rag.partial{background:var(--warning)}.rag.fail{background:var(--critical)}
+.rag.na{background:transparent;border:1.5px solid var(--axis)}.rag.review{background:transparent;border:1.5px dashed var(--series-1)}
+.rag.lg{width:14px;height:14px}
+.cktab{width:100%;border-collapse:collapse;table-layout:fixed}
+.cktab th{text-align:left;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600;padding:9px 10px 7px;border-bottom:1px solid var(--line);white-space:nowrap}
+.cktab td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.4}
+.cktab tr:last-child td{border-bottom:0}
+.cktab tbody tr{cursor:pointer}
+.cktab tbody tr:hover td{background:var(--fill)}
+.cktab tbody tr.sel td{background:var(--fill)}
+.cktab tbody tr.sel td:first-child{box-shadow:inset 2px 0 0 var(--series-1)}
+.cktab .cid{font:11px ui-monospace,Consolas,monospace;color:var(--muted);word-break:break-all}
+.cktab .st{white-space:nowrap;color:var(--muted);font-size:12px}
+.cktab .st .rag{margin-right:6px}
+.detail{position:sticky;top:52px;max-height:calc(100vh - 46px - 41px - 24px);overflow:auto;padding:12px 14px}
+.detail h2{font-size:15px;margin:6px 0 10px;line-height:1.35}
+.kv{width:100%;border-collapse:collapse}
+.kv th{width:130px;text-align:left;vertical-align:top;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600;padding:9px 12px 9px 0;border-bottom:1px solid var(--line)}
+.kv td{padding:8px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-2)}
+.kv tr:last-child th,.kv tr:last-child td{border-bottom:0}
+.kv tr.hl th,.kv tr.hl td{background:var(--fill)}.kv tr.hl th{padding-left:10px;border-radius:6px 0 0 6px}.kv tr.hl td{padding-right:10px;border-radius:0 6px 6px 0}
+.kv .vd{display:flex;gap:8px;align-items:center;color:var(--text);font-weight:600}
+.evl{list-style:none;margin:0;padding:0}
+.evl>li{padding:4px 0;border-bottom:1px dashed var(--line);color:var(--ink-2)}.evl>li:last-child{border-bottom:0}
+.evl .lbl{display:block;font-size:11px;color:var(--faint);margin-bottom:1px}
+.chip{display:inline-block;background:var(--fill);border:1px solid var(--line);border-radius:5px;padding:0 6px;margin:1px 4px 1px 0;font-size:12px}
+.chip.lnk{text-decoration:none;color:var(--series-1)}
+a.fl{color:var(--series-1);text-decoration:none;font:12px ui-monospace,Consolas,monospace}a.fl:hover,.chip.lnk:hover{text-decoration:underline}
+.meter2{display:inline-block;width:70px;height:6px;border-radius:3px;background:var(--line);vertical-align:middle;margin-right:8px;overflow:hidden}
+.meter2>i{display:block;height:100%;background:var(--series-1)}
+.yn{font-weight:600}.yn.y{color:var(--good-text)}.yn.n{color:var(--bad-text)}
+.fixbox{border-left:2px solid var(--series-1);padding:6px 10px;background:var(--fill);border-radius:0 6px 6px 0;color:var(--text)}
+.meta{color:var(--faint);font-size:11.5px;margin-top:14px;border-top:1px solid var(--line);padding-top:8px}
+/* folder picker */
+.fsdlg{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:40;white-space:normal}
+.fsdlg.on{display:flex}
+.fsbox{width:min(640px,calc(100vw - 32px));height:min(560px,calc(100vh - 64px));background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);display:flex;flex-direction:column}
+.fsbox header{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center}
+.fspath{flex:1;min-width:0;font:12px ui-monospace,Consolas,monospace;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:rtl;text-align:left}
+.fsroots{display:flex;gap:6px;flex-wrap:wrap;padding:8px 14px;border-bottom:1px solid var(--line)}
+.fslist{flex:1;overflow:auto;padding:4px 6px}
+.fsrow{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:8px;align-items:center;padding:5px 8px;border-radius:6px;cursor:pointer}
+.fsrow:hover{background:var(--fill)}
+.fsrow svg{width:15px;height:15px;fill:var(--faint)}.fsrow.git svg{fill:var(--series-1)}
+.fsrow .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gitb{font-size:10.5px;font-weight:600;color:var(--series-1);border:1px solid var(--series-1);border-radius:9px;padding:0 6px}
+.fsbox footer{padding:10px 14px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:center}
+.verdict{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-weight:600}
+.det-box{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;padding:8px 10px;background:var(--fill);border-radius:6px;font-size:12px}
+.det-box h4{margin:0 0 4px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600}
+.det-box ul{margin:0;padding-left:16px;color:var(--ink-2)}.det-box li{word-break:break-word}
+.sumtx{font-size:12.5px;color:var(--ink-2)}.sumtx ul{margin:2px 0 8px;padding-left:16px}
+.dyn{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);grid-template-rows:minmax(0,1.1fr) minmax(0,1fr);gap:12px;height:calc(100vh - 46px - 28px);min-height:560px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.sw{width:14px;border-top:2px solid;display:inline-block}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+svg text{fill:var(--ink-2);font-size:12px}svg .tick{fill:var(--faint);font-size:10.5px}svg .val{fill:var(--text);font-weight:650}
+.hit{fill:transparent;cursor:pointer}
+.delta{font-size:12px;font-weight:650}.up{color:var(--good-text)}.down{color:var(--bad-text)}.flat{color:var(--muted)}
+/* actions & summary */
+.acts{list-style:none;margin:0;padding:0;overflow:auto;flex:1;min-height:0}
+.acts li{display:grid;grid-template-columns:16px minmax(0,1fr) auto;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);align-items:baseline;cursor:pointer}
+.acts li:last-child{border-bottom:0}
+.acts .n{color:var(--faint);font-weight:650;font-size:11px}
+.acts .t{font-weight:600}
+.acts .r{color:var(--muted);font-size:12px}
+.gain{color:var(--good-text);font-weight:650;font-size:12px;white-space:nowrap}
+.tag{font-size:10.5px;color:var(--muted);background:var(--fill);border-radius:9px;padding:0 6px;margin-left:6px;font-weight:500;white-space:nowrap}
+.summary{border-top:1px solid var(--line);margin-top:8px;padding-top:8px;font-size:12px;color:var(--ink-2)}
+.summary p{margin:0 0 6px}.summary .cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.summary ul{margin:2px 0 0;padding-left:16px}.summary b{color:var(--faint);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em}
+/* dimension page */
+.dimhead{display:flex;align-items:center;gap:18px;flex-direction:row;flex-wrap:wrap}
+.dimhead .num{font-size:34px;font-weight:700;line-height:1;letter-spacing:-.02em}
+.dimhead .num small{font-size:13px;color:var(--muted);font-weight:500}
+.grade{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:9px;border:2px solid;font-weight:750;font-size:20px;flex:none}
+.note{border-left:2px solid var(--series-1);background:var(--fill);padding:6px 9px;border-radius:0 6px 6px 0;font-size:12px;color:var(--ink-2)}
+.cols2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-top:12px;align-items:start}
+.cl{list-style:none;margin:0;padding:0}
+.cl>li{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.cl>li:last-child{border-bottom:0}
+.cl .tx{font-weight:600}
+.cl .st{font-size:11px;color:var(--muted);font-weight:500;margin-left:6px}
+.cl .w{font-size:11px;color:var(--faint);white-space:nowrap}
+.cl .rec{font-size:12.5px;margin-top:3px;color:var(--ink-2)}.cl .rec::before{content:"→ ";color:var(--series-1);font-weight:700}
+.cl .ev{display:none;margin:4px 0 0;padding-left:15px;color:var(--muted);font-size:12px}.cl .ev li{word-break:break-word}
+.cl>li.open .ev{display:block}
+.cl .more{font-size:11px;color:var(--faint);margin-top:3px}
+.cl>li.open .more{display:none}
+.foot{color:var(--muted);font-size:11.5px;margin-top:12px}
+.ico{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;font-size:11px;font-weight:800;color:#fff}
+.ico.pass{background:var(--good)}.ico.partial{background:var(--warning);color:#141414}.ico.fail{background:var(--critical)}.ico.na,.ico.review{background:var(--fill);color:var(--faint)}
+.minis{display:grid;grid-template-rows:repeat(10,minmax(30px,1fr));overflow:auto;flex:1;min-height:0}
+.mini{display:grid;grid-template-columns:190px minmax(0,1fr) 44px 70px;gap:12px;align-items:center;border-bottom:1px solid var(--line);cursor:pointer}.mini:last-child{border-bottom:0}.mini:hover{background:var(--fill)}
+.mini .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini svg{width:100%;height:24px}.mini .delta{white-space:nowrap}
+.mini .v{text-align:right;font-weight:650}
+.empty{margin:auto;max-width:460px;text-align:center;color:var(--muted);line-height:1.6;padding:40px 16px}
+.empty h2{color:var(--text);font-size:18px;margin-bottom:6px}
+#tip{position:fixed;pointer-events:none;z-index:30;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:8px;
+  padding:7px 9px;font-size:12px;box-shadow:0 6px 24px rgba(0,0,0,.18);opacity:0;transition:opacity .08s;max-width:280px}
+#tip .row{display:flex;justify-content:space-between;gap:14px;color:var(--muted)}#tip .row b{color:var(--text)}
+.hidden{display:none!important}
+@media (max-width:1100px){.dimgrid{grid-template-columns:1fr}.detail{position:static;max-height:none}.ov{grid-template-columns:1fr 1fr}.ov>.card:last-child{grid-column:1/-1}.fill,.dyn{height:auto}
+  .ov>.card,.dyn>.card{min-height:380px}.dyn{grid-template-columns:1fr;grid-template-rows:none}.cols2{grid-template-columns:1fr}}
+@media (max-width:720px){.ov{grid-template-columns:1fr}.minis{grid-template-columns:1fr}.panel{width:calc(100vw - 32px)}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="picker" id="picker">
+    <button type="button" id="pick-btn" aria-haspopup="true" aria-expanded="false"><span class="nm" id="proj-name">—</span>
+      <svg viewBox="0 0 24 24" id="pick-caret"><path d="M7 10l5 5 5-5z"/></svg></button>
+    <div class="fsdlg" id="fsdlg" role="dialog" aria-modal="true" aria-label="Choose a local git folder"><div class="fsbox">
+      <header><button class="icon-btn" type="button" id="fs-up" title="Parent folder">↑</button><div class="fspath" id="fs-path"></div>
+        <button class="icon-btn" type="button" id="fs-close" title="Close">✕</button></header>
+      <div class="fsroots" id="fs-roots"></div>
+      <div class="fslist" id="fs-list"></div>
+      <footer><span class="muted" id="fs-note" style="flex:1;font-size:12px"></span>
+        <button class="icon-btn" type="button" id="fs-cancel">Cancel</button><button class="icon-btn pri" type="button" id="fs-use" disabled>Use this folder</button></footer>
+    </div></div>
+    <div class="panel" id="panel" role="menu">
+      <h3>Assessed projects</h3>
+      <div id="proj-list"></div>
+      <div class="add"><h3>Assess a project</h3>
+        <form id="add-form"><input id="target" placeholder="https://github.com/owner/repo   or   D:\path\to\git-folder" autocomplete="off" spellcheck="false">
+          <button class="icon-btn" type="button" id="browse-btn" title="Choose a local folder">Browse…</button>
+          <button class="icon-btn pri" type="submit" id="scan-btn" disabled>Assess</button></form>
+        <div class="hint" id="hint">GitHub repository or a local folder that is a git repository.</div>
+        <div id="progress"></div>
+        <div class="how" id="how"><b>What happens when you press Assess</b><ol>
+          <li>GitHub repos are cloned into a local cache; local folders are read in place and never modified.</li>
+          <li>About 70 automated checks run on the latest commit and are matched to the expectations checklist.</li>
+          <li>The same checks re-run on 8 past commits, and git history is measured, for the Dynamics view.</li></ol>
+          Runs locally, takes 1–2 minutes, no AI involved. The result is saved as a new run in <code>runs/</code>.</div>
+      </div>
+    </div>
+  </div>
+  <nav class="tabs" id="tabs"><button data-v="assessment" class="on" type="button">Assessment</button><button data-v="recommendations" type="button">Recommendations</button><button data-v="dynamics" type="button">Dynamics</button></nav>
+  <span class="spacer"></span>
+  <button class="icon-btn" id="theme" type="button" aria-label="Toggle theme"></button>
+</header>
+
+<section class="view on" id="v-assessment">
+  <nav class="subnav" id="subnav"></nav>
+  <div class="pane" id="assess-pane"></div>
+</section>
+<section class="view" id="v-recommendations"><div class="pane" id="rec-pane"></div></section>
+<section class="view" id="v-dynamics"><div class="pane" id="dyn-pane"></div></section>
+<section class="view" id="v-empty"><div class="empty" id="empty"></div></section>
+<div id="tip" role="tooltip"></div>
+
+<script>
+const MODE = /*__MODE__*/"static";
+let REPORT = /*__REPORT__*/null;
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const BANDS = { good: "Good", warning: "Needs work", serious: "Weak", critical: "Critical", na: "N/A" };
+const bandColor = (b) => b === "na" || !b ? "var(--axis)" : `var(--${b})`;
+const bandOf = (s) => s == null ? "na" : s >= 75 ? "good" : s >= 50 ? "warning" : s >= 30 ? "serious" : "critical";
+const ICON = { pass: "✓", partial: "!", fail: "✕", na: "–" };
+const fmt = (v) => v == null ? "–" : (Math.round(v * 10) / 10).toString();
+const fdate = (s) => new Date(s).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+const svgNS = "http://www.w3.org/2000/svg";
+function el(tag, attrs = {}, parent) { const e = document.createElementNS(svgNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function svgIn(host, label) { host.innerHTML = ""; const W = host.clientWidth, H = host.clientHeight;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": label }, host); return { svg, W, H }; }
+const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
+
+/* ---------- theme ---------- */
+const SUN = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M11 1h2v4h-2zM11 19h2v4h-2zM1 11h4v2H1zM19 11h4v2h-4zM4.2 5.6l1.4-1.4 2.8 2.8-1.4 1.4zM15.6 17l1.4-1.4 2.8 2.8-1.4 1.4zM4.2 18.4l2.8-2.8 1.4 1.4-2.8 2.8zM15.6 7l2.8-2.8 1.4 1.4-2.8 2.8z"/></svg>';
+const MOON = '<svg viewBox="0 0 24 24"><path d="M21 14.5A9 9 0 0 1 9.5 3a9 9 0 1 0 11.5 11.5z"/></svg>';
+const RESCAN = '<svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.75 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"/></svg>';
+const root = document.documentElement, tbtn = $("#theme");
+function theme(m) { root.dataset.theme = m; tbtn.innerHTML = m === "dark" ? SUN : MOON; tbtn.title = m === "dark" ? "Light theme" : "Dark theme"; store("sdlc360-theme", m); }
+theme(root.dataset.theme || "light");
+tbtn.onclick = () => theme(root.dataset.theme === "dark" ? "light" : "dark");
+
+/* ---------- tooltip ---------- */
+const tip = $("#tip");
+function showTip(ev, html) { tip.innerHTML = html; tip.style.opacity = 1; moveTip(ev); }
+function moveTip(ev) { const p = 14, r = tip.getBoundingClientRect(); let x = ev.clientX + p, y = ev.clientY + p;
+  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - p; if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - p;
+  tip.style.left = x + "px"; tip.style.top = y + "px"; }
+const hideTip = () => tip.style.opacity = 0;
+function dimTip(d) {
+  const c = d.checks.reduce((a, x) => (a[x.status] = (a[x.status] || 0) + 1, a), {});
+  return `<b>${esc(d.name)}</b><div class="row"><span>Score</span><b>${fmt(d.score)} · ${d.grade}</b></div>` +
+    (d.adjust ? `<div class="row"><span>Automated</span><span>${fmt(d.auto_score)}</span></div>` : "") +
+    `<div class="row"><span>Status</span><span>${BANDS[d.band]}</span></div>` +
+    (d.capped_by && d.capped_by.length ? `<div class="row"><span>Critical gate</span><span>capped (${fmt(d.uncapped_score)} → ${fmt(d.score)})</span></div>` : "") +
+    `<div class="row"><span>Checks</span><span>✓${c.pass || 0} · !${c.partial || 0} · ✕${c.fail || 0}</span></div>`;
+}
+function bindDim(node, d) { node.addEventListener("mouseenter", (e) => showTip(e, dimTip(d))); node.addEventListener("mousemove", moveTip);
+  node.addEventListener("mouseleave", hideTip); node.addEventListener("click", () => { hideTip(); go("assessment", d.id); }); }
+
+/* ---------- routing: #assessment/<sub> | #dynamics ---------- */
+let state = { view: "assessment", sub: "overview" };
+function go(view, sub) { state.view = view; if (sub) state.sub = sub; history.replaceState(null, "", `#${state.view}${state.view === "assessment" ? "/" + state.sub : ""}`); render(); }
+(function parseHash() { const [v, s] = location.hash.slice(1).split("/"); if (["dynamics", "assessment", "recommendations"].includes(v)) state.view = v; if (s) state.sub = s; })();
+document.querySelectorAll("#tabs button").forEach((b) => b.onclick = () => go(b.dataset.v));
+
+function render() {
+  hideTip();
+  if (!REPORT) { showEmpty(); return; }
+  document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("on", b.dataset.v === state.view));
+  $("#tabs").classList.remove("hidden");
+  for (const v of ["assessment", "recommendations", "dynamics", "empty"]) $("#v-" + v).classList.toggle("on", v === state.view);
+  if (state.view === "assessment") renderAssessment(); else if (state.view === "recommendations") renderRecommendations(); else renderDynamics();
+}
+
+/* =================== ASSESSMENT =================== */
+function renderAssessment() {
+  const dims = REPORT.dimensions;
+  if (state.sub !== "overview" && !dims.some((d) => d.id === state.sub)) state.sub = "overview";
+  $("#subnav").innerHTML = `<button data-s="overview" class="${state.sub === "overview" ? "on" : ""}">Overview</button>` +
+    dims.map((d) => `<button data-s="${d.id}" class="${state.sub === d.id ? "on" : ""}">${esc(d.name)}</button>`).join("");
+  $("#subnav").querySelectorAll("button").forEach((b) => b.onclick = () => go("assessment", b.dataset.s));
+  if (state.sub === "overview") overview(); else dimension(dims.find((d) => d.id === state.sub));
+}
+
+function overview() {
+  $("#assess-pane").innerHTML = `
+  <div class="ov fill">
+    <div class="card"><div class="chead"><h3>Maturity profile</h3><span class="spacer"></span><span class="legend" id="radar-legend"></span></div><div class="chart" id="radar"></div></div>
+    <div class="card"><div class="chead"><h3>Scores by aspect</h3><span class="spacer"></span>
+      <span class="legend">${["good", "warning", "serious", "critical"].map((b) => `<span><span class="dot" style="background:${bandColor(b)};border-radius:2px"></span>${BANDS[b]}</span>`).join("")}</span></div>
+      <div class="chart" id="bars"></div></div>
+  </div>`;
+  radar($("#radar")); bars($("#bars"));
+}
+
+/* =================== RECOMMENDATIONS =================== */
+function allActions() {
+  const acts = [];
+  for (const d of REPORT.dimensions) {
+    const cs = d.checks.filter((c) => c.score != null), tw = cs.reduce((a, c) => a + c.weight, 0) || 1;
+    for (const c of cs) if (c.status !== "pass") {
+      const gain = 100 * c.weight * (1 - c.score) / tw;
+      acts.push({ d, c, gain, rank: PRIO_RANK[c.priority] ?? 1, prio: gain * (1 + (100 - (d.score || 0)) / 100) });
+    }
+  }
+  return acts.sort((a, b) => a.rank - b.rank || b.prio - a.prio);  // critical first, then by impact
+}
+function renderRecommendations() {
+  const R = REPORT, o = R.overall, rv = R.review || {}, scored = R.dimensions.filter((d) => d.score != null), acts = allActions();
+  const ul = (xs) => xs && xs.length ? `<ul>${xs.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : `<div class="muted" style="margin-bottom:8px">–</div>`;
+  const strong = rv.strengths || scored.filter((d) => d.band === "good").map((d) => `${d.name} (${fmt(d.score)})`);
+  const weak = rv.risks || scored.filter((d) => ["critical", "serious"].includes(d.band)).map((d) => `${d.name} (${fmt(d.score)})`);
+  $("#rec-pane").innerHTML = `<div class="recs">
+    <div class="card"><h3>Overall maturity</h3>
+      <div style="display:flex;align-items:center;gap:14px;margin:10px 0 6px"><div class="big">${fmt(o.score)}<small> /100</small></div>
+        <span class="grade" style="border-color:${bandColor(o.band)}">${o.grade}</span></div>
+      <div class="legend" style="margin-bottom:12px"><span><span class="dot" style="background:${bandColor(o.band)}"></span>${BANDS[o.band]}</span><span>${acts.length} open expectations</span></div>
+      <div class="sumtx">${rv.summary ? `<p style="margin:0 0 8px">${esc(rv.summary)}</p>` : ""}
+        <h3 style="margin:4px 0 2px">${rv.strengths ? "Strengths" : "Strong aspects"}</h3>${ul(strong)}
+        <h3 style="margin:4px 0 2px">${rv.risks ? "Risks" : "Weak aspects"}</h3>${ul(weak)}</div></div>
+    <div class="card" style="padding:4px 4px"><table class="chk"><thead><tr><th style="width:36px">#</th><th>Open expectation · what to do</th><th style="width:120px">Priority</th><th style="width:140px">Aspect</th><th style="width:110px">Status</th><th class="num" style="width:90px" title="Points this aspect gains when the expectation is fully met">Gain</th></tr></thead><tbody>
+      ${acts.map((a, i) => `<tr class="row" data-d="${a.d.id}"><td class="muted">${i + 1}</td>
+        <td><div class="ex">${esc(a.c.title)}</div>${a.c.recommendation ? `<div class="muted" style="font-size:12px;margin-top:2px">→ ${esc(a.c.recommendation)}</div>` : ""}</td>
+        <td>${prio(a.c.priority)}</td><td class="muted">${esc(a.d.name)}</td><td>${verdict(a.c.status)}</td><td class="num delta up">+${fmt(a.gain)}</td></tr>`).join("")
+        || `<tr><td></td><td class="muted">Every expectation is met.</td></tr>`}
+    </tbody></table></div></div>`;
+  $("#rec-pane").querySelectorAll("tr.row").forEach((tr) => tr.onclick = () => go("assessment", tr.dataset.d));
+}
+const VERDICT = { pass: ["Met", "pass"], partial: ["Partially met", "partial"], fail: ["Not met", "fail"], na: ["Not applicable", "na"], review: ["Awaiting review", "review"] };
+const PRIO_LABEL = { critical: "Critical", important: "Important", nice: "Nice to have" }, PRIO_RANK = { critical: 0, important: 1, nice: 2 };
+const prio = (p) => `<span class="prio ${p || "important"}">${PRIO_LABEL[p] || "Important"}</span>`;
+const rag = (st, cls = "") => `<span class="rag ${st} ${cls}" title="${VERDICT[st][0]}"></span>`;
+const verdict = (st) => `<span class="verdict">${rag(st)}${VERDICT[st][0]}</span>`;
+
+function radar(host) {
+  const dims = REPORT.dimensions, { svg, W, H } = svgIn(host, "Radar chart of dimension scores");
+  const n = dims.length, cx = W / 2, cy = H / 2 + 4, rad = Math.max(60, Math.min(W / 2 - 150, H / 2 - 36));
+  const ang = (i) => -Math.PI / 2 + (2 * Math.PI * i) / n, pt = (i, v) => [cx + Math.cos(ang(i)) * rad * v / 100, cy + Math.sin(ang(i)) * rad * v / 100];
+  for (const lvl of [25, 50, 75, 100]) {
+    el("polygon", { points: dims.map((_, i) => pt(i, lvl).join(",")).join(" "), fill: "none", stroke: lvl === 75 ? "var(--faint)" : "var(--grid)", "stroke-dasharray": lvl === 75 ? "4 4" : "" }, svg);
+    if (lvl < 100) el("text", { x: cx + 5, y: cy - rad * lvl / 100 + 12, class: "tick" }, svg).textContent = lvl;
+  }
+  dims.forEach((d, i) => {
+    const [x, y] = pt(i, 100); el("line", { x1: cx, y1: cy, x2: x, y2: y, stroke: "var(--grid)" }, svg);
+    const [lx, ly] = pt(i, 100 + 22 * 100 / rad), cos = Math.cos(ang(i)), anchor = Math.abs(cos) < 0.2 ? "middle" : cos > 0 ? "start" : "end";
+    const t = el("text", { x: lx, y: ly, "text-anchor": anchor, "dominant-baseline": "middle", style: "cursor:pointer" }, svg);
+    el("tspan", { x: lx, dy: "-0.5em" }, t).textContent = d.name;
+    el("tspan", { x: lx, dy: "1.2em", class: "val" }, t).textContent = fmt(d.score);
+    bindDim(t, d);
+  });
+  const reviewed = dims.some((d) => d.adjust), poly = (k) => dims.map((d, i) => pt(i, d[k] ?? 0).join(",")).join(" ");
+  if (reviewed) el("polygon", { points: poly("auto_score"), fill: "none", stroke: "var(--series-2)", "stroke-width": 2, "stroke-dasharray": "5 4", "stroke-linejoin": "round" }, svg);
+  el("polygon", { points: poly("score"), fill: "var(--series-1)", "fill-opacity": 0.16, stroke: "var(--series-1)", "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+  dims.forEach((d, i) => { const [x, y] = pt(i, d.score ?? 0);
+    el("circle", { cx: x, cy: y, r: 4.5, fill: "var(--series-1)", stroke: "var(--surface)", "stroke-width": 2 }, svg);
+    bindDim(el("circle", { cx: x, cy: y, r: 15, class: "hit" }, svg), d); });
+  $("#radar-legend").innerHTML = (reviewed ? `<span><i class="sw" style="border-color:var(--series-1)"></i>Final</span><span><i class="sw" style="border-color:var(--series-2);border-top-style:dashed"></i>Automated</span>` : "")
+    + `<span><i class="sw" style="border-color:var(--faint);border-top-style:dashed"></i>Target 75</span>`;
+}
+
+function bars(host) {
+  const rows = [...REPORT.dimensions].sort((a, b) => (b.score ?? -1) - (a.score ?? -1)), { svg, W, H } = svgIn(host, "Bar chart of dimension scores");
+  const top = 4, bottom = 22, labelW = 168, right = 96, rowH = (H - top - bottom) / rows.length, plotW = Math.max(40, W - labelW - right), x = (v) => labelW + plotW * v / 100;
+  rows.forEach((d, i) => { const hit = el("rect", { x: 0, y: top + i * rowH, width: W, height: rowH, class: "hit" }, svg);
+    hit.addEventListener("mouseenter", () => hit.style.fill = "var(--fill)"); hit.addEventListener("mouseleave", () => hit.style.fill = ""); bindDim(hit, d); });
+  for (const t of [0, 25, 50, 75, 100]) {
+    el("line", { x1: x(t), x2: x(t), y1: top, y2: H - bottom + 2, stroke: t ? "var(--grid)" : "var(--axis)", "stroke-dasharray": t === 75 ? "4 4" : "", "pointer-events": "none" }, svg);
+    el("text", { x: x(t), y: H - 6, "text-anchor": "middle", class: "tick" }, svg).textContent = t;
+  }
+  const np = { "pointer-events": "none" };
+  rows.forEach((d, i) => {
+    const y = top + i * rowH, bh = Math.min(16, rowH * 0.45), by = y + (rowH - bh) / 2, v = d.score ?? 0, w = Math.max(0, x(v) - x(0));
+    el("text", { x: labelW - 10, y: y + rowH / 2, "text-anchor": "end", "dominant-baseline": "middle", ...np }, svg).textContent = d.name;
+    if (w > 0) { const r = Math.min(4, w); el("path", { d: `M${x(0)},${by} h${w - r} a${r},${r} 0 0 1 ${r},${r} v${bh - 2 * r} a${r},${r} 0 0 1 -${r},${r} h-${w - r} z`, fill: bandColor(d.band), ...np }, svg); }
+    const lbl = el("text", { x: x(v) + 7, y: y + rowH / 2, "dominant-baseline": "middle", ...np }, svg);
+    el("tspan", { class: "val" }, lbl).textContent = fmt(d.score);
+    el("tspan", { dx: 5, class: "tick" }, lbl).textContent = BANDS[d.band];
+  });
+}
+
+let SEL = {};  // selected check per aspect
+function dimension(d) {
+  const cnt = (s) => d.checks.filter((c) => c.status === s).length;
+  const assessed = cnt("pass") + cnt("partial") + cnt("fail");
+  if (SEL[d.id] == null) { const i = d.checks.findIndex((c) => c.status === "fail" || c.status === "partial"); SEL[d.id] = i < 0 ? 0 : i; }
+  $("#assess-pane").innerHTML = `
+    <div class="card dimhead" style="padding:10px 14px">
+      <div style="flex:1;min-width:260px"><h2 style="font-size:15px">${esc(d.name)}</h2><div class="muted" style="font-size:12px">${esc(d.description)}</div></div>
+      <div style="text-align:right"><div style="font-size:13px;font-weight:600">${cnt("pass")} of ${assessed} expectations met</div>
+        <div class="muted" style="font-size:11.5px">${cnt("partial")} partially · ${cnt("fail")} not met${cnt("review") ? " · " + cnt("review") + " awaiting review" : ""}${cnt("na") ? " · " + cnt("na") + " n/a" : ""}</div></div>
+      <div class="num" style="font-size:30px">${fmt(d.score)}<small> /100</small></div><span class="grade" style="border-color:${bandColor(d.band)};width:36px;height:36px;font-size:18px">${d.grade}</span>
+    </div>
+    ${d.capped_by && d.capped_by.length ? `<div class="gate"><b>Critical gate:</b> ${d.capped_by.length === 1 ? "a critical expectation is" : d.capped_by.length + " critical expectations are"} not fully met, so this aspect is capped at ${fmt(d.score)} (would be ${fmt(d.uncapped_score)}).</div>` : ""}
+    ${d.review_notes && d.review_notes.length ? `<div class="note" style="margin-top:12px">${d.adjust ? `<b>${d.adjust > 0 ? "+" : ""}${d.adjust}</b> reviewer adjustment · ` : ""}${d.review_notes.map(esc).join(" ")}</div>` : ""}
+    <div class="dimgrid">
+      <div class="card" style="padding:0"><table class="cktab" id="cktab" tabindex="0" style="outline:none">
+        <colgroup><col style="width:178px"><col style="width:100px"><col><col style="width:74px"></colgroup>
+        <thead><tr><th>ID</th><th>Criticality</th><th>Description</th><th>Status</th></tr></thead>
+        <tbody>${d.checks.map((c, i) => `<tr data-i="${i}">
+          <td class="cid">${esc(c.id)}</td><td>${prio(c.priority)}</td><td>${esc(c.title)}</td>
+          <td class="st">${rag(c.status)}${c.score == null ? "–" : Math.round(c.score * 100) + "%"}</td></tr>`).join("")}</tbody>
+      </table></div>
+      <div class="card detail" id="ckdetail"></div>
+    </div>
+    <div class="foot">Expectations and priorities come from <code>checklists/default.md</code> or the repository's <code>.sdlc360/expectations.md</code>. Use ↑ ↓ to move through the checks.</div>`;
+  const rows = document.querySelectorAll("#cktab tbody tr");
+  const select = (i) => { SEL[d.id] = i; rows.forEach((r) => r.classList.toggle("sel", +r.dataset.i === i)); $("#ckdetail").innerHTML = checkDetail(d.checks[i]); };
+  rows.forEach((r) => r.onclick = () => { select(+r.dataset.i); $("#cktab").focus({ preventScroll: true }); });
+  $("#cktab").onkeydown = (e) => { const n = d.checks.length; if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault();
+    select((SEL[d.id] + (e.key === "ArrowDown" ? 1 : n - 1)) % n); document.querySelector("#cktab tr.sel").scrollIntoView({ block: "nearest" }); } };
+  select(Math.min(SEL[d.id], d.checks.length - 1));
+}
+
+/* ---------- evidence: turn raw scanner strings into readable facts ---------- */
+const PATH_RE = /(?<=^|[\s,(\[`])(\.[\w-]+(?:\/[\w@.-]+)+|(?:[\w@~-][\w@~.-]*\/)+[\w@-][\w@.-]*\.[A-Za-z0-9]{1,6}|[\w-]+\.(?:md|py|ts|tsx|js|jsx|json|ya?ml|toml|ini|cfg|lock|sh|ps1|go|rs|java|cs|rb|mdx|rst))(?::(\d+))?(?=$|[\s,;)\]`]|\.(?:\s|$))/g;
+function fileUrl(path, line) {
+  const R = REPORT.repo, sha = (R.head || {}).sha;
+  if (R.source.startsWith("github.com/")) return `https://${R.source}/blob/${sha || "HEAD"}/${path}${line ? "#L" + line : ""}`;
+  return `vscode://file/${R.source.split(String.fromCharCode(92)).join("/")}/${path}${line ? ":" + line : ""}`;
+}
+function linkify(text) {
+  return esc(text).replace(PATH_RE, (m, path, line) => path.includes("*")  ? m
+    : `<a class="fl" href="${fileUrl(path, line)}" target="_blank" rel="noopener" title="Open ${esc(path)}">${path}${line ? ":" + line : ""}</a>`)
+    .replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+function valueHtml(v) {
+  v = v.trim();
+  if (/^(true|yes)$/i.test(v)) return `<span class="yn y">yes</span>`;
+  if (/^(false|no|none|nothing relevant)$/i.test(v)) return `<span class="yn n">${/^false$/i.test(v) ? "no" : esc(v)}</span>`;
+  const more = /\s*\(\+(\d+) more\)$/.exec(v); if (more) v = v.slice(0, more.index);
+  const parts = v.split(/,\s+/);
+  if (parts.length > 1 && parts.every((x) => x.length < 70)) return parts.map((x) => `<span class="chip">${linkify(x)}</span>`).join("") + (more ? `<span class="muted"> and ${more[1]} more</span>` : "");
+  return linkify(v) + (more ? `<span class="muted"> and ${more[1]} more</span>` : "");
+}
+function evidenceItem(e) {
+  let m = /^(\d+)\/(\d+)\s+(.*)$/.exec(e);  // "3/5 workflows declare permissions"
+  if (m) { const pct = +m[2] ? Math.round(100 * m[1] / m[2]) : 0;
+    return `<li><span class="meter2"><i style="width:${pct}%"></i></span><b>${m[1]} of ${m[2]}</b> ${linkify(m[3])}</li>`; }
+  m = /^([A-Za-z][\w .()/'-]{1,40}?):\s+(.+)$/.exec(e);  // "covers: commands, testing"
+  if (m && !/^https?$/i.test(m[1])) return `<li><span class="lbl">${esc(m[1])}</span>${valueHtml(m[2])}</li>`;
+  m = /^(.+?) at ([^\s]+:\d+) \[(.+?)\](.*)$/.exec(e);  // secret findings
+  if (m) return `<li><b>${esc(m[1])}</b> in ${linkify(m[2])} <span class="muted">· value ${esc(m[3])} (masked)${esc(m[4])}</span></li>`;
+  m = /^(.+?) -> (.+)$/.exec(e);  // "doc.md -> missing/path"
+  if (m) return `<li>${linkify(m[1])} <span class="muted">references missing</span> <code>${esc(m[2])}</code></li>`;
+  return `<li>${linkify(e)}</li>`;
+}
+function whyText(c) {
+  const pct = c.score == null ? null : Math.round(c.score * 100);
+  return { pass: ["Met · 100%", "Everything this expectation requires was found at the assessed commit."],
+    partial: [`Partially met · ${pct}%`, "Some of the required signals were found, others are missing."],
+    fail: [`Not met · ${pct}%`, "The required signals were not found at the assessed commit."],
+    na: ["Not applicable", "This expectation does not apply to this project, so it is left out of the score."],
+    review: ["Awaiting review", "This is your own expectation. The reviewer agent has not judged it yet."] }[c.status];
+}
+function checkDetail(c) {
+  if (!c) return "";
+  const [head, sub] = whyText(c), m = c.method || {}, h = REPORT.repo.head || {}, gh = REPORT.repo.source.startsWith("github.com/");
+  const row = (k, v, cls = "") => v ? `<tr class="${cls}"><th>${k}</th><td>${v}</td></tr>` : "";
+  return `<div style="display:flex;gap:8px;align-items:center"><span class="cid" style="font:11.5px ui-monospace,Consolas,monospace;color:var(--muted)">${esc(c.id)}</span>${prio(c.priority)}</div>
+    <h2>${esc(c.title)}</h2>
+    <table class="kv"><tbody>
+      ${row("Expected", m.met_when ? linkify(m.met_when) : esc(c.title))}
+      ${row("Found", c.evidence.length ? `<ul class="evl">${c.evidence.map(evidenceItem).join("")}</ul>` : `<span class="muted">No evidence recorded.</span>`)}
+      ${row("Verdict", `<div class="vd">${rag(c.status, "lg")}${head}</div><div style="margin-top:2px">${sub}</div>`, "hl")}
+      ${c.status !== "pass" && c.status !== "na" && c.recommendation ? row("To do", `<span style="color:var(--text)">${linkify(c.recommendation)}</span>`) : ""}
+      ${row("How checked", m.looks_at ? linkify(m.looks_at) : "")}
+      ${row("Assessed", `${c.source === "review" ? "Reviewer agent" : "Scanner"}${h.sha ? ` · commit ${gh ? `<a class="fl" href="https://${REPORT.repo.source}/commit/${h.sha}" target="_blank" rel="noopener">${h.sha.slice(0, 8)}</a>` : `<code>${h.sha.slice(0, 8)}</code>`}` : ""} · ${fdate(REPORT.generated_at)}`)}
+      ${row("Counts", `${PRIO_LABEL[c.priority] || "Important"} · weight ${c.weight}${c.priority === "critical" ? " · gate: not met caps the aspect at 49, partially at 74" : ""}`)}
+    </tbody></table>`;
+}
+
+/* =================== DYNAMICS =================== */
+const scorePoints = (get) => ((REPORT.history || {}).scores || []).filter((p) => get(p) != null).map((p) => ({ x: new Date(p.date), y: get(p), sha: p.sha }));
+function deltaHtml(pts) { if (pts.length < 2) return ""; const dv = pts.at(-1).y - pts[0].y, cls = dv > 0.5 ? "up" : dv < -0.5 ? "down" : "flat";
+  return `<span class="delta ${cls}">${dv > 0.5 ? "▲" : dv < -0.5 ? "▼" : "■"} ${dv > 0 ? "+" : ""}${fmt(dv)}</span> <span class="muted" style="font-size:11.5px">since ${fdate(pts[0].x)}</span>`; }
+function rolling(rows, key, k = 4) { return rows.map((r, i) => { const win = rows.slice(Math.max(0, i - k + 1), i + 1); const c = win.reduce((a, w) => a + w.commits, 0);
+  return c ? win.reduce((a, w) => a + (w[key] || 0) * w.commits / 100, 0) / c * 100 : null; }); }
+
+function renderDynamics() {
+  const H = REPORT.history || {}, weeks = (H.velocity || {}).weeks || [], overallPts = scorePoints((p) => p.overall);
+  if (!weeks.length && overallPts.length < 2) {
+    $("#dyn-pane").innerHTML = `<div class="empty"><h2>No history in this run</h2>Re-scan with history enabled to see how the project evolves:<br><code>python sdlc.py scan &lt;target&gt; --history 8</code></div>`; return;
+  }
+  const last12 = weeks.slice(-12), prev12 = weeks.slice(-24, -12), sum = (a, k) => a.reduce((s, w) => s + w[k], 0);
+  const vNow = sum(last12, "commits") / Math.max(1, last12.length), vPrev = prev12.length ? sum(prev12, "commits") / prev12.length : null;
+  const vd = vPrev ? (vNow - vPrev) / vPrev * 100 : null;
+  $("#dyn-pane").innerHTML = `
+  <div class="dyn">
+    <div class="card"><div class="chead"><h3>Maturity over time</h3><span class="spacer"></span>${deltaHtml(overallPts)}</div>
+      <div class="chart" id="d-overall"></div></div>
+    <div class="card"><div class="chead"><h3>Dimensions over time</h3><span class="spacer"></span><span class="muted" style="font-size:11.5px">change since first sampled scan</span></div>
+      <div class="minis" id="d-minis"></div></div>
+    <div class="card"><div class="chead"><h3>Velocity · commits per week</h3><span class="spacer"></span>
+        ${vd == null ? "" : `<span class="delta ${vd > 5 ? "up" : vd < -5 ? "down" : "flat"}">${vd > 0 ? "+" : ""}${Math.round(vd)}%</span><span class="muted" style="font-size:11.5px">last 12 wk vs previous 12</span>`}</div>
+      <div class="chart" id="d-velocity" style="flex:1.4"></div>
+      <div class="chead" style="margin-top:6px"><h3>Active contributors per week</h3></div><div class="chart" id="d-authors"></div></div>
+    <div class="card"><div class="chead"><h3>Engineering discipline · share of commits</h3><span class="spacer"></span>
+        <span class="legend"><span><i class="sw" style="border-color:var(--series-1)"></i>touch tests</span><span><i class="sw" style="border-color:var(--series-2)"></i>touch docs</span></span></div>
+      <div class="chart" id="d-quality"></div><div class="muted" style="font-size:11.5px;margin-top:4px">4-week rolling share of commits that change test files / documentation.</div></div>
+  </div>`;
+  if (overallPts.length > 1) lineChart($("#d-overall"), [{ name: "Overall", color: "var(--series-1)", pts: overallPts }], { yMin: 0, yMax: 100, ref: 75, dots: true, sha: true });
+  else $("#d-overall").innerHTML = `<div class="empty">Only one scan point. Re-scan with <code>--history 8</code>.</div>`;
+  const nPts = ((REPORT.history || {}).scores || []).length;
+  $("#d-minis").innerHTML = REPORT.dimensions.map((d) => {
+    const p = scorePoints((x) => x.dims[d.id]), dv = p.length > 1 ? p.at(-1).y - p[0].y : null;
+    return `<div class="mini" data-d="${d.id}"><span class="nm">${esc(d.name)}</span><svg data-spark="${d.id}"></svg><span class="v">${fmt(d.score)}</span>
+      <span class="delta ${dv == null || Math.abs(dv) <= 0.5 ? "flat" : dv > 0 ? "up" : "down"}" style="text-align:right">${dv == null || nPts < 2 ? "" : (Math.abs(dv) <= 0.5 ? "■ 0" : (dv > 0 ? "▲ +" : "▼ ") + fmt(dv))}</span></div>`;
+  }).join("");
+  $("#d-minis").querySelectorAll(".mini").forEach((m) => m.onclick = () => go("assessment", m.dataset.d));
+  $("#d-minis").querySelectorAll("svg[data-spark]").forEach((s) => spark(s, scorePoints((x) => x.dims[s.dataset.spark])));
+  if (weeks.length) {
+    columnChart($("#d-velocity"), weeks.map((w) => ({ x: new Date(w.week), y: w.commits, w })));
+    lineChart($("#d-authors"), [{ name: "Contributors", color: "var(--series-1)", pts: weeks.map((w) => ({ x: new Date(w.week), y: w.authors })) }], { yMin: 0, compact: true });
+    const t = rolling(weeks, "tests_pct"), dd = rolling(weeks, "docs_pct");
+    lineChart($("#d-quality"), [{ name: "Touch tests", color: "var(--series-1)", pts: weeks.map((w, i) => ({ x: new Date(w.week), y: t[i] })) },
+      { name: "Touch docs", color: "var(--series-2)", pts: weeks.map((w, i) => ({ x: new Date(w.week), y: dd[i] })) }], { yMin: 0, yMax: 100, unit: "%" });
+  }
+}
+
+/* ---------- generic charts ---------- */
+function niceMax(v) { if (v <= 5) return 5; const p = Math.pow(10, Math.floor(Math.log10(v))), m = v / p; return (m <= 2 ? 2 : m <= 5 ? 5 : 10) * p; }
+const mfmt = (d, span) => d.toLocaleDateString(undefined, span > 400 * 864e5 ? { month: "short", year: "2-digit" } : { month: "short", day: "numeric" });
+
+function lineChart(host, series, o = {}) {
+  const { svg, W, H } = svgIn(host, series.map((s) => s.name).join(", ") + " over time");
+  const L = 34, Rr = 12, T = 8, B = o.compact ? 18 : 22, all = series.flatMap((s) => s.pts.filter((p) => p.y != null));
+  if (!all.length || H < 20) return;
+  const x0 = Math.min(...all.map((p) => +p.x)), x1 = Math.max(...all.map((p) => +p.x));
+  const yMin = o.yMin ?? 0, yMax = o.yMax ?? niceMax(Math.max(...all.map((p) => p.y)) * 1.1);
+  const X = (t) => L + (W - L - Rr) * ((+t - x0) / ((x1 - x0) || 1)), Y = (v) => T + (H - T - B) * (1 - (v - yMin) / (yMax - yMin));
+  const yt = o.compact ? [yMin, yMax] : [0, .25, .5, .75, 1].map((f) => yMin + (yMax - yMin) * f);
+  yt.forEach((v) => { el("line", { x1: L, x2: W - Rr, y1: Y(v), y2: Y(v), stroke: v === yMin ? "var(--axis)" : "var(--grid)" }, svg);
+    el("text", { x: L - 6, y: Y(v), "text-anchor": "end", "dominant-baseline": "middle", class: "tick" }, svg).textContent = Math.round(v) + (o.unit || ""); });
+  if (o.ref != null) el("line", { x1: L, x2: W - Rr, y1: Y(o.ref), y2: Y(o.ref), stroke: "var(--faint)", "stroke-dasharray": "4 4" }, svg);
+  const nt = Math.max(2, Math.min(6, Math.floor((W - L) / 90)));
+  for (let i = 0; i <= nt; i++) { const d = new Date(x0 + (x1 - x0) * i / nt);
+    el("text", { x: X(d), y: H - 5, "text-anchor": i === 0 ? "start" : i === nt ? "end" : "middle", class: "tick" }, svg).textContent = mfmt(d, x1 - x0); }
+  series.forEach((s) => {
+    let dpath = "", pen = false;
+    s.pts.forEach((p) => { if (p.y == null) { pen = false; return; } dpath += (pen ? "L" : "M") + X(p.x).toFixed(1) + "," + Y(p.y).toFixed(1); pen = true; });
+    el("path", { d: dpath, fill: "none", stroke: s.color, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+    if (o.dots) s.pts.forEach((p) => p.y != null && el("circle", { cx: X(p.x), cy: Y(p.y), r: 4, fill: s.color, stroke: "var(--surface)", "stroke-width": 2 }, svg));
+  });
+  const xs = [...new Set(all.map((p) => +p.x))].sort((a, b) => a - b);
+  const cross = el("line", { y1: T, y2: H - B, stroke: "var(--axis)", visibility: "hidden" }, svg);
+  const ov = el("rect", { x: L, y: T, width: W - L - Rr, height: H - T - B, fill: "transparent" }, svg);
+  ov.addEventListener("mousemove", (e) => {
+    const r = svg.getBoundingClientRect(), mx = (e.clientX - r.left) * W / r.width;
+    const t = xs.reduce((b, v) => Math.abs(X(v) - mx) < Math.abs(X(b) - mx) ? v : b, xs[0]);
+    cross.setAttribute("x1", X(t)); cross.setAttribute("x2", X(t)); cross.setAttribute("visibility", "visible");
+    const rows = series.map((s) => { const p = s.pts.find((q) => +q.x === t); return p && p.y != null ? `<div class="row"><span><i class="sw" style="border-color:${s.color}"></i> ${esc(s.name)}</span><b>${fmt(p.y)}${o.unit || ""}</b></div>` : ""; }).join("");
+    const p0 = series[0].pts.find((q) => +q.x === t);
+    showTip(e, `<b>${fdate(t)}</b>${rows}${o.sha && p0 && p0.sha ? `<div class="row"><span>commit</span><code>${p0.sha.slice(0, 8)}</code></div>` : ""}`);
+  });
+  ov.addEventListener("mouseleave", () => { cross.setAttribute("visibility", "hidden"); hideTip(); });
+}
+
+function columnChart(host, data) {
+  const { svg, W, H } = svgIn(host, "Commits per week");
+  const L = 34, Rr = 12, T = 8, B = 22, yMax = niceMax(Math.max(1, ...data.map((d) => d.y)));
+  const bw = (W - L - Rr) / data.length, Y = (v) => T + (H - T - B) * (1 - v / yMax);
+  data.forEach((d, i) => {
+    const hit = el("rect", { x: L + i * bw, y: T, width: bw, height: H - T - B, class: "hit" }, svg);
+    hit.addEventListener("mouseenter", (e) => { hit.style.fill = "var(--fill)";
+      showTip(e, `<b>Week of ${fdate(d.x)}</b><div class="row"><span>Commits</span><b>${d.y}</b></div><div class="row"><span>Contributors</span><span>${d.w.authors}</span></div><div class="row"><span>Files touched</span><span>${d.w.files}</span></div>`); });
+    hit.addEventListener("mousemove", moveTip); hit.addEventListener("mouseleave", () => { hit.style.fill = ""; hideTip(); });
+  });
+  [0, yMax / 2, yMax].forEach((v) => { el("line", { x1: L, x2: W - Rr, y1: Y(v), y2: Y(v), stroke: v ? "var(--grid)" : "var(--axis)", "pointer-events": "none" }, svg);
+    el("text", { x: L - 6, y: Y(v), "text-anchor": "end", "dominant-baseline": "middle", class: "tick" }, svg).textContent = Math.round(v); });
+  data.forEach((d, i) => {
+    const x = L + i * bw + 1, w = Math.max(1, bw - 2), h = Y(0) - Y(d.y);
+    if (d.y > 0) { const r = Math.min(3, w / 2, h); el("path", { d: `M${x},${Y(0)} v${-(h - r)} a${r},${r} 0 0 1 ${r},${-r} h${w - 2 * r} a${r},${r} 0 0 1 ${r},${r} v${h - r} z`, fill: "var(--series-1)", "pointer-events": "none" }, svg); }
+  });
+  const span = data.at(-1).x - data[0].x, step = Math.max(1, Math.ceil(data.length / Math.max(2, Math.floor((W - L) / 80))));
+  data.forEach((d, i) => { if (i % step === 0) el("text", { x: L + i * bw + bw / 2, y: H - 5, "text-anchor": "middle", class: "tick" }, svg).textContent = mfmt(d.x, span); });
+}
+
+function spark(svg, pts) {
+  const W = 300, H = 24; svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("preserveAspectRatio", "none");
+  if (pts.length < 2) { el("line", { x1: 0, x2: W, y1: H / 2, y2: H / 2, stroke: "var(--grid)" }, svg); return; }
+  const x0 = +pts[0].x, x1 = +pts.at(-1).x, X = (t) => 2 + (W - 4) * (+t - x0) / ((x1 - x0) || 1), Y = (v) => H - 3 - (H - 6) * v / 100;
+  el("path", { d: pts.map((p, i) => (i ? "L" : "M") + X(p.x).toFixed(1) + "," + Y(p.y).toFixed(1)).join(""), fill: "none", stroke: "var(--series-1)", "stroke-width": 1.5, "stroke-linejoin": "round", "vector-effect": "non-scaling-stroke" }, svg);
+}
+
+/* =================== PROJECTS =================== */
+let PROJECTS = [], current = null;
+const panel = $("#panel"), pickBtn = $("#pick-btn");
+function setProjectName() { $("#proj-name").textContent = REPORT ? REPORT.repo.source.replace(/^github\.com\//, "").replace(/^.*[\\/](?=[^\\/]+$)/, "") : "Choose project"; }
+if (MODE === "static") { $("#pick-caret").remove(); pickBtn.disabled = true; }
+else {
+  pickBtn.onclick = (e) => { e.stopPropagation(); const on = !panel.classList.contains("on"); panel.classList.toggle("on", on); pickBtn.setAttribute("aria-expanded", on); };
+  document.addEventListener("click", (e) => { if (!$("#picker").contains(e.target)) panel.classList.remove("on"); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") panel.classList.remove("on"); });
+  $("#add-form").onsubmit = (e) => { e.preventDefault(); const t = $("#target").value.trim(); if (looksValid(t) && !scanning) startScan(t); };
+  $("#target").addEventListener("input", validate);
+}
+function api(url, body) { return fetch(url, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {})
+  .then((r) => r.json().then((j) => { if (!r.ok) throw new Error(j.error || r.status); return j; })); }
+function renderProjects() {
+  $("#proj-list").innerHTML = PROJECTS.length ? PROJECTS.map((p, i) => { const r = p.runs[0];
+    return `<div class="proj ${current && current.source === p.source ? "on" : ""}" data-i="${i}" title="Open ${esc(p.source)}">
+      <div style="min-width:0"><div class="n">${esc(p.name)}</div><div class="d">${esc(p.source.startsWith("github.com/") ? "GitHub" : "Local folder")} · assessed ${fdate(r.generated_at)}</div></div>
+      <button class="ghost" type="button" data-rescan="${i}" title="Assess again at the latest commit">Re-assess</button><span class="s">${fmt(r.score)}</span></div>`; }).join("")
+    : `<div class="muted" style="padding:4px 8px 8px">Nothing assessed yet — add a project below.</div>`;
+  $("#proj-list").querySelectorAll(".proj").forEach((row) => row.onclick = (e) => {
+    const p = PROJECTS[+row.dataset.i]; if (e.target.closest("[data-rescan]")) { e.stopPropagation(); startScan(p.target); return; }
+    panel.classList.remove("on"); loadProject(p); });
+}
+function loadProject(p) { current = p; store("sdlc360-project", p.source);
+  return api(`/api/runs/${encodeURIComponent(p.runs[0].id)}`).then((rep) => { REPORT = rep; setProjectName(); renderProjects(); render(); }); }
+function refreshProjects() {
+  return api("/api/projects").then((ps) => { PROJECTS = ps; renderProjects();
+    const want = store("sdlc360-project"), p = ps.find((x) => x.source === want) || ps[0];
+    if (p) return loadProject(p); setProjectName(); render(); });
+}
+const isLocal = (t) => /^([A-Za-z]:[\\/]|\/|~|\\\\)/.test(t);
+const looksValid = (t) => isLocal(t) || (/^(https?:\/\/github\.com\/)?[\w.-]+\/[\w.-]+?(\.git)?\/?$/.test(t));
+let scanning = false;
+function validate() {
+  const t = $("#target").value.trim(), h = $("#hint"); $("#scan-btn").disabled = scanning || !looksValid(t); h.className = "hint";
+  h.textContent = !t ? "GitHub repository or a local folder that is a git repository."
+    : !looksValid(t) ? "Use https://github.com/owner/repo, owner/repo, or a full local path."
+    : isLocal(t) ? "Local folder — read in place, never modified." : "GitHub repository — cloned into the local cache.";
+}
+const STEPS = ["Fetch the repository", "Check the latest commit against expectations", "Measure activity from git history", "Re-score past commits", "Save the run"];
+function stepOf(m) { return !m || m.startsWith("resolving") ? 0 : m.startsWith("scanning") ? 1 : m.startsWith("computing") ? 2 : m.startsWith("history") ? 3 : m === "done" ? 5 : 0; }
+function showSteps(target, msgs, history) {
+  const last = msgs.at(-1) || "", cur = stepOf(last), hm = /history (\d+)\/(\d+)/.exec(last);
+  $("#progress").innerHTML = `<ol class="steps"><li class="run" style="padding-bottom:6px"><span class="spin"></span>Assessing ${esc(target)}</li>${STEPS.map((s, i) =>
+    `<li class="${i < cur ? "done" : i === cur ? "run" : ""}"><span class="mk">${i < cur ? "✓" : i === cur ? "›" : "·"}</span>${s}${i === 3 ? ` <span class="muted">(${hm ? hm[1] + " of " + hm[2] : (history || 8) + " commits"})</span>` : ""}</li>`).join("")}</ol>`;
+}
+function setBusy(b) { scanning = b; $("#target").disabled = b; $("#how").classList.toggle("hidden", b); validate(); }
+function startScan(target) {
+  $("#progress").innerHTML = ""; panel.classList.add("on");
+  api("/api/scan", { target, history: 8 }).then(({ job: id, display }) => {
+    setBusy(true); showSteps(display || target, [], 8);
+    const poll = () => api(`/api/jobs/${id}`).then((j) => {
+      if (j.status === "done") { setBusy(false); $("#progress").innerHTML = ""; $("#target").value = ""; validate();
+        return api("/api/projects").then((ps) => { PROJECTS = ps; const p = ps.find((x) => x.runs.some((r) => r.id === j.run_id)); panel.classList.remove("on"); if (p) loadProject(p); }); }
+      if (j.status === "error") { setBusy(false); $("#progress").innerHTML = `<div class="job err">Assessment failed: ${esc(j.error)}</div>`; return; }
+      showSteps(display || target, j.messages, j.history); setTimeout(poll, 1000); }).catch(() => setTimeout(poll, 2000));
+    poll();
+  }).catch((e) => { const h = $("#hint"); h.className = "hint err"; h.textContent = e.message; });
+}
+/* ---------- local folder picker (served by the local SDLC 360 server; read-only) ---------- */
+const FOLDER = '<svg viewBox="0 0 24 24"><path d="M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8z"/></svg>';
+let fsState = { path: null, parent: null, git: false };
+function fsOpen() { $("#fsdlg").classList.add("on"); const t = $("#target").value.trim(); fsLoad(isLocal(t) ? t : store("sdlc360-fs") || ""); }
+function fsClose() { $("#fsdlg").classList.remove("on"); }
+function fsUse(path) { $("#target").value = path; store("sdlc360-fs", path.replace(/[\\/][^\\/]+[\\/]?$/, "")); fsClose(); validate(); $("#target").focus(); }
+function fsLoad(path) {
+  api("/api/fs" + (path ? "?path=" + encodeURIComponent(path) : "")).then((r) => {
+    fsState = r;
+    $("#fs-path").textContent = r.path || "Choose a starting point";
+    $("#fs-up").disabled = !r.path; $("#fs-use").disabled = !r.git;
+    $("#fs-note").innerHTML = !r.path ? "" : r.git ? `<span class="gitb">git</span> This folder is a git repository.` : "Open a folder marked git, or one inside a git repository.";
+    if (!r.path) $("#fs-roots").innerHTML = (r.recent || []).length ? `<span class="muted" style="font-size:11.5px;align-self:center">Recent:</span>` + r.recent.map((x) => `<button class="ghost" style="visibility:visible" data-p="${esc(x.path)}">${esc(x.path)}</button>`).join("") : "";
+    $("#fs-roots").classList.toggle("hidden", !!r.path && !$("#fs-roots").innerHTML);
+    $("#fs-list").innerHTML = r.dirs.length ? r.dirs.map((d) => `<div class="fsrow ${d.git ? "git" : ""}" data-p="${esc(d.path)}">${FOLDER}<span class="nm">${esc(d.name)}</span>
+      ${d.git ? `<button class="ghost" style="visibility:visible" data-use="${esc(d.path)}">Use</button>` : ""}</div>`).join("") : `<div class="muted" style="padding:10px">No sub-folders.</div>`;
+    $("#fs-list").querySelectorAll(".fsrow").forEach((row) => row.onclick = (e) => { const u = e.target.closest("[data-use]"); if (u) fsUse(u.dataset.use); else fsLoad(row.dataset.p); });
+    $("#fs-roots").querySelectorAll("[data-p]").forEach((b) => b.onclick = () => fsLoad(b.dataset.p));
+  }).catch((e) => { $("#fs-note").textContent = e.message; });
+}
+if (MODE === "app") {
+  $("#browse-btn").onclick = (e) => { e.preventDefault(); fsOpen(); };
+  $("#fs-up").onclick = () => fsLoad(fsState.parent || "");
+  $("#fs-close").onclick = $("#fs-cancel").onclick = fsClose;
+  $("#fs-use").onclick = () => fsState.git && fsUse(fsState.path);
+  $("#fsdlg").onclick = (e) => { if (e.target.id === "fsdlg") fsClose(); };
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("#fsdlg").classList.contains("on")) { e.stopPropagation(); fsClose(); } }, true);
+} else $("#browse-btn").remove();
+
+function showEmpty() {
+  $("#tabs").classList.add("hidden");
+  for (const v of ["assessment", "recommendations", "dynamics", "empty"]) $("#v-" + v).classList.toggle("on", v === "empty");
+  $("#empty").innerHTML = `<h2>Assess a repository</h2>Point the assessment at a GitHub repository (<code>https://github.com/owner/repo</code> or <code>owner/repo</code>)
+    or a local folder that is a git repository. Each scan is stored as a run under <code>runs/</code>.
+    <div style="margin-top:14px"><button class="icon-btn pri" type="button" id="empty-add">Add project</button></div>`;
+  $("#empty-add").onclick = (e) => { e.stopPropagation(); panel.classList.add("on"); $("#target").focus(); };
+}
+
+let rz; new ResizeObserver(() => { clearTimeout(rz); rz = setTimeout(() => REPORT && render(), 120); }).observe(document.body);
+const OPEN = new URLSearchParams(location.search).get("open");
+if (MODE === "app" && OPEN) setTimeout(() => { panel.classList.add("on"); if (OPEN === "browse") fsOpen(); }, 300);
+if (MODE === "app") refreshProjects().catch((e) => { showEmpty(); $("#empty").textContent = "Cannot reach the SDLC 360 server: " + e.message; });
+else { setProjectName(); render(); }
+</script>
+</body>
+</html>

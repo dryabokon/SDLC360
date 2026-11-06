@@ -1,0 +1,7 @@
+# Runtime: Python 3.12 standard library only. These pins are for development and CI.
+pytest==9.2.0
+pytest-cov==7.1.0
+coverage==7.17.2
+ruff==0.17.4
+mypy==2.4.1
+pre-commit==4.7.0

@@ -1,0 +1,37 @@
+# Tool configuration only: SDLC360 is run from source (python sdlc.py), runtime is stdlib-only (docs/adr/0001).
+
+[tool.ruff]
+line-length = 150
+target-version = "py312"
+extend-exclude = ["runs", ".cache"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]
+ignore = ["E731", "SIM108", "B905"]
+
+[tool.ruff.lint.per-file-ignores]
+# detection vocabularies are long alternations; splitting them hurts readability
+"src/dimensions/*" = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.12"
+files = ["src", "sdlc.py"]
+ignore_missing_imports = true
+check_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = ["integration: builds real git repositories and runs the full scan"]
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 70
+show_missing = true
+skip_covered = true

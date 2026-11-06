@@ -1,0 +1,27 @@
+# secrets
+.env
+*.env
+!.env.example
+*.pem
+*.key
+
+# outputs and caches
+runs/*
+!runs/README.md
+.cache/
+
+# python / tools
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# personal agent / editor settings
+.claude/settings.local.json
+.idea/
+.vscode/
