@@ -14,7 +14,7 @@ flowchart LR
     Runner --> History["src/history.py<br/>velocity, past-commit scores"]
     Scanner --> Dims["src/dimensions/*<br/>10 aspects of checks"]
     Scanner --> Checklist["src/checklist.py<br/>checklists/default.md"]
-    Scanner --> Methods["src/methods.py<br/>how each check works"]
+    Scanner --> Acceptance["src/acceptance.py<br/>checklists/acceptance.md, docs/sources"]
     Runner --> Render["src/render.py<br/>src/template.html"]
     Render --> Runs[("runs/&lt;id&gt;/")]
     Repo --> Cache[(".cache/repos")]

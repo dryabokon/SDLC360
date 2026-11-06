@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.2.0 (2026-11-06)
+
+- Every expectation is justified: `checklists/acceptance.md` says how it is judged (met / partially / not met,
+  limits, known gaps) and quotes published guidance verbatim, or says it is our convention. 13 sources in
+  `docs/sources/` with licences, dates and checksums.
+- Runs & Reproducibility became **Reproducibility**: no expectation about a `runs/` folder any more; lockfiles,
+  pinned toolchains, entry points, documented reproduction, provenance and seeds instead. pydantic-ai: 86.9 → 91.1.
+- Aspects ordered as a project is built: architecture, docs, harness, skills, hygiene, tests, security,
+  reproducibility, CI/CD, cost.
+- New top-level tab **How it works**: components, the user journey, where to change what, scoring rules, sources.
+- The detail panel shows "Partially met when", "Limits", "Known gap" and "Basis".
+- README rewritten for readers who are not engineers; technical reference moved to `docs/usage.md`.
+- Fixes: one workflow satisfies `ci.present`; every YAML form of the `pull_request` trigger counts;
+  `CLAUDE.local.md` no longer counts as project instructions.
+
 ## 0.1.0 (2026-11-06)
 
 - Ten-aspect scanner with a markdown checklist of expectations, three priorities and a critical gate.

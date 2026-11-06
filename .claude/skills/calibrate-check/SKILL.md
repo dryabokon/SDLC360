@@ -11,7 +11,8 @@ description: Fix a wrong SDLC360 verdict (false positive or false negative) or a
    `make_repo` fixture that has the same shape. Assemble secrets at runtime (`"AKIA" + "..."`).
 3. **Fix the rule** in `src/dimensions/<aspect>.py`. Prefer a narrower pattern over a new exception list.
 4. **Keep the contract in sync** for a new or renamed check:
-   - `src/methods.py`: `looks_at` and `met_when`, in plain words;
+   - `checklists/acceptance.md`: how it is checked, met / partially / not met, limits, and a verbatim **Basis**
+     quote from `docs/sources/` (or a **Convention** line saying why we expect it anyway);
    - `checklists/default.md`: the expectation line with a priority (one or two `critical` items per aspect);
    - `tests/unit/test_checklist.py::test_default_checklist_is_consistent` must stay green.
 5. **Check for collateral damage.** Run `pytest`, then re-scan one or two reference repositories from

@@ -78,6 +78,20 @@ button,input{font:inherit;color:inherit}.muted{color:var(--muted)}.spacer{flex:1
 .subnav button.on{color:var(--text);border-bottom-color:var(--series-1);font-weight:600}
 .subnav button:hover{color:var(--text)}
 .pane{padding:12px 16px 16px}
+.guide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}.guide .wide{grid-column:1/-1}
+.guide h2{font-size:15px;margin:0 0 4px}.guide h3{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin:0 0 8px;font-weight:600}
+.guide p{margin:0 0 8px;color:var(--ink-2)}.guide ol{margin:0;padding-left:20px}.guide li{margin:0 0 7px;color:var(--ink-2)}.guide li b{color:var(--text)}
+.guide table{border-collapse:collapse;width:100%}.guide th,.guide td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.guide th{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:600}.guide tr:last-child td{border-bottom:0}
+.guide code{font:11.5px ui-monospace,Consolas,monospace}
+#gsvg{display:block;width:100%;height:auto;max-height:430px}
+#gsvg .bx{fill:var(--surface);stroke:var(--line);stroke-width:1.3}#gsvg .bx.grp{fill:var(--fill)}#gsvg .bx.dash{stroke-dasharray:5 4}
+#gsvg .bx.key{stroke:var(--series-1);stroke-width:1.6}
+#gsvg .t{font-size:13px;font-weight:600;fill:var(--text)}#gsvg .s{font-size:11px;fill:var(--muted)}#gsvg .m{font:10.5px ui-monospace,Consolas,monospace;fill:var(--muted)}
+#gsvg .k{font-size:9.5px;font-weight:700;letter-spacing:.05em;fill:var(--faint)}
+#gsvg .ln{fill:none;stroke:var(--muted);stroke-width:1.4}#gsvg .ln.dash{stroke-dasharray:5 4}#gsvg .mk{fill:var(--muted)}
+#gsvg .lb{font-size:10.5px;fill:var(--muted);font-weight:600}#gsvg .lbg{fill:var(--surface)}
+@media (max-width:1100px){.guide{grid-template-columns:1fr}}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;min-width:0;min-height:0;padding:12px 14px;display:flex;flex-direction:column}
 .chead{display:flex;align-items:center;gap:10px;margin-bottom:6px;min-height:22px;flex-wrap:wrap}
 .chart{flex:1;min-height:0;position:relative}
@@ -240,7 +254,7 @@ svg text{fill:var(--ink-2);font-size:12px}svg .tick{fill:var(--faint);font-size:
       </div>
     </div>
   </div>
-  <nav class="tabs" id="tabs"><button data-v="assessment" class="on" type="button">Assessment</button><button data-v="recommendations" type="button">Recommendations</button><button data-v="dynamics" type="button">Dynamics</button></nav>
+  <nav class="tabs" id="tabs"><button data-v="assessment" class="on" type="button">Assessment</button><button data-v="recommendations" type="button">Recommendations</button><button data-v="dynamics" type="button">Dynamics</button><button data-v="guide" type="button">How it works</button></nav>
   <span class="spacer"></span>
   <button class="icon-btn" id="theme" type="button" aria-label="Toggle theme"></button>
 </header>
@@ -251,12 +265,14 @@ svg text{fill:var(--ink-2);font-size:12px}svg .tick{fill:var(--faint);font-size:
 </section>
 <section class="view" id="v-recommendations"><div class="pane" id="rec-pane"></div></section>
 <section class="view" id="v-dynamics"><div class="pane" id="dyn-pane"></div></section>
+<section class="view" id="v-guide"><div class="pane" id="guide-pane"></div></section>
 <section class="view" id="v-empty"><div class="empty" id="empty"></div></section>
 <div id="tip" role="tooltip"></div>
 
 <script>
 const MODE = /*__MODE__*/"static";
 let REPORT = /*__REPORT__*/null;
+const SOURCES = /*__SOURCES__*/[];
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const BANDS = { good: "Good", warning: "Needs work", serious: "Weak", critical: "Critical", na: "N/A" };
@@ -301,16 +317,18 @@ function bindDim(node, d) { node.addEventListener("mouseenter", (e) => showTip(e
 /* ---------- routing: #assessment/<sub> | #dynamics ---------- */
 let state = { view: "assessment", sub: "overview" };
 function go(view, sub) { state.view = view; if (sub) state.sub = sub; history.replaceState(null, "", `#${state.view}${state.view === "assessment" ? "/" + state.sub : ""}`); render(); }
-(function parseHash() { const [v, s] = location.hash.slice(1).split("/"); if (["dynamics", "assessment", "recommendations"].includes(v)) state.view = v; if (s) state.sub = s; })();
+(function parseHash() { const [v, s] = location.hash.slice(1).split("/"); if (["dynamics", "assessment", "recommendations", "guide"].includes(v)) state.view = v; if (s) state.sub = s; })();
 document.querySelectorAll("#tabs button").forEach((b) => b.onclick = () => go(b.dataset.v));
 
+const VIEWS = ["assessment", "recommendations", "dynamics", "guide", "empty"];
 function render() {
   hideTip();
-  if (!REPORT) { showEmpty(); return; }
-  document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("on", b.dataset.v === state.view));
+  if (!REPORT && state.view !== "guide") { showEmpty(); return; }
+  document.querySelectorAll("#tabs button").forEach((b) => { b.classList.toggle("on", b.dataset.v === state.view); b.hidden = !REPORT && b.dataset.v !== "guide"; });
   $("#tabs").classList.remove("hidden");
-  for (const v of ["assessment", "recommendations", "dynamics", "empty"]) $("#v-" + v).classList.toggle("on", v === state.view);
-  if (state.view === "assessment") renderAssessment(); else if (state.view === "recommendations") renderRecommendations(); else renderDynamics();
+  for (const v of VIEWS) $("#v-" + v).classList.toggle("on", v === state.view);
+  if (state.view === "guide") renderGuide();
+  else if (state.view === "assessment") renderAssessment(); else if (state.view === "recommendations") renderRecommendations(); else renderDynamics();
 }
 
 /* =================== ASSESSMENT =================== */
@@ -522,6 +540,72 @@ function checkDetail(c) {
     </tbody></table>`;
 }
 
+/* =================== HOW IT WORKS =================== */
+function renderGuide() {
+  const r = REPORT, cl = (r && r.checklist) || {}, h = (r && r.repo.head) || {};
+  const nExp = r ? r.dimensions.reduce((n, d) => n + d.checks.length, 0) : 0;
+  const cur = r ? `<p class="muted">This report: <b>${esc(r.repo.source)}</b>${h.sha ? ` at commit <code>${esc(h.sha.slice(0, 8))}</code>` : ""}, ${nExp} expectations from
+    <code>${esc(cl.path ? cl.path.replace(/^.*[\\/](checklists|\.sdlc360)[\\/]/, "$1/") : "built-in checks")}</code> (${esc(cl.origin || "default")}), assessed ${fdate(r.generated_at)}.</p>` : "";
+  const src = SOURCES.map((x) => `<tr><td><code>${esc(x.id)}</code></td><td><a class="fl" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a><div class="muted">${esc(x.publisher)} · ${esc(x.published)}</div></td><td class="num">${x.cited}</td></tr>`).join("");
+  $("#guide-pane").innerHTML = `<div class="guide">
+  <div class="card wide"><h2>What SDLC360 does</h2>
+    <p>It reads a git repository and tells you, aspect by aspect, whether the project meets the expectations we hold for a well-run,
+    AI-assisted codebase, with the evidence for every verdict. No LLM is involved: the same commit always gets the same verdicts.</p>${cur}
+    <svg id="gsvg" viewBox="0 0 1240 420" role="img" aria-label="How SDLC360 works: components and data flow"></svg></div>
+  <div class="card"><h3>Your journey</h3><ol>
+    <li><b>Pick a project</b> in the header, or add one: a GitHub URL, <code>owner/repo</code>, or a local git folder (folder picker). Local folders are read in place and never changed.</li>
+    <li><b>Scan.</b> The scanner checks the current commit against the checklist, re-scores a few past commits for Dynamics, and stores everything as a run in <code>runs/</code>.</li>
+    <li><b>Assessment</b>: the overview shows all aspects; each aspect tab is a checklist. Click a row to see what we expected, what we found, the verdict, how it was checked, its limits and the published basis for it.</li>
+    <li><b>Recommendations</b>: every open expectation, critical first, with what to do.</li>
+    <li><b>Dynamics</b>: how the score, delivery pace and test / doc discipline changed over the last months.</li>
+    <li><b>Fix and re-assess.</b> After changes, press <b>Re-assess</b>: a new run appears next to the old one.</li></ol></div>
+  <div class="card"><h3>Where to change what</h3><table><thead><tr><th>You want to change</th><th>Edit</th><th>Takes effect</th></tr></thead><tbody>
+    <tr><td><b>What we expect</b> and how important it is (critical / important / nice)</td><td><code>checklists/default.md</code>, or <code>.sdlc360/expectations.md</code> committed in the assessed repo</td><td>re-render a run: <code>python sdlc.py render runs/&lt;id&gt;</code>, no re-scan</td></tr>
+    <tr><td><b>How an expectation is judged</b>: met / partially / not met, limits, basis</td><td><code>checklists/acceptance.md</code>; the rule itself in <code>src/dimensions/&lt;aspect&gt;.py</code></td><td>texts: re-render; rule: next scan</td></tr>
+    <tr><td><b>Your own expectation</b> with no scanner rule</td><td>a <code>- [ ] important: …</code> line in the checklist; the verdict goes into <code>runs/&lt;id&gt;/review.json</code></td><td>re-render (shown as <i>Awaiting review</i> until judged)</td></tr>
+    <tr><td><b>Why we expect it</b>: published sources</td><td><code>docs/sources/</code>, cited in <code>acceptance.md</code></td><td>re-render</td></tr></tbody></table></div>
+  <div class="card"><h3>How verdicts become scores</h3><ol>
+    <li>Each check scores 0–1: <b>Met</b> from 0.85, <b>Partially met</b> from 0.35, otherwise <b>Not met</b>; <b>Not applicable</b> when the practice does not apply (e.g. cost tracking without LLM calls).</li>
+    <li>An aspect score is the mean of its applicable expectations, weighted by priority: critical 5, important 3, nice 1.</li>
+    <li><b>Critical gate</b>: an unmet critical expectation caps its aspect at 49, a partially met one at 74, whatever else passes.</li>
+    <li>The overall score is the mean of the applicable aspects. Grades: A ≥ 90, B ≥ 80, C ≥ 65, D ≥ 50.</li></ol></div>
+  <div class="card"><h3>Why these expectations: sources</h3>
+    <p class="muted">Each expectation cites published guidance verbatim, or is marked as our own convention. Copies and licences: <code>docs/sources/</code>.</p>
+    <table><thead><tr><th>Id</th><th>Source</th><th class="num">Cited by</th></tr></thead><tbody>${src || `<tr><td colspan="3" class="muted">No sources bundled in this report.</td></tr>`}</tbody></table></div>
+  </div>`;
+  drawGuide();
+}
+
+function drawGuide() {
+  const svg = $("#gsvg"), NS = "http://www.w3.org/2000/svg";
+  const el = (tag, a, p) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); (p || svg).appendChild(e); return e; };
+  const tx = (x, y, cls, s, anchor) => { const t = el("text", { x, y, class: cls }); if (anchor) t.setAttribute("text-anchor", anchor); t.textContent = s; return t; };
+  const box = (x, y, w, hgt, title, lines, cls, tag) => { el("rect", { x, y, width: w, height: hgt, rx: 8, class: "bx " + (cls || "") }); tx(x + 10, y + 19, "t", title);
+    if (tag) tx(x + w - 8, y + 17, "k", tag, "end"); (lines || []).forEach((l, i) => tx(x + 10, y + 37 + i * 15, l[0] === "~" ? "m" : "s", l.replace(/^~/, ""))); };
+  const m = el("marker", { id: "ga", viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" }, el("defs", {}));
+  el("path", { d: "M0,0L10,5L0,10z", class: "mk" }, m);
+  const arrow = (d, label, lx, ly, dash) => { el("path", { d, class: "ln" + (dash ? " dash" : ""), "marker-end": "url(#ga)" });
+    if (label) { const t = tx(lx, ly, "lb", label, "middle"); const b = t.getBBox(); svg.insertBefore(el("rect", { x: b.x - 3, y: b.y - 1, width: b.width + 6, height: b.height + 2, class: "lbg" }), t); } };
+  // top row: the flow of one scan
+  box(10, 40, 200, 130, "Repository", ["GitHub URL or owner/repo", "or a local git folder", "", "~.cache/repos/ (blobless clone)", "~local: read in place"], "", "TARGET");
+  box(290, 20, 260, 170, "Scanner", ["10 aspects, analytical rules", "files + git history of one commit", "no LLM: same commit, same verdicts", "", "~src/dimensions/<aspect>.py", "~src/scanner.py · history.py"], "key", "CODE");
+  box(630, 20, 260, 170, "Run folder", ["one scan = one immutable run", "", "~runs/<time>_<name>/", "~  manifest.json  report.json", "~  report.html    scan.log", "~  review.json (optional)"], "grp", "FILES");
+  box(970, 20, 260, 170, "Dashboard", ["Assessment · Recommendations", "Dynamics · How it works", "", "~python sdlc.py serve (./start.sh)", "~or open report.html offline"], "", "UI");
+  arrow("M210,105H288", "scan", 249, 97);
+  arrow("M550,105H628", "report", 589, 97);
+  arrow("M890,105H968", "render", 929, 97);
+  // bottom row: what people edit
+  tx(150, 258, "k", "WHAT PEOPLE EDIT");
+  box(150, 270, 250, 130, "Expectations", ["what we want, with priority", "critical · important · nice", "", "~checklists/default.md", "~or .sdlc360/expectations.md"], "", "WHAT");
+  box(495, 270, 250, 130, "Acceptance criteria", ["how each one is judged", "met / partially / not met, limits", "", "~checklists/acceptance.md"], "", "HOW");
+  box(840, 270, 250, 130, "Sources", ["why we expect it", "DORA, NIST, OWASP, OpenSSF, …", "", "~docs/sources/<NN-slug>/"], "", "WHY");
+  arrow("M275,270C275,230 360,222 380,192", "decides what counts", 300, 226);
+  arrow("M620,270C620,232 520,224 500,192", "explains verdicts", 590, 228);
+  arrow("M840,335H747", "cited as basis", 793, 327);
+  box(1100, 210, 130, 50, "Reviewer", ["~review.json"], "dash", "OPTIONAL");
+  arrow("M1100,235C1000,235 880,225 862,192", "own expectations", 985, 222, true);
+}
+
 /* =================== DYNAMICS =================== */
 const scorePoints = (get) => ((REPORT.history || {}).scores || []).filter((p) => get(p) != null).map((p) => ({ x: new Date(p.date), y: get(p), sha: p.sha }));
 function deltaHtml(pts) { if (pts.length < 2) return ""; const dv = pts.at(-1).y - pts[0].y, cls = dv > 0.5 ? "up" : dv < -0.5 ? "down" : "flat";
@@ -725,11 +809,12 @@ if (MODE === "app") {
 } else $("#browse-btn").remove();
 
 function showEmpty() {
-  $("#tabs").classList.add("hidden");
-  for (const v of ["assessment", "recommendations", "dynamics", "empty"]) $("#v-" + v).classList.toggle("on", v === "empty");
+  document.querySelectorAll("#tabs button").forEach((b) => { b.hidden = b.dataset.v !== "guide"; b.classList.remove("on"); });
+  for (const v of VIEWS) $("#v-" + v).classList.toggle("on", v === "empty");
   $("#empty").innerHTML = `<h2>Assess a repository</h2>Point the assessment at a GitHub repository (<code>https://github.com/owner/repo</code> or <code>owner/repo</code>)
     or a local folder that is a git repository. Each scan is stored as a run under <code>runs/</code>.
-    <div style="margin-top:14px"><button class="icon-btn pri" type="button" id="empty-add">Add project</button></div>`;
+    <div style="margin-top:14px;display:flex;gap:8px;justify-content:center"><button class="icon-btn pri" type="button" id="empty-add">Add project</button>
+    <button class="icon-btn" type="button" onclick="go('guide')">How it works</button></div>`;
   $("#empty-add").onclick = (e) => { e.stopPropagation(); panel.classList.add("on"); $("#target").focus(); };
 }
 

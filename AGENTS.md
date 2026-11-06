@@ -22,7 +22,8 @@ Read `README.md` first, then `docs/architecture.md`.
 
 - `sdlc.py`: CLI entry point; `src/cli.py` defines the commands.
 - `src/dimensions/<aspect>.py`: scanner rules. A check id (`sec.no_secrets`) must also appear in
-  `src/methods.py` (how it is checked, when it is met) and usually in `checklists/default.md`.
+  `checklists/acceptance.md` (how it is checked, when it is met, limits, published basis) and usually in
+  `checklists/default.md`. Basis quotes must be verbatim from `docs/sources/`.
 - `src/scanner.py`: `scan()` produces raw `auto_checks`; `finalize()` applies checklist, review and the critical gate.
   `finalize()` must stay idempotent: re-rendering a run never re-scans.
 - `src/runner.py`: one scan = one run folder; `src/serve.py`: local web app; `src/template.html`: the whole UI.

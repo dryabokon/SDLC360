@@ -583,7 +583,7 @@ for the goal behind it. **Convention** marks expectations that are our own judge
 - **Not met:** No lockfile and no `requirements*.txt` at all, for example a `pyproject.toml` or `package.json` with no lock.
 - **Not applicable:** The repository has no manifest (`pyproject.toml`, `setup.py`, `setup.cfg`, `requirements*.txt`, `package.json`, `Cargo.toml`, `go.mod`, `Gemfile`, `composer.json`, `*.csproj`, `pom.xml`, `build.gradle*`, `environment.yml`) and no source files.
 - **Limits:** The scanner checks that a lockfile exists, not that it is current or matches the manifest. A lockfile in a fixture, vendored or sub-project folder counts for the whole repo. `==` anywhere on the line counts as pinned, including `foo==1.*` and `foo>=1; python_version=="3.8"`. Maven, plain Gradle and NuGet projects without a lock are not met.
-- **Known gap:** `src/methods.py` says "every requirement is pinned", but one fully pinned file is enough. A pinned `requirements-dev.txt` or `constraints.txt` makes the check Met even when the runtime `requirements.txt` is unpinned.
+- **Known gap:** The checklist says "every requirement is pinned", but one fully pinned file is enough. A pinned `requirements-dev.txt` or `constraints.txt` makes the check Met even when the runtime `requirements.txt` is unpinned.
 - **Basis:**
   - S10 · ASI04 guideline 2, p.21 (direct) · "Dependency gatekeeping: Allowlist and pin; scan for typosquats (PyPI, npm, LangChain, LlamaIndex); verify provenance before install or activation"
   - S12 · Pinned-Dependencies (remediation) (direct) · "If your project is producing an application and the package manager supports lock files (e.g. `package-lock.json` for npm), make sure to check these in the source code as well."
@@ -595,7 +595,7 @@ for the goal behind it. **Convention** marks expectations that are our own judge
 - **Partially met:** Exactly 1 matching file (0.5).
 - **Not met:** None.
 - **Limits:** The scanner counts files, not distinct mechanisms. Two `Dockerfile`s, or two files in `.devcontainer/`, meet the check. File contents are never read, so an unpinned `FROM python:latest` counts. `Dockerfile.dev` and `docker-compose.yaml` are missed. A `global.json` that is not the .NET SDK file also counts.
-- **Known gap:** `methods.py` says "at least two pinning mechanisms", but the code counts matching files.
+- **Known gap:** The intent is "at least two pinning mechanisms", but the code counts matching files.
 - **Basis:**
   - S08 · p. 41 (direct) · "Version everything: Store all production artifacts in version control. This includes application code, system configurations, test scripts, deployment scripts, container orchestration files, and cloud configuration files."
   - S11 · Platform and Runtime Security Considerations > Container and Deployment Considerations (direct) · "pin image versions using immutable digests (e.g., SHA256 hashes) instead of mutable tags like latest"

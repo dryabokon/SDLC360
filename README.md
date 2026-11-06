@@ -1,101 +1,133 @@
-# SDLC360
+# SDLC360: a 360° check-up of any software repository
 
-A 360° maturity assessment of any git repository: a GitHub URL / `owner/repo`, or a local folder.
-It answers one question per aspect: **does this project meet the expectations we hold for a well-run,
-AI-assisted codebase?**, and shows the answer as a checklist with evidence, a radar and a bar chart.
+Point SDLC360 at a GitHub repository or a local git folder. A minute later you see, aspect by aspect, whether the
+project is run the way a modern, AI-assisted team should run it: what is in place, what is missing, what to fix
+first, and how the project has been moving over the last year.
 
-Ten aspects are assessed: Security & Secrets · AI Harness · Skills · Documentation · Architecture ·
-Tests · CI/CD · Reproducibility · Cost Management · Code Hygiene.
+It answers questions like:
 
-The assessment is **analytical, not LLM-based**: every expectation is checked by a deterministic scanner rule
-over the files and git history at one commit. The same commit always gives the same verdict.
+- **Can a coding agent work in this repo safely and productively?** Are there instructions, permissions, guardrails, skills?
+- **Would a new engineer find their way?** Is the README current, is the architecture written down, do the docs match the code?
+- **Will a change break something unnoticed?** Are there tests, do they run on every pull request, is coverage enforced?
+- **Is anything leaking or drifting?** Secrets, credential files, unpinned dependencies, unbounded LLM spend.
 
-## Quick start
+![The overview: a maturity radar and the score of each aspect](docs/images/overview.png)
 
-Requirements: Python 3.12+ and git. The tool itself uses only the standard library.
+## What makes it trustworthy
 
-```bash
-./start.sh --open      # web app at http://127.0.0.1:8360/ (background; log in .cache/server.log)
-./stop.sh              # stop it
-```
+- **Every verdict shows its evidence.** For each expectation you see what we expected, what we found (file and line,
+  linked to the exact commit), the verdict, how it was checked and what the check cannot see.
+- **No guessing, no LLM.** The checks are analytical rules over the files and git history of one commit. The same
+  commit always gets the same verdicts, and every scan is kept as a reproducible run.
+- **Expectations are not our invention.** Each one cites published guidance verbatim: Google's *New SDLC* and DORA's
+  research on AI-assisted delivery, NIST's secure development framework, OWASP's agentic risks, OpenSSF Scorecard,
+  Anthropic's agent guidance and the AGENTS.md and Agent Skills standards. The few that rest on our own judgement
+  say so. See [the sources](docs/sources/README.md).
+- **Calibrated on well-run open-source projects.** For example, `pydantic/pydantic-ai` scores 91 (A). Each false
+  alarm found on such projects became a fix and a regression test ([calibration](docs/calibration.md)).
 
-In the web app pick a project in the header, or enter a GitHub URL / choose a local folder and press **Scan**.
+## What it looks at
 
-From the command line:
+Ten aspects, in the order a project is built: design, build, verify, deliver, operate.
 
-```bash
-python sdlc.py scan https://github.com/encode/httpx --open   # or owner/repo, or D:/path/to/repo
-python sdlc.py scan . --no-history                           # quick: skip re-scoring past commits
-python sdlc.py list                                          # projects and their runs
-python sdlc.py render runs/<run-id> --review review.json     # re-apply checklist / reviewer verdicts, no re-scan
-```
-
-## Usage: what a scan does
-
-1. **Resolve the target.** GitHub repos are cloned blobless into `.cache/repos/`; local folders are read in place
-   and never written to.
-2. **Run the scanner rules** of the ten aspects at HEAD. Each rule records a verdict (Met / Partially met /
-   Not met / Not applicable) and the evidence it found.
-3. **Apply the checklist** (`checklists/default.md`, or the repo's own `.sdlc360/expectations.md`): it decides
-   which expectations count and their priority (`critical` / `important` / `nice`). An unmet critical expectation
-   caps its aspect at 49, a partially met one at 74.
-4. **Dynamics**: re-score a sample of past commits (`--history 8 --months 12`) and compute weekly velocity.
-5. **Write a run folder** (see below) and render a self-contained HTML report.
-
-## Runs and reproducibility
-
-This is how SDLC360 *itself* keeps its results reproducible. It is our convention, and the assessment does not
-expect other repositories to have a `runs/` folder: the Reproducibility aspect checks lockfiles, pinned toolchains,
-entry points, documentation and provenance instead.
-
-Every scan writes `runs/<UTC yyyymmdd-HHMMSS>_<name>/`:
-
-| File | Content |
+| Aspect | The question |
 |---|---|
-| `manifest.json` | status, target, assessed commit, options, checklist path, tool version and git SHA, `reproduce` command |
-| `report.json` | raw scanner output (`auto_checks`) plus the final, checklist-applied scores |
-| `report.html` | the dashboard; opens offline |
-| `scan.log` | what was scanned and how long each aspect took |
+| Architecture | Are the components, data flow and key decisions written down and current? |
+| Documentation | Can a newcomer, human or agent, start from the README, and do the docs match the code? |
+| AI Harness | Do coding agents get instructions, permissions and automatic guardrails? |
+| Skills | Are repeated agent workflows packaged as well-formed, discoverable skills? |
+| Code Hygiene | Linting, formatting, type checking and pre-commit hooks |
+| Tests | Is there a test suite, does it grow with the code, is coverage measured and enforced? |
+| Security | No committed secrets or credential files; scanning, dependency updates, least-privilege CI |
+| Reproducibility | Locked dependencies, pinned toolchains, one-command setup, documented reproduction |
+| CI/CD | Are pull requests gated, releases automated, workflows pinned, fast and bounded? |
+| Cost | Are LLM tokens and cloud spend tracked and capped? (not applicable when there are none) |
 
-To reproduce a run, execute its `manifest.json → reproduce` command with the tool at `manifest.json → tool.git_sha`.
-A failed scan still leaves a manifest with `"status": "failed"` and the error.
+Each aspect is a checklist of expectations with a priority: **critical**, **important** or **nice to have**.
+An unmet critical expectation caps its aspect at 49 out of 100, whatever else passes.
 
-## Configuration
+## Your journey
 
-- **Expectations**: edit `checklists/default.md`, or commit `.sdlc360/expectations.md` into the assessed repository.
-  Format and gate rules are explained at the top of the default file.
-- **Reviewer verdicts** for your own (`- [ ]`) expectations: `review.json` next to the run, see `docs/review.md`.
-- **Environment**: `.env` (git-ignored, template in `.env.example`) holds `GH_PAT`. It is used only by maintainers
-  for GitHub administration. The scanner itself needs no secrets and clones public repositories anonymously.
-- **Port**: `PORT=8361 ./start.sh`.
+Six steps, all in the browser.
 
-## Testing
+<details><summary><b>1 · Start the app</b></summary>
 
 ```bash
-python -m venv .venv && .venv/Scripts/pip install -r requirements-dev.txt   # .venv/bin/pip on Linux/macOS
-.venv/Scripts/python -m pytest --cov            # unit + integration, coverage floor in pyproject.toml
-.venv/Scripts/ruff check . && .venv/Scripts/ruff format --check . && .venv/Scripts/mypy
+./start.sh --open      # opens http://127.0.0.1:8360/ ; ./stop.sh stops it
 ```
 
-Integration tests build small real git repositories (a "mature" and a "bare" fixture) and assert the verdicts
-of key checks. Every calibration fix (a false positive found on a reference repository) gets a regression test in
-`tests/unit/test_heuristics.py`.
+Requirements: Python 3.12+ and git. Nothing to install: the tool uses only the Python standard library.
+</details>
 
-## Overview of the code
+<details><summary><b>2 · Choose a project and scan it</b></summary>
 
+Click the project name in the header. Paste a GitHub URL or `owner/repo`, or pick a local git folder with the folder
+picker. **Scan** checks the current commit, re-scores a few past commits for the Dynamics view and stores the run.
+Local folders are only read, never changed.
+</details>
+
+<details><summary><b>3 · Read the assessment</b></summary>
+
+The **Overview** shows all aspects at once. Each aspect tab is a checklist: ID, criticality, the expectation and
+its status. Click a row to see what we expected, what we found, the verdict, how it was checked, its limits and the
+published basis for it.
+
+![An aspect: the checklist on the left, the selected expectation on the right](docs/images/aspect.png)
+</details>
+
+<details><summary><b>4 · Decide what to fix</b></summary>
+
+**Recommendations** lists every open expectation across all aspects, critical first, with what to do.
+
+![Recommendations: open expectations, critical first](docs/images/recommendations.png)
+</details>
+
+<details><summary><b>5 · See how the project evolves</b></summary>
+
+**Dynamics** shows the score over the last months, delivery pace, active contributors, and how often commits
+touch tests and documentation.
+
+![Dynamics: score over time, velocity, contributors, engineering discipline](docs/images/dynamics.png)
+</details>
+
+<details><summary><b>6 · Fix and re-assess</b></summary>
+
+After changes, press **Re-assess**. The new run appears next to the earlier ones, so progress is visible.
+</details>
+
+## Make it yours
+
+The tab **How it works** in the app explains the same on one page.
+
+![How it works: components, where to change what, how scores are computed, sources](docs/images/how-it-works.png)
+
+| You want to change | Edit |
+|---|---|
+| **What we expect** and how important it is | [`checklists/default.md`](checklists/default.md), or commit `.sdlc360/expectations.md` to the assessed repository |
+| **How an expectation is judged**: met / partially / not met, limits, basis | [`checklists/acceptance.md`](checklists/acceptance.md) |
+| **An expectation of your own** that no rule checks | add `- [ ] important: …` to the checklist; a reviewer records the verdict ([review.json](docs/review.md)) |
+| **Why we expect it** | [`docs/sources/`](docs/sources/README.md) |
+
+A changed checklist or acceptance text is applied to an existing run without re-scanning:
+`python sdlc.py render runs/<run-id>`.
+
+## How it works
+
+```mermaid
+flowchart LR
+    R["Repository<br/>GitHub or local folder"] -->|scan| S["Scanner<br/>10 aspects, analytical rules"]
+    E["Expectations<br/>checklists/default.md"] -->|what counts| S
+    A["Acceptance criteria<br/>checklists/acceptance.md"] -->|how it is judged| S
+    Src["Sources<br/>docs/sources/"] -->|basis| A
+    S --> Run["Run folder<br/>runs/&lt;id&gt;/"]
+    Rev["Reviewer (optional)<br/>review.json"] -.-> Run
+    Run --> D["Dashboard<br/>Assessment · Recommendations · Dynamics"]
 ```
-sdlc.py              entry point (CLI)
-start.sh / stop.sh   web app in the background
-src/                 the tool: repo access, scanner, checklist, history, runner, web server, HTML template
-src/dimensions/      one module per aspect; each check returns score + evidence + recommendation
-checklists/          expectations (what we want), with priorities
-docs/                architecture, decisions (ADRs), reviewer format
-tests/               unit and integration tests
-runs/                scan outputs (git-ignored except its README)
-```
 
-Architecture and the reasoning behind it: [docs/architecture.md](docs/architecture.md) and [docs/adr/](docs/adr/).
+## For developers
 
-## Development
-
-See [CONTRIBUTING.md](CONTRIBUTING.md). Agents working in this repository follow [AGENTS.md](AGENTS.md).
+- Setup, command line, run folders, configuration and testing: [docs/usage.md](docs/usage.md).
+- Architecture and design decisions: [docs/architecture.md](docs/architecture.md), [docs/adr/](docs/adr/).
+- Contributing: [CONTRIBUTING.md](CONTRIBUTING.md). Coding agents follow [AGENTS.md](AGENTS.md).
+- Tests: `.venv/Scripts/python -m pytest --cov` (unit and integration, run in CI on Linux and Windows).
+- Configuration: `.env` (template `.env.example`) is for maintainers only; a scan needs no secrets.
