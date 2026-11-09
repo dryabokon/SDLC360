@@ -2,7 +2,7 @@
 
 Every capability the assessment knows, grouped by aspect, with its **standard** priority. This is the published
 baseline (the Standard profile). To switch capabilities off, change priorities or thresholds, or add your own, use
-the **Capabilities** tab in the app: it saves a profile in [profiles/](profiles/), and this file stays unchanged.
+the **Criteria** page in the app: it saves a profile in [profiles/](profiles/), and this file stays unchanged.
 
     - [check.id] priority: capability text     -> judged by the scanner rule with that id
     - [ ] priority: capability text            -> your own capability; judged by a reviewer
@@ -16,16 +16,12 @@ Priorities:
 
 Edit this file when a scanner rule is added, removed or reworded (with its block in `acceptance-criteria/`).
 
-## architecture
+## docs
 - [arch.doc] critical: An architecture document describes components, data flow and boundaries.
+- [doc.readme] critical: The README explains what the project is and how to start.
 - [arch.diagrams] important: Architecture diagrams are kept as code (Mermaid / PlantUML / C4).
 - [arch.adr] important: Significant design decisions are recorded, one file per decision.
-- [arch.structure] important: Source code is organised into modules, not a flat root.
 - [arch.fresh] important: The architecture document is maintained alongside the code.
-- [arch.boundaries] nice: Module boundaries are explicit and enforced by tooling.
-
-## docs
-- [doc.readme] critical: The README explains what the project is and how to start.
 - [doc.readme_sections] important: The README covers setup, usage, testing, configuration and overview.
 - [doc.links] important: Docs reference files that actually exist.
 - [doc.freshness] important: Docs are updated together with the code.
@@ -53,14 +49,13 @@ Edit this file when a scanner rule is added, removed or reworded (with its block
 - [sk.size] nice: Skills stay concise and push detail into references.
 - [sk.layout] nice: Skills follow one layout and kebab-case naming.
 
-## hygiene
-- [hyg.lint] critical: A linter is configured.
-- [hyg.format] important: An auto-formatter is configured.
-- [hyg.types] important: Static typing is enforced.
-- [hyg.precommit] important: Pre-commit hooks run format and lint locally.
-- [hyg.file_size] nice: No oversized source files.
-- [hyg.editor] nice: .editorconfig / .gitattributes keep formatting consistent.
+## review
+- [rev.via_pr] critical: Changes reach the main branch through pull requests.
+- [rev.small_changes] important: Changes are small enough to review.
+- [rev.ai_policy] important: The rules for using AI in this project are written down.
+- [sec.codeowners] nice: CODEOWNERS assigns reviewers for sensitive paths.
 - [hyg.templates] nice: PR and issue templates guide contributors.
+- [rev.ai_attribution] nice: Commits made with AI agents say so.
 
 ## tests
 - [test.present] critical: The project has an automated test suite.
@@ -70,9 +65,32 @@ Edit this file when a scanner rule is added, removed or reworded (with its block
 - [test.framework] nice: The test runner is configured explicitly.
 - [test.layers] nice: Beyond unit tests there are integration / e2e / property tests.
 
+## hygiene
+- [hyg.lint] critical: A linter is configured.
+- [hyg.format] important: An auto-formatter is configured.
+- [hyg.types] important: Static typing is enforced.
+- [hyg.precommit] important: Pre-commit hooks run format and lint locally.
+- [arch.structure] important: Source code is organised into modules, not a flat root.
+- [hyg.file_size] nice: No oversized source files.
+- [hyg.editor] nice: .editorconfig / .gitattributes keep formatting consistent.
+- [arch.boundaries] nice: Module boundaries are explicit and enforced by tooling.
+
+## cicd
+- [ci.present] critical: CI runs on GitHub Actions.
+- [ci.pr] important: CI gates pull requests before merge.
+- [ci.stages] important: CI lints, tests and builds.
+- [rep.entrypoints] important: One command sets up, builds and tests the project.
+- [rep.environment] important: Runtime and toolchain versions are pinned (version files / container).
+- [rep.documented] important: How to get the same result from a clean checkout is documented.
+- [ci.cd] important: Releases or deployments are automated.
+- [ci.hygiene] nice: Jobs have timeouts, version matrices and protected environments.
+- [ci.pinning] nice: Third-party actions are pinned to commit SHAs.
+- [ci.speed] nice: CI is fast: caching, cancel-in-progress and path filters.
+
 ## security
 - [sec.no_secrets] critical: No secrets or API keys are hard-coded in tracked files.
 - [sec.no_sensitive_files] critical: No credential files (.env, private keys, tfstate) are committed.
+- [rep.lockfile] important: Dependencies are locked to exact versions.
 - [sec.ci_scanning] important: CI scans code, dependencies and secrets on every change.
 - [sec.dep_updates] important: Dependency updates are automated (Dependabot / Renovate).
 - [sec.gitignore] important: .gitignore keeps env files and keys out of git.
@@ -80,29 +98,9 @@ Edit this file when a scanner rule is added, removed or reworded (with its block
 - [sec.env_template] nice: Required configuration is documented in an .env.example template.
 - [sec.precommit_secrets] nice: A pre-commit hook blocks secrets before they are committed.
 - [sec.policy] nice: A SECURITY.md explains how to report vulnerabilities.
-- [sec.codeowners] nice: CODEOWNERS assigns reviewers for sensitive paths.
-
-## reproducibility
-- [rep.lockfile] critical: Dependencies are locked to exact versions.
-- [rep.environment] important: Runtime and toolchain versions are pinned (version files / container).
-- [rep.entrypoints] important: One command sets up, builds and tests the project.
-- [rep.documented] important: How to get the same result from a clean checkout is documented.
-- [rep.provenance] nice: Results record the code version and configuration that produced them.
-- [rep.seeds] nice: Randomness is seeded where results depend on it.
-
-## cicd
-- [ci.present] critical: CI runs on GitHub Actions.
-- [ci.pr] important: CI gates pull requests before merge.
-- [ci.stages] important: CI lints, tests and builds.
-- [ci.cd] important: Releases or deployments are automated.
-- [ci.hygiene] nice: Jobs have timeouts, version matrices and protected environments.
-- [ci.pinning] nice: Third-party actions are pinned to commit SHAs.
-- [ci.speed] nice: CI is fast: caching, cancel-in-progress and path filters.
 
 ## cost
 - [cost.llm_tracking] critical: LLM token usage and cost are tracked per call / run.
 - [cost.llm_limits] important: LLM calls are bounded by max_tokens, budgets and retries.
-- [cost.infra] important: Cloud resources have budgets, tags and cost checks.
 - [cost.llm_efficiency] nice: Prompt caching and a central model config keep spend down.
-- [cost.ci] nice: CI minutes are controlled (timeouts, cancel-in-progress, path filters).
 - [cost.documented] nice: Expected costs and budgets are documented.

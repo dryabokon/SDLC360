@@ -14,9 +14,7 @@
     "ci.cd": {"enabled": false},
     "ci.hygiene": {"enabled": false},
     "sec.policy": {"enabled": false},
-    "sec.codeowners": {"enabled": false},
-    "rep.provenance": {"enabled": false},
-    "cost.infra": {"enabled": false}
+    "sec.codeowners": {"enabled": false}
   },
   "custom": []
 }

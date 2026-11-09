@@ -3,19 +3,44 @@
 from __future__ import annotations
 
 import platform
+import re
 import sys
 import time
 from datetime import UTC, datetime
+from functools import lru_cache
 
 from . import __version__
 from .acceptance import method_for, reference_cards
-from .checklist import CRITICAL_CAP, PRIORITY_WEIGHT, priority_from_weight
-from .dimensions import DIMENSIONS
+from .checklist import CATALOG, CRITICAL_CAP, PRIORITY_WEIGHT, parse, priority_from_weight
+from .dimensions import DIMENSIONS, LEGACY, RULES
 from .model import band, grade
 from .profiles import resolve as resolve_checklist
 from .repo import Repo
 
 REVIEW_SCORES = {"met": 1.0, "partial": 0.5, "unmet": 0.0, "na": None}
+
+
+@lru_cache(maxsize=1)
+def catalog_order() -> dict[str, tuple[str, int]]:
+    """check id -> (aspect, position) from the standard catalog: the one place that says which aspect holds a check."""
+    return {i["id"]: (aspect, n) for aspect, its in parse(CATALOG.read_text(encoding="utf-8")).items() for n, i in enumerate(its)}
+
+
+def group(pool: list[tuple[str, dict]]) -> list[dict]:
+    """Place raw checks into the current aspects. `pool` holds (rule set or old aspect id, check)."""
+    place, ids = catalog_order(), {a.id for a in DIMENSIONS}
+    out: dict[str, list[tuple[int, dict]]] = {a.id: [] for a in DIMENSIONS}
+    seen = set()
+    for origin, c in pool:
+        c["id"] = re.sub(r"^run\.", "rep.", c["id"])  # "runs" checks before 0.4 are today's rep.*
+        aspect, n = place.get(c["id"], (LEGACY.get(origin, origin), 10_000))
+        if aspect in ids and c["id"] not in seen:
+            seen.add(c["id"])
+            out[aspect].append((n, c))
+    return [
+        {"id": a.id, "name": a.name, "description": a.description, "auto_checks": [c for _, c in sorted(out[a.id], key=lambda x: x[0])]}
+        for a in DIMENSIONS
+    ]
 
 
 def status_of(score: float | None, pending: bool = False) -> str:
@@ -30,35 +55,26 @@ def scan(repo: Repo, only: list[str] | None = None, checklist: dict | None = Non
     t0 = time.perf_counter()
     checklist = checklist or resolve_checklist(repo.root)
     repo.params = checklist.get("params") or {}
-    dims = []
-    for d in DIMENSIONS:
-        if only and d.id not in only:
-            continue
-        t = time.perf_counter()
+    pool: list[tuple[str, dict]] = []
+    for rule in RULES:
         try:
-            res = d.run(repo).to_dict()
+            pool += [(rule.id, c.to_dict()) for c in rule.assess(repo)]
         except Exception as e:  # one broken heuristic must not sink the whole assessment
-            res = {
-                "id": d.id,
-                "name": d.name,
-                "description": d.description,
-                "score": None,
-                "grade": "N/A",
-                "checks": [
+            pool.append(
+                (
+                    rule.id,
                     {
-                        "id": f"{d.id}.error",
+                        "id": f"{rule.id}.error",
                         "title": "Assessment error",
                         "weight": 0,
                         "score": None,
                         "status": "na",
                         "evidence": [f"{type(e).__name__}: {e}"],
                         "recommendation": "",
-                    }
-                ],
-            }
-        res["elapsed_s"] = round(time.perf_counter() - t, 3)
-        res["auto_checks"] = res.pop("checks")
-        dims.append(res)
+                    },
+                )
+            )
+    dims = [d for d in group(pool) if not only or d["id"] in only]
     report = {
         "schema": "sdlc360/report@2",
         "tool": {"name": "sdlc360", "version": __version__, "python": sys.version.split()[0], "platform": platform.platform()},
@@ -152,9 +168,10 @@ def finalize(report: dict, review: dict | None = None) -> dict:
     report["thresholds_changed"] = sorted(  # take effect at the next scan; keys of older versions are not compared
         cid for cid in wanted if any(k in used.get(cid, {}) and used[cid][k] != v for k, v in wanted[cid].items())
     )
+    # older runs line up with the current aspects: their raw checks are placed again by the catalog (idempotent)
+    report["dimensions"] = group([(d["id"], c) for d in report["dimensions"] for c in d.get("auto_checks", d.get("checks", []))])
+    items = regroup_items(items)
     for d in report["dimensions"]:
-        if "auto_checks" not in d:  # report@1 compatibility
-            d["auto_checks"] = d.pop("checks")
         d["checks"] = apply_checklist(d, items.get(d["id"]), verdicts, report.get("scan_params"))
         auto = _weighted([c for c in d["checks"] if c["source"] == "auto"])
         base = _weighted(d["checks"])
@@ -178,6 +195,23 @@ def finalize(report: dict, review: dict | None = None) -> dict:
         report["review"] = review
     report["top_actions"] = top_actions(report)
     return report
+
+
+def regroup_items(items: dict[str, list[dict]]) -> dict[str, list[dict]]:
+    """A run's capability list (profile) by the current aspects; lists of older versions used other sections."""
+    if not items:
+        return items
+    place, ids = catalog_order(), {a.id for a in DIMENSIONS}
+    out: dict[str, list[tuple[int, dict]]] = {}
+    for section, its in items.items():
+        for it in its:
+            if it.get("custom"):
+                sec = LEGACY.get(section, section)
+                out.setdefault(sec if sec in ids else "docs", []).append((10_000, it))
+            elif it["id"] in place:
+                aspect, n = place[it["id"]]
+                out.setdefault(aspect, []).append((n, it))
+    return {a: [it for _, it in sorted(v, key=lambda x: x[0])] for a, v in out.items()}
 
 
 def top_actions(report: dict, n: int = 10) -> list[dict]:

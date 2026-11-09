@@ -1,4 +1,4 @@
-# Code hygiene: how each capability is judged
+# Code Quality: how each capability is judged
 
 Capabilities and their priorities are in [capabilities.md](../capabilities.md).
 How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
@@ -86,6 +86,29 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 >
 > — [nist-ssdf](../references/nist-ssdf/), SP 800-218 PW.5.1 Ex.5, p.22 · supporting
 
+## arch.structure: Source code is organised into modules, not a flat root.
+
+**Accepted when.** Code lives in folders, and at most {max_root_files} source files sit in the project root.
+
+**How we check.** Source files (by extension, excluding tests, `vendor/`, `third_party/`, `docs/`, `examples/`, `.github/`). It counts how many sit in the repo root and whether any sit in a subfolder.
+
+- **Met:** At least one source file in a subfolder and at most {max_root_files} source files in the root.
+- **Partially met:** {max_root_files+1} to {max_root_files*3} source files in the root, or all code in the root with at most {max_root_files*3} files.
+- **Not met:** More than {max_root_files*3} source files in the root (score 0.3).
+- **Not applicable:** No source files at all.
+
+**What the check cannot see.** `.sh` and `.ps1` count as source, so root helper scripts count against the repo. One nested file (for example `scripts/x.sh`) is enough. A flat `src/` holding hundreds of files is Met. Module cohesion is not judged.
+
+**Why we expect it.**
+
+> Folder hierarchies, naming conventions, and timestamps all provide important signals that help both humans and agents understand how and when to utilize information.
+>
+> — [anthropic-context-engineering](../references/anthropic-context-engineering/), Context retrieval and agentic search · supporting
+
+> Define policies that specify risk-based software architecture and design requirements, such as making code modular to facilitate code reuse and updates
+>
+> — [nist-ssdf](../references/nist-ssdf/), SP 800-218 PO.1.2 Ex.1, p.14 · supporting
+
 ## hyg.file_size: No oversized source files.
 
 **Accepted when.** No source file is larger than {max_kb} KB (large projects may have a few).
@@ -116,18 +139,23 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Our convention.** Shared line-ending and whitespace rules prevent noisy diffs between Windows, Linux and agent-generated edits.
 
-## hyg.templates: PR and issue templates guide contributors.
+## arch.boundaries: Module boundaries are explicit and enforced by tooling.
 
-**Accepted when.** Pull request and issue templates exist.
+**Accepted when.** A tool enforces module boundaries (import-linter, dependency-cruiser, ArchUnit or a workspace tool). Checked only for projects with more than {min_source_files} source files.
 
-**How we check.** Files at `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE*` (including that folder), `.github/ISSUE_TEMPLATE/*` (including `config.yml`) and `docs/pull_request_template.md`. Score = min(1, count / 2).
+**How we check.** Files anywhere named `.importlinter`, `importlinter.ini`, `.dependency-cruiser.*`, `nx.json`, `turbo.json`, `pnpm-workspace.yaml`, `go.work`, `lerna.json` or `*.sln`. Also a root `pyproject.toml` containing the text "importlinter" or "tach", and `ArchUnit`/`ArchRule`/`NetArchTest`/`deptry` text in up to 500 test files. Score: 0.5 per file found, plus 0.5 for a test hit.
 
-- **Met:** 2 or more matching files.
-- **Partially met:** Exactly 1.
-- **Not met:** None.
+- **Met:** Two or more of those files, or one file plus a test hit.
+- **Partially met:** Exactly one file, or only a test hit.
+- **Not met:** Nothing found.
+- **Not applicable:** {min_source_files} or fewer source files.
 
-**What the check cannot see.** A root-level `pull_request_template.md` (supported by GitHub) is missed, and so are org-wide templates from a `.github` repository. Template content is not checked.
+**What the check cannot see.** Whether the rules are run in CI or actually enforced is not checked. deptry is usually configured in `pyproject.toml`, not tests, so it is rarely seen there.
 
-**Known flaw.** The checklist says "PR and issue templates", but two issue-template files (or one plus `config.yml`) meet it with no PR template.
+**Known flaw.** Workspace files (`*.sln`, `nx.json`, `pnpm-workspace.yaml`, `go.work`, `lerna.json`) declare workspaces, they do not enforce boundaries. Two `.sln` files give Met. The "tach" text test also matches "attach", "detach" and so on anywhere in `pyproject.toml`.
 
-**Our convention.** PR and issue templates turn the review checklist into a habit; a nice-to-have sign of maturity.
+**Why we expect it.**
+
+> We need to work within software architectures that give us independence of action—more than ever, we need to be able to develop, test, and deploy software independently.
+>
+> — [dora-2025-state-of-ai-assisted-development](../references/dora-2025-state-of-ai-assisted-development/), p. 9 · supporting

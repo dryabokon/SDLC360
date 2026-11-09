@@ -33,36 +33,40 @@ def test_critical_cap_takes_the_strictest():
 
 def _report(critical_score: float) -> dict:
     checks = [
-        {"id": "x.crit", "title": "c", "weight": 5, "score": critical_score, "evidence": [], "recommendation": "fix"},
-        {"id": "x.other", "title": "o", "weight": 3, "score": 1.0, "evidence": [], "recommendation": ""},
+        {"id": "test.present", "title": "c", "weight": 5, "score": critical_score, "evidence": [], "recommendation": "fix"},
+        {"id": "test.ratio", "title": "o", "weight": 3, "score": 1.0, "evidence": [], "recommendation": ""},
     ]
     items = {
-        "x": [
-            {"id": "x.crit", "text": "Crit", "priority": "critical", "weight": 5.0, "custom": False},
-            {"id": "x.other", "text": "Other", "priority": "important", "weight": 3.0, "custom": False},
-            {"id": "custom.x.mine", "text": "Mine", "priority": "nice", "weight": 1.0, "custom": True},
+        "tests": [
+            {"id": "test.present", "text": "Crit", "priority": "critical", "weight": 5.0, "custom": False},
+            {"id": "test.ratio", "text": "Other", "priority": "important", "weight": 3.0, "custom": False},
+            {"id": "custom.tests.mine", "text": "Mine", "priority": "nice", "weight": 1.0, "custom": True},
         ]
     }
-    return {"repo": {"source": "t"}, "checklist": {"items": items}, "dimensions": [{"id": "x", "name": "X", "auto_checks": checks}]}
+    return {"repo": {"source": "t"}, "checklist": {"items": items}, "dimensions": [{"id": "tests", "name": "Tests", "auto_checks": checks}]}
+
+
+def _tests(rep: dict) -> dict:
+    return next(d for d in rep["dimensions"] if d["id"] == "tests")
 
 
 def test_finalize_applies_gate_and_is_idempotent():
     rep = finalize(_report(0.0))
-    d = rep["dimensions"][0]
+    d = _tests(rep)
     assert d["uncapped_score"] == 37.5  # 3 of 8 weighted points; the custom item awaits review and is not scored
     assert d["score"] == 37.5 and d["capped_by"] == []  # already below the cap
     assert [c["status"] for c in d["checks"]] == ["fail", "pass", "review"]
-    assert finalize(rep)["dimensions"][0]["score"] == 37.5
+    assert _tests(finalize(rep))["score"] == 37.5
 
 
 def test_finalize_caps_partial_critical_at_74():
-    d = finalize(_report(0.8))["dimensions"][0]
-    assert d["uncapped_score"] == 87.5 and d["score"] == 74.0 and d["capped_by"] == ["x.crit"]
+    d = _tests(finalize(_report(0.8)))
+    assert d["uncapped_score"] == 87.5 and d["score"] == 74.0 and d["capped_by"] == ["test.present"]
 
 
 def test_review_verdicts_and_adjust_are_applied():
-    review = {"capabilities": {"custom.x.mine": {"status": "met", "note": "seen"}}, "dimensions": {"x": {"adjust": 50, "notes": ["n"]}}}
-    d = finalize(_report(1.0), review)["dimensions"][0]
+    review = {"capabilities": {"custom.tests.mine": {"status": "met", "note": "seen"}}, "dimensions": {"tests": {"adjust": 50, "notes": ["n"]}}}
+    d = _tests(finalize(_report(1.0), review))
     mine = d["checks"][2]
     assert mine["status"] == "pass" and mine["evidence"] == ["seen"]
     assert d["adjust"] == 20.0  # clamped to +-20

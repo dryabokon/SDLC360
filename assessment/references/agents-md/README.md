@@ -29,8 +29,8 @@ agents-md-site.md is a text extract of the site (FAQ: placement, nesting, preced
 ## Used for
 
 - `doc.readme`
-- `ai.scoped_context`
-- `ai.instructions_fresh`
-- `ai.instructions_quality`
 - `ai.instructions`
+- `ai.instructions_quality`
+- `ai.instructions_fresh`
+- `ai.scoped_context`
 - `test.ratio`

@@ -91,15 +91,6 @@ def test_unpinned_requirements_are_not_a_lockfile(make_repo):
     assert checks["rep.lockfile"].score == 0.4
 
 
-def test_provenance_and_seeds_only_apply_to_experiment_code(make_repo):
-    from src.dimensions.reproducibility import assess
-
-    plain = {c.id: c.score for c in assess(Repo(make_repo({"app.py": "print(1)\n"}, name="plain")))}
-    assert plain["rep.provenance"] is None and plain["rep.seeds"] is None
-    ml = {c.id: c.score for c in assess(Repo(make_repo({"train.py": "import torch\ntorch.manual_seed(0)\nimport mlflow\n"}, name="ml")))}
-    assert ml["rep.provenance"] == 1.0 and ml["rep.seeds"] == 1.0
-
-
 def test_one_workflow_is_enough_and_all_pr_trigger_forms_count(make_repo):
     from src.dimensions.cicd import assess
 
@@ -114,3 +105,57 @@ def test_personal_claude_local_md_is_not_project_instructions(make_repo):
 
     checks = {c.id: c.score for c in assess(Repo(make_repo({"CLAUDE.local.md": "# mine", "app.py": ""})))}
     assert checks["ai.instructions"] == 0.0
+
+
+def _commits(root, messages: list[tuple[str, int]]) -> None:
+    """Add commits to a fixture repo: (message, number of files the commit touches)."""
+    from tests.conftest import _git
+
+    for n, (msg, files) in enumerate(messages):
+        for f in range(files):
+            (root / f"src_{n}_{f}.py").write_text(f"x = {n}\n", encoding="utf-8")
+        _git(root, "add", "-A")
+        _git(root, "commit", "-q", "--allow-empty", "-m", msg)
+
+
+def test_review_counts_pull_request_marks_and_change_size(make_repo):
+    from src.dimensions.review import assess
+
+    root = make_repo({"README.md": "x\n"}, name="prs")
+    _commits(root, [(f"Fix thing (#{i})", 2) for i in range(5)] + [("Merge pull request #9 from a/b", 1)] + [("direct push", 1)] * 8)
+    checks = {c.id: c for c in assess(Repo(root))}
+    assert "6 of the last 15" in checks["rev.via_pr"].evidence[0]  # 6 PRs, 8 pushes and the fixture commit
+    assert checks["rev.via_pr"].status == "partial"  # 40% against a 60% bar
+    assert checks["rev.small_changes"].score == 1.0  # median 1 file
+
+    big = make_repo({"README.md": "x\n"}, name="big")
+    _commits(big, [("Big change (#1)", 20)] * 12)
+    assert {c.id: c for c in assess(Repo(big))}["rev.small_changes"].status == "partial"  # median 20 files vs 10 (partial up to ~24)
+
+
+def test_review_needs_history(make_repo):
+    from src.dimensions.review import assess
+
+    checks = {c.id: c for c in assess(Repo(make_repo({"README.md": "x\n"}, name="young")))}
+    assert checks["rev.via_pr"].score is None and checks["rev.small_changes"].score is None
+
+
+def test_ai_policy_and_attribution(make_repo):
+    from src.dimensions.review import assess
+
+    root = make_repo({"AGENTS.md": "# Agents\n", "CONTRIBUTING.md": "# Contributing\n\n## Using AI coding agents\n\nRules.\n"}, name="ai")
+    _commits(root, [("Add feature\n\nCo-Authored-By: Claude <noreply@anthropic.com>", 1)])
+    checks = {c.id: c for c in assess(Repo(root))}
+    assert checks["rev.ai_policy"].score == 1.0 and "CONTRIBUTING.md" in checks["rev.ai_policy"].evidence[0]
+    assert checks["rev.ai_attribution"].score == 1.0
+
+    plain = {c.id: c for c in assess(Repo(make_repo({"README.md": "x\n"}, name="noai")))}
+    assert plain["rev.ai_policy"].score == 0.0 and plain["rev.ai_attribution"].score is None  # no sign of agents
+
+
+def test_ai_policy_ignores_readmes_of_nested_folders(make_repo):
+    """Reference cards (assessment/references/x/README.md) titled "... AI agents" are not the project's AI policy."""
+    from src.dimensions.review import assess
+
+    root = make_repo({"README.md": "# Tool\n", "assessment/references/x/README.md": "# Effective context engineering for AI agents\n"})
+    assert {c.id: c for c in assess(Repo(root))}["rev.ai_policy"].score == 0.0

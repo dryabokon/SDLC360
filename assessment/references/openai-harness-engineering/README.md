@@ -22,4 +22,4 @@ _Not extracted (no archived copy)._
 
 ## Used for
 
-_Not cited in acceptance criteria yet._
+_Not quoted yet._

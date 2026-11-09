@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- New header: a black brand bar with the SDLC 360° mark, **Projects** and **Criteria** buttons and the theme switch
+  on the right; below it, the open project with its source, commit, date and criteria. The Assessment / Capabilities
+  tabs are gone: the assessment is the main view, and the settings are the **Criteria** page (`#criteria`;
+  `#capabilities` still works).
+
+- **Nine aspects of equal weight**: Docs & Architecture (merged), AI Harness, Skills, **Code Review** (new), Tests,
+  Code Quality, CI/CD (now with one-command setup and pinned toolchains), Security & Secrets (now with the lockfile),
+  LLM Usage & Cost. Architecture and Reproducibility are no longer aspects of their own.
+- A check's aspect is its section in `assessment/capabilities.md`, not the module of its rule; older runs are
+  regrouped the same way when opened.
+- New checks: changes reach main through pull requests, changes are small (median files per change), an AI usage
+  policy is written down, agent-written commits are attributed. CODEOWNERS and PR templates moved to Code Review.
+- Removed: cloud cost controls, CI-minute cost (a duplicate of CI speed), provenance of results and seeded randomness
+  (ML-specific; candidates for an ML profile).
+
 - A capability's details are shorter: **How we check** (with "Not seen:" for blind spots and known flaws) and
   **Why it matters**. "Partially met" is explained in the verdict, only when it applies.
 - A quote links to our own reference card (publisher, date, licence, retrieval date, the copy we keep and its
@@ -10,6 +25,8 @@
 - An open capability reads as three rows, **Expected**, **Found** and **What to do**, styled like the folded details. Criticality, status and
   percentage are shown only in the list on the left. **Accepted when** moved into the folded details. The detail
   panel is wider.
+- Older runs list their aspects in the current order and under the current names, like the Criteria page. Their
+  "Runs & Reproducibility" aspect (before 0.4) is shown as today's Reproducibility, its `run.*` checks as `rep.*`.
 - `start.sh` / `stop.sh` work from WSL when the server runs on the Windows interpreter, and print the address at once.
 
 ## 0.5.0 (2026-11-06)

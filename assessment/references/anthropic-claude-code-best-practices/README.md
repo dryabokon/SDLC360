@@ -30,24 +30,24 @@ The URL redirects to the Claude Code docs; the page changes over time, so the ch
 ## Used for
 
 - `arch.adr`
-- `ai.mcp`
-- `ai.instructions_fresh`
 - `ai.instructions`
-- `ai.settings`
-- `ai.scoped_context`
-- `ai.guardrails`
-- `ai.extensions`
-- `ai.no_local_leak`
 - `ai.instructions_quality`
+- `ai.instructions_fresh`
+- `ai.settings`
+- `ai.guardrails`
+- `ai.no_local_leak`
+- `ai.extensions`
 - `ai.ci_agents`
-- `sk.size`
+- `ai.scoped_context`
+- `ai.mcp`
 - `sk.present`
 - `sk.frontmatter`
 - `sk.descriptions`
+- `sk.size`
 - `test.present`
-- `sec.env_template`
 - `rep.documented`
 - `ci.cd`
+- `sec.env_template`
 - `cost.llm_tracking`
-- `cost.llm_efficiency`
 - `cost.llm_limits`
+- `cost.llm_efficiency`

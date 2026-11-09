@@ -12,7 +12,7 @@ flowchart LR
     Runner["src/runner.py<br/>one scan = one run folder"] --> Repo["src/repo.py<br/>resolve target, git, file index"]
     Runner --> Scanner["src/scanner.py<br/>scan() + finalize()"]
     Runner --> History["src/history.py<br/>velocity, past-commit scores"]
-    Scanner --> Dims["src/dimensions/*<br/>10 aspects of checks"]
+    Scanner --> Dims["src/dimensions/*<br/>rule sets, 9 aspects"]
     Scanner --> Profiles["src/profiles.py<br/>assessment/profiles/*.json, thresholds"]
     Profiles --> Checklist["src/checklist.py<br/>assessment/capabilities.md"]
     Scanner --> Acceptance["src/acceptance.py<br/>assessment/acceptance-criteria/*.md, assessment/references/"]
@@ -24,7 +24,7 @@ flowchart LR
 | Component | Responsibility | Boundary |
 |---|---|---|
 | `repo.py` | Validate and resolve a target, then index files (`git ls-files` plus untracked files on disk) | The only module that runs git on the target. Read-only for local repos |
-| `dimensions/*` | Scanner rules: `assess(repo) -> [Check]` with score 0..1 or `None` (N/A), evidence and recommendation | Pure functions of `Repo`. No I/O besides reading |
+| `dimensions/*` | Scanner rules in topic modules: `assess(repo) -> [Check]` with score 0..1 or `None` (N/A), evidence and recommendation. `__init__.py` lists the nine aspects; a check's aspect is its section in `capabilities.md` | Pure functions of `Repo`. No I/O besides reading git and files |
 | `checklist.py` | Parse the capability catalog: ids, standard priorities, custom items | No knowledge of scanners |
 | `profiles.py` | Profiles (overrides of the catalog) and `PARAMS`, the adjustable thresholds; validation on save | Writes only `assessment/profiles/<id>.json`; `standard` is read-only |
 | `scanner.py` | `scan()` runs all aspects and keeps raw `auto_checks`. `finalize()` applies checklist, review and the critical gate | `finalize()` is idempotent and needs no repo |

@@ -1,4 +1,4 @@
-# AI harness: how each capability is judged
+# AI Harness: how each capability is judged
 
 Capabilities and their priorities are in [capabilities.md](../capabilities.md).
 How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).

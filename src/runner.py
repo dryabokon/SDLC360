@@ -80,7 +80,7 @@ def run_scan(
         log.info("capabilities: %s (%s)", cl["path"], (cl.get("profile") or {}).get("name", cl["origin"]))
         report = scan(repo, only=only, checklist=cl)
         for d in report["dimensions"]:
-            log.info("  %-24s %6s  %s  (%.2fs)", d["name"], d["score"], d["grade"], d["elapsed_s"])
+            log.info("  %-24s %6s  %s", d["name"], d["score"], d["grade"])
         say("computing velocity")
         hist = {"velocity": velocity(repo), "scores": []}
         if history_points > 1 and repo.is_git:

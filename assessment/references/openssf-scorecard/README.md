@@ -30,14 +30,14 @@ The closest existing catalogue of analytical (non-LLM) repository checks; severa
 ## Used for
 
 - `doc.standard_files`
-- `sec.workflow_permissions`
-- `sec.policy`
-- `sec.dep_updates`
-- `sec.ci_scanning`
+- `rev.via_pr`
 - `sec.codeowners`
-- `rep.provenance`
-- `rep.lockfile`
+- `ci.pr`
 - `rep.environment`
 - `ci.cd`
-- `ci.pr`
 - `ci.pinning`
+- `rep.lockfile`
+- `sec.ci_scanning`
+- `sec.dep_updates`
+- `sec.workflow_permissions`
+- `sec.policy`

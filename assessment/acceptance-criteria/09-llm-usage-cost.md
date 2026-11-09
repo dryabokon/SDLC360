@@ -1,4 +1,4 @@
-# Cost: how each capability is judged
+# LLM Usage & Cost: how each capability is judged
 
 Capabilities and their priorities are in [capabilities.md](../capabilities.md).
 How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
@@ -57,23 +57,6 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 >
 > — [google-new-sdlc](../references/google-new-sdlc/), p. 40 · supporting
 
-## cost.infra: Cloud resources have budgets, tags and cost checks.
-
-**Accepted when.** Cloud resources have budgets, cost tags and cost checks.
-
-**How we check.** IaC files: `*.tf`, `*.bicep`, `cdk.json`, `Pulumi.yaml`, `serverless.yml`, `template.yaml`, `*.cfn.yaml` anywhere, or any file under root `k8s/`, `helm/` or `charts/`. In those files (first 200) plus all workflow YAML, it collects distinct matches of: `infracost`, `aws_budgets_budget`, `azurerm_consumption_budget`, `google_billing_budget`, cost-center/cost_center, `tags`, `labels:`/`labels =`, `autoscal`, `spot`, `preemptible`, `resources:` followed by `limits`.
-
-- **Met:** 3 or more distinct signals (score = distinct / 3).
-- **Partially met:** Exactly 2 distinct signals (0.67).
-- **Not met:** 0 or 1 signal (1 gives 0.33, below 0.35).
-- **Not applicable:** No IaC file exists.
-
-**What the check cannot see.** Weak signals add up. Workflow `tags:` push triggers and near-universal k8s `labels:` count, and `spot` matches inside words like "hotspot". Any file named `template.yaml` counts as IaC. Budgets are never required.
-
-**Known flaw.** Signals are deduplicated by the exact matched text (lower-cased, not trimmed). So `labels:` and `labels =`, or `cost-center` and `cost_center`, count as two signals.
-
-**Our convention.** Cloud spend without budgets or tags cannot be attributed or capped; applies only when infrastructure is defined as code.
-
 ## cost.llm_efficiency: Prompt caching and a central model config keep spend down.
 
 **Accepted when.** Prompts are cached and models are configured in one place.
@@ -98,21 +81,6 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > Set `model: haiku` in a subagent’s definition if its work is simple
 >
 > — [anthropic-claude-code-best-practices](../references/anthropic-claude-code-best-practices/), Know what subagents cost · supporting
-
-## cost.ci: CI minutes are controlled (timeouts, cancel-in-progress, path filters).
-
-**Accepted when.** CI minutes are controlled: outdated runs are cancelled, unrelated changes skipped, jobs have timeouts.
-
-**How we check.** Only when GitHub workflows exist and the project uses an LLM SDK or IaC. In all workflow text it counts `timeout-minutes` occurrences and jobs. A job counts if its key is indented 2 spaces and the next line, at 4 spaces, is `runs-on` or `uses`; at least 1 job is assumed. It also looks for `cancel-in-progress: true` and a `paths:`/`paths-ignore:` line. Score = 0.4 x min(1, timeouts/jobs) + 0.35 x cancel + 0.25 x paths.
-
-- **Met:** `cancel-in-progress: true` AND a path filter AND timeouts on at least 62.5% of counted jobs.
-- **Partially met:** Score 0.35 to 0.85. Examples: cancel-in-progress alone, or cancel + paths, or timeouts covering at least 87.5% of jobs alone, or path filter + at least 25% timeout coverage.
-- **Not met:** Below 0.35, e.g. only path filters, or timeouts on fewer than 87.5% of jobs with nothing else.
-- **Not applicable:** No workflows, or no LLM/IaC usage.
-
-**What the check cannot see.** Step-level `timeout-minutes` also count, and jobs whose first key is `name:`/`needs:`/`if:` are not counted, so the ratio is easily inflated. `cancel-in-progress: ${{ … }}` is not recognised. Expensive runners are reported but not scored. Other CI systems are ignored.
-
-**Our convention.** Timeouts, cancel-in-progress and path filters stop CI minutes from being burned by hung or superseded jobs.
 
 ## cost.documented: Expected costs and budgets are documented.
 

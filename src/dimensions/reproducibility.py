@@ -71,14 +71,10 @@ ENV_PINS = (
     "devbox.json",
 )
 ENTRYPOINTS = ("Makefile", "justfile", "Justfile", "Taskfile.y*ml", "noxfile.py", "tox.ini", "scripts/*", "start*.sh", "run*.sh", "start*.bat")
-TRACKING = r"\b(mlflow|wandb|dvc|sacred|aim\b|neptune|clearml|comet_ml|tensorboard|lightning\.pytorch\.loggers)"
-PROVENANCE = r"rev-parse\s+HEAD|git\s+describe|GITHUB_SHA|GIT_COMMIT|git_sha|commit_sha|get_git_hash|repo\.head\.commit"
-ML_STACK = r"\b(import (torch|tensorflow|sklearn|jax|xgboost|lightgbm)|from (torch|sklearn|transformers|tensorflow|jax) import)"
 
 
 def assess(repo: Repo):
     c = Checks()
-    src = repo.source_files[:3000]
     manifests = repo.find(*MANIFESTS)
 
     locks = repo.find(*LOCKFILES)
@@ -132,36 +128,6 @@ def assess(repo: Repo):
         "Document how to get from a clean checkout to the same result: setup, exact command, where outputs land, how to compare.",
     )
 
-    ml = repo.grep(ML_STACK, files=src[:2000], max_hits=1)
-    tracking = repo.grep(TRACKING, files=src + repo.find("requirements*.txt", "pyproject.toml", "package.json"), max_hits=5)
-    dvc = repo.find("dvc.yaml", ".dvc/config", "MLproject")
-    prov = repo.grep(PROVENANCE, files=src, max_hits=3)
-    produces_results = bool(ml or tracking or dvc)
-    c.add(
-        "rep.provenance",
-        "Results record the code version and configuration that produced them",
-        1,
-        (1.0 if (tracking or dvc or prov) else 0.0) if produces_results else None,
-        (
-            [
-                f"tracking: {short(sorted({h[2][:30] for h in tracking}) + dvc, 3)}",
-                f"code records git SHA: {short([f'{h[0]}:{h[1]}' for h in prov], 3)}",
-            ]
-            if produces_results
-            else ["no experiment / ML stack detected: not applicable"]
-        ),
-        "Log the git SHA, config and seed with every result (MLflow / W&B / DVC, or a manifest written next to the output).",
-    )
-
-    seeds = repo.grep(r"\b(seed\(|random_state|manual_seed|set_seed|--seed|SEED\s*=)", files=src, max_hits=3)
-    c.add(
-        "rep.seeds",
-        "Randomness is seeded where results depend on it",
-        1,
-        (1.0 if seeds else 0.0) if ml else None,
-        short([f"{h[0]}:{h[1]}" for h in seeds], 3) if ml else "no ML / numeric stack detected: not applicable",
-        "Seed every RNG (python, numpy, torch) and record the seed with the result.",
-    )
     return c.items
 
 

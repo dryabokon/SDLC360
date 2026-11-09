@@ -9,7 +9,7 @@ description: Fix a wrong SDLC360 verdict (false positive or false negative) or a
    Copy the check's `evidence` from `report.json` and find the exact file or line that misleads the rule.
 2. **Write the failing test first.** Use `tests/unit/test_heuristics.py` and build a minimal repo with the
    `make_repo` fixture that has the same shape. Assemble secrets at runtime (`"AKIA" + "..."`).
-3. **Fix the rule** in `src/dimensions/<aspect>.py`. Prefer a narrower pattern over a new exception list.
+3. **Fix the rule** in `src/dimensions/` (the module that adds that check id). Prefer a narrower pattern over a new exception list.
 4. **Keep the contract in sync** for a new or renamed check:
    - `assessment/acceptance-criteria/<NN-aspect>.md`: how it is checked, met / partially / not met, what the check
      cannot see, and under **Why we expect it** a verbatim quote from `assessment/references/` (or an

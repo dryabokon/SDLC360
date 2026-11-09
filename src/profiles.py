@@ -60,6 +60,8 @@ PARAMS: dict[str, list[Param]] = {
     "test.present": [Param("min_files", "Test files", 5, "files", 1, 10000)],
     "test.ratio": [Param("min_ratio", "Test files per source file", 0.34, "", 0.01, 5, 0.01)],
     "hyg.file_size": [Param("max_kb", "Largest acceptable source file", 60, "KB", 1, 10000)],
+    "rev.via_pr": [Param("min_share", "Commits on the main line that came through a pull request", 60, "%", 1, 100)],
+    "rev.small_changes": [Param("max_files", "Files a typical change touches", 10, "files", 1, 1000)],
 }
 
 

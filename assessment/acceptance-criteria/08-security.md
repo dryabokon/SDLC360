@@ -1,4 +1,4 @@
-# Security: how each capability is judged
+# Security & Secrets: how each capability is judged
 
 Capabilities and their priorities are in [capabilities.md](../capabilities.md).
 How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
@@ -50,6 +50,35 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > Check for any secrets or sensitive data in the suggested code.
 >
 > — [openssf-ai-code-assistant-guide](../references/openssf-ai-code-assistant-guide/), TL;DR > Be Security-Conscious · supporting
+
+## rep.lockfile: Dependencies are locked to exact versions.
+
+**Accepted when.** Dependencies are locked to exact versions: a lockfile, or requirements files pinned with `==` throughout.
+
+**How we check.** Lockfiles anywhere in the tree by file name: `uv.lock`, `poetry.lock`, `Pipfile.lock`, `pdm.lock`, `pixi.lock`, `conda-lock.yml`, `requirements*.lock`, `package-lock.json`, `npm-shrinkwrap.json`, `pnpm-lock.yaml`, `yarn.lock`, `bun.lock(b)`, `Cargo.lock`, `go.sum`, `Gemfile.lock`, `composer.lock`, `packages.lock.json`, `gradle.lockfile`, `flake.lock`. It also reads every `requirements*.txt` and `constraints*.txt`.
+
+- **Met:** At least one lockfile exists, or at least one `requirements*.txt` / `constraints*.txt` is "fully pinned". Fully pinned means it has at least one requirement line and every one contains `==` or ` @ `. Comments and lines starting with `-` are ignored.
+- **Partially met:** No lockfile and no fully pinned file, but at least one `requirements*.txt` exists (score 0.4).
+- **Not met:** No lockfile and no `requirements*.txt` at all, for example a `pyproject.toml` or `package.json` with no lock.
+- **Not applicable:** The repository has no manifest (`pyproject.toml`, `setup.py`, `setup.cfg`, `requirements*.txt`, `package.json`, `Cargo.toml`, `go.mod`, `Gemfile`, `composer.json`, `*.csproj`, `pom.xml`, `build.gradle*`, `environment.yml`) and no source files.
+
+**What the check cannot see.** The scanner checks that a lockfile exists, not that it is current or matches the manifest. A lockfile in a fixture, vendored or sub-project folder counts for the whole repo. `==` anywhere on the line counts as pinned, including `foo==1.*` and `foo>=1; python_version=="3.8"`. Maven, plain Gradle and NuGet projects without a lock are not met.
+
+**Known flaw.** The checklist says "every requirement is pinned", but one fully pinned file is enough. A pinned `requirements-dev.txt` or `constraints.txt` makes the check Met even when the runtime `requirements.txt` is unpinned.
+
+**Why we expect it.**
+
+> Dependency gatekeeping: Allowlist and pin; scan for typosquats (PyPI, npm, LangChain, LlamaIndex); verify provenance before install or activation
+>
+> — [owasp-agentic-top10-2026](../references/owasp-agentic-top10-2026/), ASI04 guideline 2, p.21 · direct
+
+> If your project is producing an application and the package manager supports lock files (e.g. `package-lock.json` for npm), make sure to check these in the source code as well.
+>
+> — [openssf-scorecard](../references/openssf-scorecard/), Pinned-Dependencies (remediation) · direct
+
+> Maintain a list of organization-approved commercial software components and component versions along with their provenance data.
+>
+> — [nist-ssdf](../references/nist-ssdf/), SP 800-218 PW.4.1 Ex.5, p.21 · supporting
 
 ## sec.ci_scanning: CI scans code, dependencies and secrets on every change.
 
@@ -220,27 +249,3 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > Place a security policy file `SECURITY.md` in the root directory of your repository.
 >
 > — [openssf-scorecard](../references/openssf-scorecard/), Security-Policy (remediation) · direct
-
-## sec.codeowners: CODEOWNERS assigns reviewers for sensitive paths.
-
-**Accepted when.** A `CODEOWNERS` file assigns reviewers.
-
-**How we check.** Any file named `CODEOWNERS` anywhere in the tree (case-insensitive), plus `.github/CODEOWNERS`, `docs/CODEOWNERS`.
-
-- **Met:** Such a file exists.
-- **Partially met:** never.
-- **Not met:** None exists.
-
-**What the check cannot see.** Contents are not read: an empty file, or one with a single `*` owner, passes. A `CODEOWNERS` in a subfolder GitHub ignores (e.g. a vendored package) also passes.
-
-**Known flaw.** The checklist says owners are assigned "for sensitive paths"; no path coverage is checked.
-
-**Why we expect it.**
-
-> Have the code owner review and approve all changes made to the code by others.
->
-> — [nist-ssdf](../references/nist-ssdf/), SP 800-218 PS.1.1 Ex.4, p.18 · direct
-
-> Require review from code owners
->
-> — [openssf-scorecard](../references/openssf-scorecard/), Branch-Protection (Tier 4) · direct

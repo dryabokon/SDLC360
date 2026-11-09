@@ -28,20 +28,19 @@ It answers questions like:
 
 ## What it looks at
 
-Ten aspects, in the order a project is built: design, build, verify, deliver, operate.
+Nine aspects of equal weight.
 
 | Aspect | The question |
 |---|---|
-| Architecture | Are the components, data flow and key decisions written down and current? |
-| Documentation | Can a newcomer, human or agent, start from the README, and do the docs match the code? |
+| Docs & Architecture | Can a newcomer, human or agent, start from the README; are components and key decisions written down and current? |
 | AI Harness | Do coding agents get instructions, permissions and automatic guardrails? |
 | Skills | Are repeated agent workflows packaged as well-formed, discoverable skills? |
-| Code Hygiene | Linting, formatting, type checking and pre-commit hooks |
+| Code Review | Do changes reach the main branch through pull requests, stay small, and is the use of AI governed? |
 | Tests | Is there a test suite, does it grow with the code, is coverage measured and enforced? |
-| Security | No committed secrets or credential files; scanning, dependency updates, least-privilege CI |
-| Reproducibility | Locked dependencies, pinned toolchains, one-command setup, documented reproduction |
-| CI/CD | Are pull requests gated, releases automated, workflows pinned, fast and bounded? |
-| Cost | Are LLM tokens and cloud spend tracked and capped? (not applicable when there are none) |
+| Code Quality | Linting, formatting, type checking, pre-commit hooks and code structure |
+| CI/CD | Are pull requests gated, is setup one command with pinned toolchains, are releases automated? |
+| Security & Secrets | No committed secrets; locked and updated dependencies, scanning, least-privilege CI |
+| LLM Usage & Cost | Are LLM tokens tracked and capped? (not applicable when the code calls no LLM) |
 
 Each aspect is a checklist of capabilities with a priority: **critical**, **important** or **nice to have**.
 An unmet critical capability caps its aspect at 49 out of 100, whatever else passes.
@@ -61,7 +60,7 @@ Requirements: Python 3.12+ and git. Nothing to install: the tool uses only the P
 
 <details><summary><b>2 · Choose a project and assess it</b></summary>
 
-Click the project name in the header. Paste a GitHub URL or `owner/repo`, or pick a local git folder with the folder
+Press **Projects** at the top right. Paste a GitHub URL or `owner/repo`, or pick a local git folder with the folder
 picker, choose a profile and press **Assess**. Local folders are only read, never changed.
 </details>
 
@@ -76,7 +75,7 @@ capabilities with their status. Click one to see what was **expected**, what we 
 
 <details><summary><b>4 · Make it yours</b></summary>
 
-The **Capabilities** tab has the same layout. Switch capabilities on or off, set how critical each one is, change
+The **Criteria** page (button at the top right) has the same layout. Switch capabilities on or off, set how critical each one is, change
 the numbers in **Accepted when** ("There are at least **5** test files"), and add capabilities of your own in plain
 words. Save it as a profile; **Apply to this run** re-judges the open assessment at once.
 
@@ -92,8 +91,8 @@ After changes, press **Re-assess**. The new run appears next to the earlier ones
 
 | You want to change | Where |
 |---|---|
-| **Which capabilities count**, how critical each is, and the numbers they are accepted at | the **Capabilities** tab: a profile (*Standard*, *Prototype*, or your own) |
-| **A capability of your own** that no rule checks | **Capabilities** tab → *Add your own capability*, with when it is accepted; a reviewer records the verdict ([review.json](docs/reviewer-verdicts.md)) |
+| **Which capabilities count**, how critical each is, and the numbers they are accepted at | the **Criteria** page: a profile (*Standard*, *Prototype*, or your own) |
+| **A capability of your own** that no rule checks | **Criteria** → *Add your own capability*, with when it is accepted; a reviewer records the verdict ([review.json](docs/reviewer-verdicts.md)) |
 | **How a rule checks**, its blind spots and published basis (for developers) | [`assessment/acceptance-criteria/`](assessment/acceptance-criteria/), one file per aspect |
 | **Why we expect it** | [`assessment/references/`](assessment/references/README.md) |
 
@@ -104,8 +103,8 @@ Profiles are saved in [`assessment/profiles/`](assessment/profiles/). From the c
 
 ```mermaid
 flowchart LR
-    R["Repository<br/>GitHub or local folder"] -->|scan| S["Scanner<br/>10 aspects, analytical rules"]
-    E["Profile<br/>Capabilities tab"] -->|what counts, thresholds| S
+    R["Repository<br/>GitHub or local folder"] -->|scan| S["Scanner<br/>9 aspects, analytical rules"]
+    E["Profile<br/>Criteria page"] -->|what counts, thresholds| S
     A["Acceptance criteria<br/>assessment/acceptance-criteria/"] -->|how it is judged| S
     Src["References<br/>assessment/references/"] -->|basis| A
     S --> Run["Run folder<br/>runs/&lt;id&gt;/"]

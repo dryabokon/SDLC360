@@ -69,6 +69,80 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Our convention.** Lint, test and build in CI are the minimum feedback loop; each missing stage lets a class of defects reach main.
 
+## rep.entrypoints: One command sets up, builds and tests the project.
+
+**Accepted when.** One command sets up, builds or tests the project (a Makefile, scripts, `start.sh`, package.json scripts).
+
+**How we check.** Any of these, matched by name anywhere: `Makefile`, `justfile`, `Taskfile.y*ml`, `noxfile.py`, `tox.ini`, `start*.sh`, `run*.sh`, `start*.bat`. Also any file under the root `scripts/`, a `"scripts":` key in the root `package.json`, or `[project.scripts]`, `[tool.poe` or `[tool.hatch.envs` in the root `pyproject.toml`.
+
+- **Met:** At least one of these is found (the score is true/false).
+- **Partially met:** never
+- **Not met:** None is found.
+
+**What the check cannot see.** The scanner checks that a runner exists, not that its commands set up, build or test. Any stray file in `scripts/`, or a Makefile in a vendored folder, meets it. `[project.scripts]` declares console entry points, not tasks. Gradle/Maven wrappers, `Rakefile`, `.csproj` and `Cargo` aliases are not recognised.
+
+**Known flaw.** The checklist says "One command sets up, builds and tests the project". The code only checks that some task runner or script exists.
+
+**Why we expect it.**
+
+> The goal is to be able to reproduce testing and production environments in a fully automated fashion using only information from version control.
+>
+> — [dora-2025-ai-capabilities-model](../references/dora-2025-ai-capabilities-model/), p. 41 · supporting
+
+## rep.environment: Runtime and toolchain versions are pinned (version files / container).
+
+**Accepted when.** At least 2 files pin the runtime and tool versions (`.python-version`, `.nvmrc`, a Dockerfile and the like).
+
+**How we check.** Counts files, matched by name anywhere: `.python-version`, `.nvmrc`, `.node-version`, `.tool-versions`, `mise.toml`, `.mise.toml`, `rust-toolchain*`, `global.json`, `.sdkmanrc`, `.java-version`, `.ruby-version`, `.go-version`, `Dockerfile`, `*.dockerfile`, `docker-compose*.yml`, `compose.y*ml`, `flake.nix`, `shell.nix`, `devbox.json`. It also counts any file under the root `.devcontainer/`.
+
+- **Met:** 2 or more matching files (score = files / 2, capped at 1).
+- **Partially met:** Exactly 1 matching file (0.5).
+- **Not met:** None.
+
+**What the check cannot see.** The scanner counts files, not distinct mechanisms. Two `Dockerfile`s, or two files in `.devcontainer/`, meet the check. File contents are never read, so an unpinned `FROM python:latest` counts. `Dockerfile.dev` and `docker-compose.yaml` are missed. A `global.json` that is not the .NET SDK file also counts.
+
+**Known flaw.** The intent is "at least two pinning mechanisms", but the code counts matching files.
+
+**Why we expect it.**
+
+> Version everything: Store all production artifacts in version control. This includes application code, system configurations, test scripts, deployment scripts, container orchestration files, and cloud configuration files.
+>
+> — [dora-2025-ai-capabilities-model](../references/dora-2025-ai-capabilities-model/), p. 41 · direct
+
+> pin image versions using immutable digests (e.g., SHA256 hashes) instead of mutable tags like latest
+>
+> — [openssf-ai-code-assistant-guide](../references/openssf-ai-code-assistant-guide/), Platform and Runtime Security Considerations > Container and Deployment Considerations · direct
+
+> For Dockerfiles used in building and releasing your project, pin dependencies by hash.
+>
+> — [openssf-scorecard](../references/openssf-scorecard/), Pinned-Dependencies (remediation) · direct
+
+## rep.documented: How to get the same result from a clean checkout is documented.
+
+**Accepted when.** The docs explain how to set up and get the same results from a clean checkout.
+
+**How we check.** Joins the text of the first 40 files matching `README*`, `CONTRIBUTING*`, `AGENTS.md` or `CLAUDE.md` anywhere, or any `docs/**.md`. It looks for (a) a markdown heading line (`#…`) containing install, setup, getting started, quick start/quickstart or development, and (b) reproduction wording: `reproduc*`, `rerun`/`re-run*`, `deterministic*`, or "same result(s)".
+
+- **Met:** Both a setup heading and reproduction wording are found.
+- **Partially met:** Only one of them is found (0.5).
+- **Not met:** Neither is found.
+
+**What the check cannot see.** Lines in code blocks that start with `#`, such as `# install deps`, count as headings. Any README in a subfolder or vendored package counts. Both checks are keyword matches: a "reproducible builds" badge or the word "rerun" satisfies (b). The scanner never checks that the steps lead to the same result.
+
+**Why we expect it.**
+
+> keep the install command in `CLAUDE.md` so Claude runs it whenever it starts in a new checkout
+>
+> — [anthropic-claude-code-best-practices](../references/anthropic-claude-code-best-practices/), Run sessions in parallel · supporting
+
+> One of the most common pitfalls is storing only application source code in version control.
+>
+> — [dora-2025-ai-capabilities-model](../references/dora-2025-ai-capabilities-model/), p. 42 · supporting
+
+> Include documentation of the entire training process, such as data preprocessing and model architecture.
+>
+> — [nist-ssdf](../references/nist-ssdf/), SP 800-218A PS.3.1.R3, p.21 · supporting
+
 ## ci.cd: Releases or deployments are automated.
 
 **Accepted when.** Releases or deployments are automated, for example on a version tag.

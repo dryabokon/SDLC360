@@ -19,29 +19,32 @@
   --grid:#242422;--axis:#383835;--series-1:#3987e5;--series-2:#d95926;--good-text:#30d158;--bad-text:#ff6961}
 *{box-sizing:border-box}html,body{margin:0;height:100%}
 body{background:var(--bg);color:var(--text);font:13px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-  -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;display:grid;grid-template-rows:46px minmax(0,1fr)}
+  -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;display:grid;grid-template-rows:44px 44px minmax(0,1fr)}
 h1,h2,h3{margin:0;font-weight:600}h1{font-size:15px}
 h3{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
 code{font:11.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--fill);padding:0 4px;border-radius:4px}
 button,input{font:inherit;color:inherit}.muted{color:var(--muted)}.spacer{flex:1}
-/* header */
-.topbar{border-bottom:1px solid var(--line);padding:0 16px;display:flex;align-items:center;gap:18px;white-space:nowrap}
-.tabs{display:flex;gap:2px;height:100%}
-.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:0 12px;cursor:pointer;color:var(--muted);font-weight:600;height:100%}
-.tabs button.on{color:var(--text);border-bottom-color:var(--text)}
-.tabs button:hover{color:var(--text)}
+/* header: a black brand bar in both themes (as in our other tools), then the context of what is open */
+.brand{background:#030303;color:#ececec;padding:0 16px;display:flex;align-items:center;gap:12px;white-space:nowrap;--bb:rgba(255,255,255,.16)}
+.brand .logo{display:flex;align-items:center;gap:9px;color:inherit;text-decoration:none}
+.brand .logo svg{width:24px;height:24px;color:#64d2ff}
+.brand .logo b{font-size:14.5px;letter-spacing:-.01em}
+.brand .what{font-size:12px;color:#9b9b9b;overflow:hidden;text-overflow:ellipsis}
+.bbtn{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 11px;border:1px solid var(--bb);border-radius:6px;background:none;color:#ececec;cursor:pointer;font-size:12.5px;font-weight:500}
+.bbtn:hover:not(:disabled){background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.3)}
+.bbtn.on,.bbtn.on:hover:not(:disabled){background:#ececec;color:#111;border-color:#ececec}
+.bbtn svg{width:15px;height:15px;flex:none}.bbtn.ico,.bbtn.ico:hover:not(:disabled){padding:0;width:30px;justify-content:center;border:0;background:none;opacity:.85}.bbtn.ico:hover:not(:disabled){opacity:1}.bbtn.ico svg{fill:currentColor;width:16px;height:16px}
+.ctxbar{border-bottom:1px solid var(--line);padding:0 16px;display:flex;align-items:center;gap:12px;white-space:nowrap;min-width:0}
+.ctxbar .ttl{font-size:15px;font-weight:650;overflow:hidden;text-overflow:ellipsis;flex:none;max-width:40%}
+.ctxbar .cmeta{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+[hidden]{display:none!important}
 .icon-btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;height:30px;min-width:30px;padding:0 10px;cursor:pointer;display:inline-grid;place-items:center}
 .icon-btn:hover{border-color:var(--faint)}.icon-btn svg{width:15px;height:15px;fill:currentColor}
 .icon-btn.pri{background:var(--text);color:var(--surface);border-color:var(--text)}
 .icon-btn:disabled{opacity:.4;cursor:default}
 /* project picker */
 .picker{position:relative;height:100%;display:flex;align-items:center}
-.picker>button{background:none;border:1px solid transparent;border-radius:6px;height:30px;padding:0 8px;cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:600;max-width:360px}
-.picker>button:hover:not(:disabled){border-color:var(--line)}
-.picker>button:disabled{cursor:default}
-.picker>button .nm{overflow:hidden;text-overflow:ellipsis}
-.picker>button svg{width:12px;height:12px;fill:var(--muted);flex:none}
-.panel{position:absolute;top:42px;left:0;z-index:20;width:440px;background:var(--surface);border:1px solid var(--line);border-radius:10px;
+.panel{position:absolute;top:40px;right:0;z-index:20;color:var(--text);width:440px;background:var(--surface);border:1px solid var(--line);border-radius:10px;
   box-shadow:0 12px 40px rgba(0,0,0,.18);padding:6px;display:none;white-space:normal}
 .panel.on{display:block}
 .panel h3{padding:6px 8px 4px}
@@ -250,10 +253,12 @@ select:focus,.txt:focus,.inl:focus{outline:2px solid var(--series-1);outline-off
 </style>
 </head>
 <body>
-<header class="topbar">
+<header class="brand">
+  <a class="logo" href="#assessment/overview" id="home" title="SDLC 360°: overview of the open project"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.5-6"/><path d="M20.5 3.5V8H16"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg><b>SDLC 360°</b></a>
+  <span class="what">Engineering maturity of repositories built with AI agents</span>
+  <span class="spacer"></span>
   <div class="picker" id="picker">
-    <button type="button" id="pick-btn" aria-haspopup="true" aria-expanded="false"><span class="nm" id="proj-name">—</span>
-      <svg viewBox="0 0 24 24" id="pick-caret"><path d="M7 10l5 5 5-5z"/></svg></button>
+    <button type="button" class="bbtn" id="pick-btn" aria-haspopup="true" aria-expanded="false" title="Open an assessed project or assess a new one"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v8.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/></svg><span>Projects</span></button>
     <div class="fsdlg" id="fsdlg" role="dialog" aria-modal="true" aria-label="Choose a local git folder"><div class="fsbox">
       <header><button class="icon-btn" type="button" id="fs-up" title="Parent folder">↑</button><div class="fspath" id="fs-path"></div>
         <button class="icon-btn" type="button" id="fs-close" title="Close">✕</button></header>
@@ -280,11 +285,15 @@ select:focus,.txt:focus,.inl:focus{outline:2px solid var(--series-1);outline-off
       </div>
     </div>
   </div>
-  <nav class="tabs" id="tabs"><button data-v="assessment" class="on" type="button">Assessment</button><button data-v="capabilities" type="button">Capabilities</button></nav>
+  <button type="button" class="bbtn" id="crit-btn" title="Assessment criteria: which capabilities count, how critical they are, and the numbers they are accepted at"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg><span>Criteria</span></button>
+  <button class="bbtn ico" id="theme" type="button" aria-label="Toggle theme"></button>
+</header>
+<div class="ctxbar" id="ctxbar">
+  <span class="ttl" id="proj-name">—</span><span class="cmeta" id="proj-meta"></span>
   <span class="spacer"></span>
   <span class="pbar hidden" id="cap-bar"></span>
-  <button class="icon-btn" id="theme" type="button" aria-label="Toggle theme"></button>
-</header>
+  <button class="icon-btn" type="button" id="crit-back" hidden>Back to assessment</button>
+</div>
 
 <section class="view on" id="v-assessment">
   <nav class="subnav" id="subnav"></nav>
@@ -341,19 +350,32 @@ function dimTip(d) {
 function bindDim(node, d) { node.addEventListener("mouseenter", (e) => showTip(e, dimTip(d))); node.addEventListener("mousemove", moveTip);
   node.addEventListener("mouseleave", hideTip); node.addEventListener("click", () => { hideTip(); go("assessment", d.id); }); }
 
-/* ---------- routing: #assessment/<sub> | #capabilities ---------- */
+/* ---------- routing: #assessment/<sub> | #criteria (the settings; #capabilities before 0.6) ---------- */
 let state = { view: "assessment", sub: "overview" };
-function go(view, sub) { state.view = view; if (sub) state.sub = sub; history.replaceState(null, "", `#${state.view}${state.view === "assessment" ? "/" + state.sub : ""}`); render(); }
-(function parseHash() { const [v, s] = location.hash.slice(1).split("/"); if (["assessment", "capabilities"].includes(v)) state.view = v; if (s) state.sub = s; })();
-document.querySelectorAll("#tabs button").forEach((b) => b.onclick = () => go(b.dataset.v));
+function go(view, sub) { state.view = view; if (sub) state.sub = sub; history.replaceState(null, "", state.view === "assessment" ? `#assessment/${state.sub}` : "#criteria"); render(); }
+(function parseHash() { const [v, s] = location.hash.slice(1).split("/"); if (v === "assessment") state.view = v; if (v === "criteria" || v === "capabilities") state.view = "capabilities"; if (s) state.sub = s; })();
+$("#crit-btn").onclick = () => go(state.view === "capabilities" ? "assessment" : "capabilities");
+$("#crit-back").onclick = () => go("assessment");
+$("#home").onclick = (e) => { e.preventDefault(); if (REPORT) go("assessment", "overview"); };
+function context() {  // the second header row: what is open
+  const crit = state.view === "capabilities";
+  $("#crit-btn").classList.toggle("on", crit); $("#crit-btn").hidden = MODE !== "app";
+  $("#crit-back").hidden = !crit || !REPORT;
+  if (crit) { $("#proj-name").textContent = "Assessment criteria";
+    $("#proj-meta").textContent = "Which capabilities count, how critical they are, and the numbers they are accepted at. Saved as a profile."; return; }
+  if (!REPORT) { $("#proj-name").textContent = "No project open"; $("#proj-meta").textContent = ""; return; }
+  const r = REPORT.repo, h = r.head || {};
+  $("#proj-name").textContent = r.source.replace(/^github\.com\//, "").replace(/^.*[\\/](?=[^\\/]+$)/, "");
+  $("#proj-meta").textContent = [r.source.startsWith("github.com/") ? "GitHub" : "Local folder", h.sha ? "commit " + h.sha.slice(0, 8) : "",
+    "assessed " + fdate(REPORT.generated_at), "criteria: " + profileName(REPORT)].filter(Boolean).join(" · ");
+}
 
 const VIEWS = ["assessment", "capabilities", "empty"];
 const FREE_VIEWS = ["capabilities"];  // works without an open report
 function render() {
   hideTip();
   if (!REPORT && !FREE_VIEWS.includes(state.view)) { showEmpty(); return; }
-  document.querySelectorAll("#tabs button").forEach((b) => { b.classList.toggle("on", b.dataset.v === state.view); b.hidden = (!REPORT && !FREE_VIEWS.includes(b.dataset.v)) || (b.dataset.v === "capabilities" && MODE !== "app"); });
-  $("#tabs").classList.remove("hidden");
+  context();
   for (const v of VIEWS) $("#v-" + v).classList.toggle("on", v === state.view);
   $("#cap-bar").classList.toggle("hidden", state.view !== "capabilities");
   if (state.view === "capabilities") renderCapabilitiesView(); else renderAssessment();
@@ -732,8 +754,8 @@ function capBindBar() {
 /* =================== PROJECTS =================== */
 let PROJECTS = [], current = null, CURRENT_RUN = null;
 const panel = $("#panel"), pickBtn = $("#pick-btn");
-function setProjectName() { $("#proj-name").textContent = REPORT ? REPORT.repo.source.replace(/^github\.com\//, "").replace(/^.*[\\/](?=[^\\/]+$)/, "") : "Choose project"; }
-if (MODE === "static") { $("#pick-caret").remove(); pickBtn.disabled = true; }
+function setProjectName() { context(); }
+if (MODE === "static") { $("#picker").remove(); }
 else {
   pickBtn.onclick = (e) => { e.stopPropagation(); const on = !panel.classList.contains("on"); panel.classList.toggle("on", on); pickBtn.setAttribute("aria-expanded", on); };
   document.addEventListener("click", (e) => { if (!$("#picker").contains(e.target)) panel.classList.remove("on"); });
@@ -822,10 +844,10 @@ if (MODE === "app") {
   $("#fs-use").onclick = () => fsState.git && fsUse(fsState.path);
   $("#fsdlg").onclick = (e) => { if (e.target.id === "fsdlg") fsClose(); };
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("#fsdlg").classList.contains("on")) { e.stopPropagation(); fsClose(); } }, true);
-} else { $("#browse-btn").remove(); $("#scan-profile").remove(); }
+} else { $("#browse-btn")?.remove(); $("#scan-profile")?.remove(); }  // gone with the picker in a static report
 
 function showEmpty() {
-  document.querySelectorAll("#tabs button").forEach((b) => { b.hidden = !FREE_VIEWS.includes(b.dataset.v) || (b.dataset.v === "capabilities" && MODE !== "app"); b.classList.remove("on"); });
+  context();
   for (const v of VIEWS) $("#v-" + v).classList.toggle("on", v === "empty");
   $("#cap-bar").classList.add("hidden");
   $("#empty").innerHTML = `<h2>Assess a repository</h2>Point the assessment at a GitHub repository (<code>https://github.com/owner/repo</code> or <code>owner/repo</code>)

@@ -44,9 +44,11 @@ DORA, *AI Capabilities Model 2025*
 - `doc.freshness`
 - `ai.mcp`
 - `sk.present`
+- `rev.small_changes`
+- `rev.ai_policy`
 - `test.ci`
-- `rep.entrypoints`
-- `rep.documented`
-- `rep.environment`
-- `ci.pr`
 - `ci.present`
+- `ci.pr`
+- `rep.entrypoints`
+- `rep.environment`
+- `rep.documented`

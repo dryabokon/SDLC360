@@ -69,54 +69,15 @@ def assess(repo: Repo):
         ):
             c.add(cid, t, w, None, "no LLM SDK usage detected")
 
-    iac = repo.find("*.tf", "*.bicep", "cdk.json", "Pulumi.yaml", "serverless.yml", "template.yaml", "*.cfn.yaml", "k8s/*", "helm/*", "charts/*")
-    if iac:
-        tf = "\n".join(repo.read(f) for f in iac[:200])
-        infra = re.findall(
-            r"infracost|aws_budgets_budget|azurerm_consumption_budget|google_billing_budget|cost[-_]?center|\btags\b|labels\s*[:=]|autoscal|spot|preemptible|resources:\s*\n\s*limits",
-            tf + repo.workflow_text,
-            re.I,
-        )
-        c.add(
-            "cost.infra",
-            "Cloud cost controls (budgets, tagging, infracost, limits)",
-            2.5,
-            min(1.0, len(set(i.lower() for i in infra)) / 3),
-            [f"IaC files: {len(iac)}", f"signals: {', '.join(sorted(set(i.lower().strip() for i in infra))[:6]) or 'none'}"],
-            "Tag resources with cost-center/owner, define budgets + alerts in IaC, and run infracost on PRs.",
-        )
-    else:
-        c.add("cost.infra", "Cloud cost controls (budgets, tagging, infracost, limits)", 2.5, None, "no infrastructure-as-code")
-
-    if repo.workflows and (llm or iac):  # CI minutes only matter once the project pays for resources
-        txt = repo.workflow_text
-        jobs = max(1, len(re.findall(r"^\s{2}[\w-]+:\s*\n\s{4}(runs-on|uses)", txt, re.M)))
-        timeouts = len(re.findall(r"timeout-minutes", txt))
-        cancel = bool(re.search(r"cancel-in-progress:\s*true", txt))
-        paths = bool(re.search(r"^\s*paths(-ignore)?\s*:", txt, re.M))
-        big = re.findall(r"runs-on:\s*\S*(large|xlarge|gpu|macos)", txt, re.I)
-        s = 0.4 * min(1.0, timeouts / jobs) + 0.35 * cancel + 0.25 * paths
-        c.add(
-            "cost.ci",
-            "CI minutes controlled (timeouts, cancel-in-progress, path filters)",
-            1.5,
-            s,
-            [f"timeouts {timeouts}/{jobs} jobs", f"cancel-in-progress: {cancel}", f"path filters: {paths}"]
-            + ([f"expensive runners: {len(big)}"] if big else []),
-            "Cancel superseded runs, cap job time and skip CI for doc-only changes.",
-        )
-    else:
-        c.add("cost.ci", "CI minutes controlled", 1.5, None, "no paid resources detected" if repo.workflows else "no workflows")
-
     docs = "\n".join(repo.read(f) for f in repo.find("README*", "docs/*.md", "CLAUDE.md", "COST*.md")[:30])
     documented = re.search(r"\b(cost|budget|pricing|spend|\$\d)", docs, re.I)
-    applicable = bool(llm or iac)
+    applicable = bool(llm)
     c.add(
         "cost.documented",
         "Expected costs / budgets documented",
         1,
         bool(documented) if applicable else None,
-        "cost/budget discussed in docs" if documented else ("not documented" if applicable else "no paid-resource usage detected"),
+        "cost/budget discussed in docs" if documented else ("not documented" if applicable else "no LLM usage detected"),
         "Document expected per-run / monthly costs, budgets and who owns them.",
     )
     return c.items

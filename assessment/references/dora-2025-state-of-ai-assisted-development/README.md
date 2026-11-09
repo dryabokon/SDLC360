@@ -30,11 +30,12 @@ DORA, *State of AI-assisted Software Development 2025*
 
 ## Used for
 
-- `arch.boundaries`
 - `doc.freshness`
-- `ai.ci_agents`
 - `ai.guardrails`
+- `ai.ci_agents`
+- `rev.ai_policy`
 - `test.ci`
+- `arch.boundaries`
 - `ci.cd`
 - `ci.speed`
 - `cost.llm_tracking`

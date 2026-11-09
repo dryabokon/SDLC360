@@ -25,8 +25,8 @@ files:
 
 ## Used for
 
-- `sk.size`
 - `sk.frontmatter`
-- `sk.links`
-- `sk.layout`
 - `sk.descriptions`
+- `sk.links`
+- `sk.size`
+- `sk.layout`

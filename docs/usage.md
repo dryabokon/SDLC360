@@ -31,7 +31,7 @@ python sdlc.py serve --port 8360 --open                      # the web app in th
 
 1. **Resolve the target.** GitHub repositories are cloned blobless into `.cache/repos/`. Local folders are read in
    place and never written to; for history a throw-away `git clone --shared` is used.
-2. **Run the scanner rules** of the ten aspects on the current commit. Each rule records a score 0–1, the evidence
+2. **Run the scanner rules** of the nine aspects on the current commit. Each rule records a score 0–1, the evidence
    it found and a recommendation.
 3. **Apply the profile** (`--profile`, default *Standard*; a repository may bring `.sdlc360/capabilities.md`):
    which capabilities count, their priority (`critical` / `important` / `nice`) and the thresholds the rules use.
@@ -62,8 +62,8 @@ other repositories to have a `runs/` folder.
 
 | What | Where |
 |---|---|
-| Capabilities on / off, priorities, thresholds, your own capabilities | the **Capabilities** tab, saved as `assessment/profiles/<name>.json`; the catalog is `assessment/capabilities.md` |
-| How each capability is judged | `assessment/acceptance-criteria/` (texts) and `src/dimensions/<aspect>.py` (rules) |
+| Capabilities on / off, priorities, thresholds, your own capabilities | the **Criteria** page, saved as `assessment/profiles/<name>.json`; the catalog is `assessment/capabilities.md` |
+| How each capability is judged | `assessment/acceptance-criteria/` (texts) and `src/dimensions/*.py` (rules) |
 | Published basis | `assessment/references/` ([index](../assessment/references/README.md)); `python assessment/references/fetch.py` restores local copies |
 | Reviewer verdicts | `runs/<id>/review.json` ([format](reviewer-verdicts.md)) |
 | Secrets | `.env` (git-ignored, template `.env.example`) holds `GH_PAT` for maintainers only; scans need no secrets |

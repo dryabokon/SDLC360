@@ -76,6 +76,15 @@ class Checks:
         return c
 
 
+@dataclass(frozen=True)
+class Aspect:
+    """One of the nine aspects a report shows. Which checks it holds is decided by assessment/capabilities.md."""
+
+    id: str
+    name: str
+    description: str
+
+
 @dataclass
 class Dimension:
     id: str

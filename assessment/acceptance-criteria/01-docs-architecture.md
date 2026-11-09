@@ -1,7 +1,31 @@
-# Documentation: how each capability is judged
+# Docs & Architecture: how each capability is judged
 
 Capabilities and their priorities are in [capabilities.md](../capabilities.md).
 How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
+
+## arch.doc: An architecture document describes components, data flow and boundaries.
+
+**Accepted when.** There is an architecture document, for example `ARCHITECTURE.md` or `docs/architecture.md`.
+
+**How we check.** Files matching `ARCHITECTURE*` or `DESIGN.md` anywhere in the tree, or `docs/*architecture*`, `docs/*design*`, `docs/*overview*`, `doc/*architecture*` or `docs/arc42/*` at any depth. The extension must be `.md`, `.mdx`, `.rst`, `.adoc` or `.txt`.
+
+- **Met:** At least one such file exists.
+- **Partially met:** Never.
+- **Not met:** No such file.
+
+**What the check cannot see.** Only the file name is checked, so an empty file passes. `docs/design-system/button.md` or a decision record with "design" in its name also passes. An architecture section inside the README is not counted.
+
+**Known flaw.** The checklist says the document describes components, data flow and boundaries. The content is never read.
+
+**Why we expect it.**
+
+> Given a clear architecture document, AI agents can scaffold entire applications, generate consistent patterns across modules, and ensure that new code conforms to established conventions.
+>
+> — [google-new-sdlc](../references/google-new-sdlc/), p. 22 · supporting
+
+> proprietary company data, such as codebases, wikis, architectural diagrams, documentation, and style guides—all of which can be managed through manual and automated context engineering.
+>
+> — [dora-2025-ai-capabilities-model](../references/dora-2025-ai-capabilities-model/), p. 28 · supporting
 
 ## doc.readme: The README explains what the project is and how to start.
 
@@ -22,6 +46,66 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 > README.md files are for humans: quick starts, project descriptions, and contribution guidelines.
 >
 > — [agents-md](../references/agents-md/), Why AGENTS.md? · supporting
+
+## arch.diagrams: Architecture diagrams are kept as code (Mermaid / PlantUML / C4).
+
+**Accepted when.** The docs hold at least {min_diagrams} diagrams kept as code (Mermaid, PlantUML, C4, draw.io).
+
+**How we check.** The first 400 tracked `.md`/`.mdx` files are searched for a code fence opening with `mermaid`, `plantuml`, `d2`, `dot` or `graphviz`. It also counts `*.puml`, `*.plantuml`, `*.drawio`, `*.excalidraw`, `*.d2`, `*.mmd`, `*.dsl` and `*.c4` files anywhere. The total is the number of markdown files with a fence plus the number of diagram files.
+
+- **Met:** A total of {min_diagrams} or more.
+- **Partially met:** A total of {min_diagrams:partial} or more.
+- **Not met:** Fewer.
+
+**What the check cannot see.** A markdown file counts once, however many diagrams it holds. Any `.dsl` file counts, Structurizr or not. Diagrams in `.rst`/`.adoc` and exported PNG/SVG images are not seen. Nothing checks that a diagram shows the architecture.
+
+**Known flaw.** The fence pattern has no word boundary, so a `dotenv` code fence (common in READMEs for env examples) counts as a Graphviz diagram.
+
+**Why we expect it.**
+
+> The AI, using RAG to access the latest API specs, architectural diagrams, and the codebase itself, provides a step-by-step answer
+>
+> — [dora-2025-ai-capabilities-model](../references/dora-2025-ai-capabilities-model/), p. 32 · supporting
+
+## arch.adr: Significant design decisions are recorded, one file per decision.
+
+**Accepted when.** At least {min_records} design decisions are written down, one file each, in a decisions folder.
+
+**How we check.** Folders whose path or name matches `*adr`, `*adrs`, `*decisions`, `*decision-records` or `docs/architecture/decisions`. It counts the tracked `.md` files beneath them at any depth.
+
+- **Met:** {min_records} or more markdown files.
+- **Partially met:** {min_records:partial} or more markdown files.
+- **Not met:** Fewer.
+
+**What the check cannot see.** README and template files in the folder count as decision records, and content is not checked. A folder such as `design-decisions` for something unrelated counts. Records written as `.rst`/`.adoc`, or kept outside such folders, are missed.
+
+**Why we expect it.**
+
+> Maintain records of design decisions, risk responses, and approved exceptions that can be used for auditing and maintenance purposes throughout the rest of the software life cycle.
+>
+> — [nist-ssdf](../references/nist-ssdf/), SP 800-218 PW.1.2 Ex.2, p.20 · direct
+
+> The developer's role shifts from writing boilerplate to making and documenting the structural decisions that boilerplate implements.
+>
+> — [google-new-sdlc](../references/google-new-sdlc/), p. 22 · supporting
+
+> Decisions that aren’t in the repo: which error helper the team settled on, how deploys work, what needs a migration review
+>
+> — [anthropic-claude-code-best-practices](../references/anthropic-claude-code-best-practices/), Keep CLAUDE.md short · supporting
+
+## arch.fresh: The architecture document is maintained alongside the code.
+
+**Accepted when.** The architecture document was updated no more than {max_lag_days} days before the latest code change.
+
+**How we check.** The newest commit touching any arch.doc file is compared with the newest commit touching the first 2,000 source files.
+
+- **Met:** The architecture doc lags the code by no more than about {max_lag_days} days (full score up to {grace_days} days, then a linear fade to 0 at {zero_days} days).
+- **Partially met:** A lag of about {max_lag_days+1} to {partial_days} days, or unknown dates (scores 0.5).
+- **Not met:** A lag of more than about {partial_days} days, or no architecture doc.
+
+**What the check cannot see.** The newest matching file wins. Editing an unrelated `docs/*design*` page or fixing a typo counts as maintenance. Whether the content matches the code is not checked.
+
+**Our convention.** An architecture document that lags the code misleads people and agents more than no document; we use the same staleness rule as for docs.
 
 ## doc.readme_sections: The README covers setup, usage, testing, configuration and overview.
 

@@ -26,6 +26,6 @@ files:
 
 ## Used for
 
-- `arch.structure`
 - `ai.extensions`
 - `sk.descriptions`
+- `arch.structure`

@@ -102,18 +102,7 @@ def test_mature_scores_higher_and_bare_is_gated(mature, bare):
 
 
 def test_every_aspect_reports_without_errors(mature):
-    assert [d["id"] for d in mature["dimensions"]] == [
-        "architecture",
-        "docs",
-        "harness",
-        "skills",
-        "hygiene",
-        "tests",
-        "security",
-        "reproducibility",
-        "cicd",
-        "cost",
-    ]
+    assert [d["id"] for d in mature["dimensions"]] == ["docs", "harness", "skills", "review", "tests", "hygiene", "cicd", "security", "cost"]
     assert not [c["id"] for d in mature["dimensions"] for c in d["checks"] if c["id"].endswith(".error")]
 
 
@@ -195,3 +184,30 @@ def test_catalog_embeds_reference_cards():
     cat = catalog()
     cited = {b["source"] for m in cat["methods"].values() for b in m["basis"]}
     assert set(cat["references"]) == cited
+
+
+def test_an_older_run_lines_up_with_the_current_aspects(mature):
+    """Older runs had other aspects ("architecture", "runs" with run.* checks, ...); finalize() places their checks by
+    the current catalog, so they line up with the Capabilities tab, and doing it twice changes nothing."""
+    import copy
+
+    from src.dimensions import DIMENSIONS
+    from src.scanner import finalize
+
+    old = copy.deepcopy(mature)
+    checks = [c for d in old["dimensions"] for c in d["auto_checks"]]
+    for c in checks:
+        c["id"] = c["id"].replace("rep.", "run.")
+    old["dimensions"] = [
+        {"id": "architecture", "name": "Architecture", "auto_checks": [c for c in checks if c["id"].startswith("arch.")]},
+        {"id": "runs", "name": "Runs & Reproducibility", "auto_checks": [c for c in checks if c["id"].startswith("run.")]},
+        {"id": "security", "name": "Old name", "auto_checks": [c for c in checks if not c["id"].startswith(("arch.", "run."))]},
+    ]
+    once = finalize(old)
+    assert [d["id"] for d in once["dimensions"]] == [d.id for d in DIMENSIONS]
+    assert [d["name"] for d in once["dimensions"]] == [d.name for d in DIMENSIONS]
+    where = {c["id"]: d["id"] for d in once["dimensions"] for c in d["checks"]}
+    assert where["rep.lockfile"] == "security" and where["rep.entrypoints"] == "cicd" and where["arch.doc"] == "docs"
+    assert where["sec.codeowners"] == "review"
+    again = finalize(copy.deepcopy(once))
+    assert {c["id"]: d["id"] for d in again["dimensions"] for c in d["checks"]} == where

@@ -28,12 +28,11 @@ files:
 
 - `hyg.lint`
 - `hyg.types`
-- `sec.workflow_permissions`
-- `sec.no_sensitive_files`
-- `sec.dep_updates`
-- `sec.ci_scanning`
-- `sec.env_template`
-- `sec.no_secrets`
-- `rep.provenance`
 - `rep.environment`
 - `ci.pinning`
+- `sec.no_secrets`
+- `sec.no_sensitive_files`
+- `sec.ci_scanning`
+- `sec.dep_updates`
+- `sec.workflow_permissions`
+- `sec.env_template`

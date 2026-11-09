@@ -30,26 +30,26 @@ SP 800-218 (SSDF v1.1, 2022) is included because 800-218A extends its practice i
 
 ## Used for
 
-- `arch.structure`
 - `arch.adr`
-- `hyg.precommit`
+- `rev.via_pr`
+- `sec.codeowners`
+- `test.present`
+- `test.ci`
+- `test.layers`
 - `hyg.lint`
 - `hyg.format`
-- `test.ci`
-- `test.present`
-- `test.layers`
-- `sec.precommit_secrets`
-- `sec.workflow_permissions`
-- `sec.policy`
-- `sec.dep_updates`
-- `sec.ci_scanning`
-- `sec.env_template`
-- `sec.no_secrets`
-- `sec.codeowners`
-- `sec.no_sensitive_files`
-- `rep.provenance`
+- `hyg.precommit`
+- `arch.structure`
+- `ci.present`
 - `rep.documented`
-- `rep.lockfile`
 - `ci.hygiene`
 - `ci.pinning`
-- `ci.present`
+- `sec.no_secrets`
+- `sec.no_sensitive_files`
+- `rep.lockfile`
+- `sec.ci_scanning`
+- `sec.dep_updates`
+- `sec.workflow_permissions`
+- `sec.env_template`
+- `sec.precommit_secrets`
+- `sec.policy`

@@ -29,6 +29,5 @@ Its final score is the minimum over sections: the same idea as our critical gate
 
 ## Used for
 
-- `test.layers`
 - `test.coverage`
-- `rep.seeds`
+- `test.layers`
