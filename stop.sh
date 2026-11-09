@@ -4,13 +4,19 @@ set -euo pipefail
 PORT="${PORT:-8360}"
 URL="http://127.0.0.1:$PORT/"
 
+# Under WSL the server may run on the Windows side (see start.sh); then only Windows curl.exe reaches it.
+CURL=curl
 if ! curl -sf "${URL}api/projects" >/dev/null 2>&1; then
-    echo "SDLC360 is not running on port $PORT."
-    exit 0
+    if command -v curl.exe >/dev/null 2>&1 && curl.exe -sf "${URL}api/projects" >/dev/null 2>&1; then
+        CURL=curl.exe
+    else
+        echo "SDLC360 is not running on port $PORT."
+        exit 0
+    fi
 fi
-curl -sf -X POST -H "Origin: http://127.0.0.1:$PORT" "${URL}api/shutdown" >/dev/null
+"$CURL" -sf -X POST -H "Origin: http://127.0.0.1:$PORT" "${URL}api/shutdown" >/dev/null
 for ((i = 0; i < 50; i++)); do
-    if ! curl -sf "${URL}api/projects" >/dev/null 2>&1; then
+    if ! "$CURL" -sf "${URL}api/projects" >/dev/null 2>&1; then
         echo "SDLC360 stopped."
         exit 0
     fi

@@ -180,3 +180,18 @@ def test_server_api(tmp_path):
     finally:
         httpd.shutdown()
         httpd.server_close()
+
+
+def test_report_embeds_a_card_for_every_cited_reference(mature):
+    """A report is self-contained: each quote's source card travels with it, also in a static report.html."""
+    cited = {b["source"] for d in mature["dimensions"] for c in d["checks"] for b in c["method"].get("basis", [])}
+    assert cited and set(mature["references"]) == cited
+    assert all(r["title"] and r["retrieved"] for r in mature["references"].values())
+
+
+def test_catalog_embeds_reference_cards():
+    from src.serve import catalog
+
+    cat = catalog()
+    cited = {b["source"] for m in cat["methods"].values() for b in m["basis"]}
+    assert set(cat["references"]) == cited

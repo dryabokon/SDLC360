@@ -102,3 +102,23 @@ def test_every_capability_has_a_plain_accepted_sentence():
         assert text and len(text) < 260, cid
         keys = set(re.findall(r"\{(\w+)\}", text))
         assert keys == {p.key for p in PARAMS.get(cid, [])}, f"{cid}: the sentence must show each threshold once as {{key}}"
+
+
+def test_reference_cards_carry_files_and_key_points():
+    """The app links a quote to our card, not to the publisher's page: the card must say what we keep and why it matters."""
+    refs = references()
+    nist = refs["nist-ssdf"]
+    assert [f["name"] for f in nist["files"]] == ["NIST.SP.800-218A.pdf", "NIST.SP.800-218.pdf"]
+    assert all(len(f["sha256"]) == 64 and f["stored"] == "in git" for f in nist["files"])
+    assert refs["google-new-sdlc"]["files"][0]["stored"] == "local copy"
+    assert refs["openai-harness-engineering"]["files"] == []  # link only
+    for sid, meta in refs.items():
+        assert meta["key_points"] or not meta["files"], f"{sid}: a kept original but no Key points"
+
+
+def test_reference_cards_keep_only_the_cited_sources():
+    from src.acceptance import reference_cards
+
+    cards = reference_cards({"nist-ssdf", "no-such-source"})
+    assert list(cards) == ["nist-ssdf"]
+    assert cards["nist-ssdf"]["retrieved"] and cards["nist-ssdf"]["key_points"]

@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- A capability's details are shorter: **How we check** (with "Not seen:" for blind spots and known flaws) and
+  **Why it matters**. "Partially met" is explained in the verdict, only when it applies.
+- A quote links to our own reference card (publisher, date, licence, retrieval date, the copy we keep and its
+  SHA-256, key points) instead of the publisher's page, which may move. Reports embed the cards they cite.
+- The overview shows the radar and the aspect scores only ("Where to start" and "What is going well" are gone).
+- An open capability reads as three rows, **Expected**, **Found** and **What to do**, styled like the folded details. Criticality, status and
+  percentage are shown only in the list on the left. **Accepted when** moved into the folded details. The detail
+  panel is wider.
+- `start.sh` / `stop.sh` work from WSL when the server runs on the Windows interpreter, and print the address at once.
+
 ## 0.5.0 (2026-11-06)
 
 - Two tabs: **Assessment** and **Capabilities**, with the same layout. Recommendations, Dynamics and How it works are

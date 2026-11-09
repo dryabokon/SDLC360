@@ -21,8 +21,11 @@ change in the **Capabilities** tab. Each `{key}` is a threshold of the rule (lis
 `src/profiles.py → PARAMS`), so the sentence always states the number the verdict is based on. Tests fail when a
 sentence and its rule disagree on the thresholds.
 
-Everything else in a block (how the rule checks, partial verdicts, blind spots, published basis) is for developers and
-for readers who want to dig deeper; the app shows it folded away under "How this is checked, and why it matters".
+Everything else in a block is for readers who want to dig deeper. The app shows it folded away under "How this is
+checked, and why it matters", after the Accepted when sentence (in the Assessment; the Capabilities tab keeps that
+sentence in view, because it is edited there), in two parts: **How we check** (the rule, then "Not seen:" with the blind spots and any
+known flaw) and **Why it matters** (each quote, with the card of its reference). "Partially met" is shown in the
+verdict only when that is the verdict; "Not met" and "Not applicable" stay in the file for developers.
 
 ## Acceptance criteria
 

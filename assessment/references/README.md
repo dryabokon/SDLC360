@@ -27,6 +27,8 @@ quote them verbatim under **Why we expect it**, or say **Our convention** when a
 
 `README.md` is the card: metadata in the frontmatter (title, publisher, authors, dates, licence, URL, files with
 SHA-256), the key points, and which capabilities quote it. Next to it lies the original, if its licence allows.
+The app shows this card under each quote (it travels inside every report, also a static `report.html`), so a
+citation stays checkable when the publisher's page moves or changes; the publisher's URL is only a footnote.
 
 - **In git**: originals whose licence allows redistribution and that are small (NIST public domain, OWASP CC BY-SA,
   OpenSSF / AGENTS.md / Agent Skills under Apache-2.0 or MIT).

@@ -103,7 +103,7 @@ button,input{font:inherit;color:inherit}.muted{color:var(--muted)}.spacer{flex:1
 .prio.critical{color:var(--text);border-color:var(--text)}
 .prio.nice{border-style:dashed;color:var(--faint)}
 .gate{margin-top:12px;border-left:2px solid var(--critical);background:var(--fill);padding:6px 9px;border-radius:0 6px 6px 0;font-size:12px;color:var(--ink-2)}
-.dimgrid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:12px;margin-top:12px;align-items:start}
+.dimgrid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:12px;margin-top:12px;align-items:start}
 .rag{display:inline-block;width:10px;height:10px;border-radius:50%;flex:none;vertical-align:middle}
 .rag.pass{background:var(--good)}.rag.partial{background:var(--warning)}.rag.fail{background:var(--critical)}
 .rag.na{background:transparent;border:1.5px solid var(--axis)}.rag.review{background:transparent;border:1.5px dashed var(--series-1)}
@@ -191,7 +191,6 @@ svg text{fill:var(--ink-2);font-size:12px}svg .tick{fill:var(--faint);font-size:
 .cl .tx{font-weight:600}
 .cl .st{font-size:11px;color:var(--muted);font-weight:500;margin-left:6px}
 .cl .w{font-size:11px;color:var(--faint);white-space:nowrap}
-.cl .rec{font-size:12.5px;margin-top:3px;color:var(--ink-2)}.cl .rec::before{content:"→ ";color:var(--series-1);font-weight:700}
 .cl .ev{display:none;margin:4px 0 0;padding-left:15px;color:var(--muted);font-size:12px}.cl .ev li{word-break:break-word}
 .cl>li.open .ev{display:block}
 .cl .more{font-size:11px;color:var(--faint);margin-top:3px}
@@ -211,23 +210,21 @@ svg text{fill:var(--ink-2);font-size:12px}svg .tick{fill:var(--faint);font-size:
 #tip .row{display:flex;justify-content:space-between;gap:14px;color:var(--muted)}#tip .row b{color:var(--text)}
 /* assessment: verdicts that say what to do, or cheer */
 .ov2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px;margin-top:12px}
-.todo{margin:8px 0 6px;padding-left:20px}.todo li{padding:6px 4px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:4px}
-.todo li:last-child{border-bottom:0}.todo li:hover{background:var(--fill)}
-.rec{color:var(--ink-2);font-size:12.5px;margin-top:3px;padding-left:10px;border-left:2px solid var(--warning)}
-.rec.sm{font-size:12px;color:var(--muted);margin-top:4px}
 .cheer{color:var(--good-text);font-weight:600}.cheer.big{font-size:15px;margin:10px 0}
 .dhead{display:flex;gap:8px;align-items:center}.dhead .cid{font:11.5px ui-monospace,Consolas,monospace;color:var(--muted)}
 .vbox{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:8px;background:var(--fill);margin:0 0 12px;color:var(--ink-2)}
 .vbox b{color:var(--text)}.vbox .rag{margin-top:2px}
-.vbox.good{background:color-mix(in srgb,var(--good) 10%,var(--surface));border:1px solid color-mix(in srgb,var(--good) 35%,var(--line))}
-.vbox.warn{background:color-mix(in srgb,var(--warning) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--warning) 45%,var(--line))}
-.vbox.bad{background:color-mix(in srgb,var(--critical) 8%,var(--surface));border:1px solid color-mix(in srgb,var(--critical) 35%,var(--line))}
-.todo1{margin-top:6px;color:var(--text)}
-.acc,.found{margin:0 0 12px;color:var(--text)}
-.acc>.lbl,.found>.lbl,.todo1>.lbl{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600;margin-bottom:3px}
+.kv.main{margin:4px 0 12px}.kv.main th{width:110px}.xnote{margin-top:6px;font-size:12.5px}
+.acc{margin:0 0 12px;color:var(--text)}
+.acc>.lbl{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600;margin-bottom:3px}
 .acc{font-size:13.5px;line-height:1.6}
 .more{border-top:1px solid var(--line);padding-top:8px}.more summary{cursor:pointer;color:var(--muted);font-size:12px;padding:2px 0 6px}
 .more summary:hover{color:var(--text)}.more .kv th{width:110px}
+.quote{font-style:italic;color:var(--ink-2)}
+.ref summary{cursor:pointer;font-size:12px;color:var(--text);padding:3px 0}.ref summary:hover{text-decoration:underline}
+.refcard{margin:4px 0 6px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--fill);font-size:12px}
+.refcard .lbl{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin:8px 0 2px}
+.refcard ul{margin:0;padding-left:16px}.refcard ul.files{list-style:none;padding-left:0}.refcard .foot{margin-top:8px}
 /* capabilities: same layout, settings instead of verdicts */
 .pbar{display:flex;align-items:center;gap:8px}
 .pbar .icon-btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;height:28px;padding:0 10px;color:var(--text);font-size:12px;font-weight:500}
@@ -241,11 +238,8 @@ select:focus,.txt:focus,.inl:focus{outline:2px solid var(--series-1);outline-off
 #cap-tab tr.off td{color:var(--faint)}#cap-tab tr.off td:nth-child(3){text-decoration:line-through}
 .inl{width:76px;height:26px;margin:0 3px;border:1px solid var(--series-1);border-radius:6px;background:var(--surface);color:var(--text);font:inherit;font-weight:600;text-align:center}
 .dot1{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--series-1);vertical-align:middle;margin-left:3px}
-.sw{position:relative;display:inline-block;width:30px;height:17px;cursor:pointer}.sw input{opacity:0;width:0;height:0;position:absolute}
-.sw i{position:absolute;inset:0;border-radius:9px;background:var(--axis);transition:background .15s}
-.sw i::after{content:"";position:absolute;left:2px;top:2px;width:13px;height:13px;border-radius:50%;background:#fff;transition:transform .15s}
-.sw input:checked+i{background:var(--series-1)}.sw input:checked+i::after{transform:translateX(13px)}
-.sw input:disabled+i{opacity:.5;cursor:default}.sw input:focus-visible+i{outline:2px solid var(--series-1);outline-offset:2px}
+.onck{width:14px;height:14px;margin:2px 0 0;accent-color:var(--series-1);cursor:pointer;vertical-align:top}.onck:disabled{cursor:default;opacity:.5}
+#cap-tab td.on{text-align:center}
 .add form select{height:32px;max-width:150px}
 @media (max-width:1100px){.ov2{grid-template-columns:1fr}.pbar{flex-wrap:wrap}}
 .lnk{color:var(--series-1);text-decoration:none;cursor:pointer}.lnk:hover{text-decoration:underline}
@@ -450,9 +444,22 @@ function evidenceItem(e) {
   if (m) return `<li>${linkify(m[1])} <span class="muted">references missing</span> <code>${esc(m[2])}</code></li>`;
   return `<li>${linkify(e)}</li>`;
 }
-function basisHtml(m) {
-  const items = (m.basis || []).map((b) => `<li><a class="fl" href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.title)}</a>`
-    + ` <span class="muted">· ${esc(b.locator)}${b.strength ? " · " + esc(b.strength) : ""}</span><div class="muted" style="font-style:italic">${esc(b.quote)}</div></li>`);
+/* A quote is backed by our reference card (embedded in the report), not by a link that may move: the card says who
+   published it, when we retrieved it, which original we keep and its SHA-256. The publisher's page is a footnote. */
+const STRENGTH = { direct: "asks for this practice", supporting: "supports the goal behind it" };
+function refCard(r) {
+  const files = (r.files || []).map((f) => `<li><code>${esc(f.name)}</code> <span class="muted">· ${esc(f.stored)} · SHA-256 <code title="${esc(f.sha256)}">${esc(f.sha256.slice(0, 12))}…</code></span></li>`).join("");
+  return `<div class="refcard">
+    <div><b>${esc(r.publisher || "")}</b><span class="muted"> · ${esc(r.published || "")}${r.kind ? " · " + esc(r.kind) : ""}</span></div>
+    ${(r.key_points || []).length ? `<div class="lbl">Key points</div><ul>${r.key_points.map((k) => `<li>${plain(k)}</li>`).join("")}</ul>` : ""}
+    <div class="lbl">Our copy</div>${files ? `<ul class="files">${files}</ul>` : `<span class="muted">No copy kept: the publisher does not allow downloads.</span>`}
+    <div class="muted foot">Retrieved ${esc(r.retrieved || "?")} · ${esc(r.license || "")}${r.url ? ` · <a class="fl" href="${esc(r.url)}" target="_blank" rel="noopener">publisher's page</a> (may have changed since)` : ""}</div>
+  </div>`;
+}
+function basisHtml(m, refs) {
+  const items = (m.basis || []).map((b) => { const r = (refs || {})[b.source];
+    return `<li><div class="quote">“${esc(b.quote)}”</div>
+      <details class="ref"><summary>${esc(b.title)} <span class="muted">· ${esc(b.locator)}${b.strength ? ` · <span title="${esc(STRENGTH[b.strength] || "")}">${esc(b.strength)}</span>` : ""}</span></summary>${r ? refCard(r) : ""}</details></li>`; });
   if (items.length) return `<ul class="evl">${items.join("")}</ul>`;
   return m.convention ? `<span class="muted">Team convention: ${esc(m.convention)}</span>` : "";
 }
@@ -470,19 +477,7 @@ function renderAssessment() {
   if (state.sub === "overview") overview(); else dimension(dims.find((d) => d.id === state.sub));
 }
 
-/* open capabilities, critical first, then by how many points they would win back */
-function openItems() {
-  const acts = [];
-  for (const d of REPORT.dimensions) {
-    const cs = d.checks.filter((c) => c.score != null), tw = cs.reduce((a, c) => a + c.weight, 0) || 1;
-    for (const c of cs) if (c.status !== "pass") acts.push({ d, c, rank: PRIO_RANK[c.priority] ?? 1, gain: 100 * c.weight * (1 - c.score) / tw });
-  }
-  return acts.sort((a, b) => a.rank - b.rank || b.gain - a.gain);
-}
 function overview() {
-  const acts = openItems(), all = REPORT.dimensions.flatMap((d) => d.checks), met = all.filter((c) => c.status === "pass");
-  const critMet = met.filter((c) => c.priority === "critical").length, critAll = all.filter((c) => c.priority === "critical" && c.status !== "na").length;
-  const good = REPORT.dimensions.filter((d) => d.band === "good");
   $("#assess-pane").innerHTML = `
   <div class="ov fill">
     <div class="card"><div class="chead"><h3>Maturity profile</h3><span class="spacer"></span><span class="legend" id="radar-legend"></span></div><div class="chart" id="radar"></div></div>
@@ -490,21 +485,8 @@ function overview() {
       <span class="legend">${["good", "warning", "serious", "critical"].map((b) => `<span><span class="dot" style="background:${bandColor(b)};border-radius:2px"></span>${BANDS[b]}</span>`).join("")}</span></div>
       <div class="chart" id="bars"></div></div>
   </div>
-  <div class="ov2">
-    <div class="card"><h3>Where to start</h3>
-      ${acts.length ? `<ol class="todo">${acts.slice(0, 5).map((a) => `<li data-d="${a.d.id}" data-c="${esc(a.c.id)}">
-        <div><b>${esc(a.c.title)}</b> ${prio(a.c.priority)} <span class="muted">· ${esc(a.d.name)}</span></div>
-        ${a.c.recommendation ? `<div class="rec">${linkify(a.c.recommendation)}</div>` : ""}</li>`).join("")}</ol>
-        ${acts.length > 5 ? `<div class="muted" style="font-size:12px">${acts.length - 5} more open capabilities are listed in each aspect.</div>` : ""}`
-      : `<div class="cheer big">Every capability is in place. Outstanding work.</div>`}</div>
-    <div class="card"><h3>What is going well</h3>
-      <div class="cheer">${met.length} of ${all.filter((c) => c.status !== "na").length} capabilities are in place${critAll ? `, including ${critMet} of ${critAll} critical ones` : ""}.</div>
-      ${good.length ? `<div class="muted" style="margin-top:6px">Strong aspects: ${good.map((d) => `<a class="lnk" href="#assessment/${d.id}" data-go="${d.id}">${esc(d.name)}</a> ${fmt(d.score)}`).join(" · ")}. Keep them that way.</div>` : ""}</div>
-  </div>`;
+`;
   radar($("#radar")); bars($("#bars"));
-  $("#assess-pane").querySelectorAll(".todo li").forEach((li) => li.onclick = () => { const d = REPORT.dimensions.find((x) => x.id === li.dataset.d);
-    SEL[d.id] = d.checks.findIndex((c) => c.id === li.dataset.c); go("assessment", d.id); });
-  $("#assess-pane").querySelectorAll("[data-go]").forEach((a) => a.onclick = (e) => { e.preventDefault(); go("assessment", a.dataset.go); });
 }
 
 let SEL = {};  // selected row per aspect (assessment) — the capabilities tab keeps its own
@@ -541,7 +523,7 @@ function dimension(d) {
     ${d.review_notes && d.review_notes.length ? `<div class="note" style="margin-top:12px">${d.adjust ? `<b>${d.adjust > 0 ? "+" : ""}${d.adjust}</b> reviewer adjustment · ` : ""}${d.review_notes.map(esc).join(" ")}</div>` : ""}
     <div class="dimgrid">${capTable("cktab", d.checks.map((c, i) => `<tr data-i="${i}">
         <td class="cid">${esc(c.id)}</td><td>${prio(c.priority)}</td>
-        <td>${esc(c.title)}${(c.status === "fail" || c.status === "partial") && c.recommendation ? `<div class="rec sm">${linkify(c.recommendation)}</div>` : ""}</td>
+        <td>${esc(c.title)}</td>
         <td class="st">${rag(c.status)}${c.score == null ? "–" : Math.round(c.score * 100) + "%"}</td></tr>`).join(""), "Status")}
       <div class="card detail" id="ckdetail"></div></div>`;
   const start = $("#assess-pane [data-start]");
@@ -550,33 +532,46 @@ function dimension(d) {
 }
 
 /* ---------- one card for a capability: the same in Assessment (verdict) and Capabilities (settings) ---------- */
-const CHEER = { critical: "Solid foundation: this critical capability is in place.", important: "Well done: this is in place.", nice: "Nice touch: this goes beyond the basics." };
-function verdictBox(c) {
-  const pct = c.score == null ? "" : ` · ${Math.round(c.score * 100)}%`, m = c.method || {};
-  if (c.status === "pass") return `<div class="vbox good">${rag("pass", "lg")}<div><b>${CHEER[c.priority] || CHEER.important}</b></div></div>`;
-  if (c.status === "na") return `<div class="vbox">${rag("na", "lg")}<div><b>Not applicable here.</b> ${m.na_when ? `<span class="muted">${plain(m.na_when)}</span>` : "It is left out of the score."}</div></div>`;
-  if (c.status === "review") return `<div class="vbox">${rag("review", "lg")}<div><b>Waiting for a reviewer.</b> <span class="muted">Your own capability: a person or an agent records the verdict in review.json.</span></div></div>`;
-  const gate = c.priority === "critical" ? `<div class="muted" style="margin-top:4px">Critical: until it is met, the aspect is capped at ${c.status === "fail" ? 49 : 74}.</div>` : "";
-  return `<div class="vbox ${c.status === "fail" ? "bad" : "warn"}">${rag(c.status, "lg")}<div><b>${c.status === "fail" ? "Not met" : "Almost there"}${pct}</b>
-    ${c.recommendation ? `<div class="todo1"><span class="lbl">What to do</span>${linkify(c.recommendation)}</div>` : ""}${gate}</div></div>`;
+const CHEER = { critical: "A solid foundation: this critical capability is in place.", important: "Well done.", nice: "A nice touch beyond the basics." };
+function foundNote(c) {  // what qualifies the evidence; the status itself is the dot on the left
+  const m = c.method || {};
+  if (c.status === "partial" && m.partial_when) return `<div class="muted xnote">Partly: ${plain(m.partial_when)}</div>`;
+  if (c.status === "na") return `<div class="muted xnote">Not applicable here. ${m.na_when ? plain(m.na_when) : "It is left out of the score."}</div>`;
+  if (c.status === "review") return `<div class="muted xnote">Waiting for a reviewer: a person or an agent records the verdict in review.json.</div>`;
+  return "";
 }
-function moreAbout(m, extra = "") {
+function whatToDo(c) {  // always answers "what now?"; a row like Expected and Found
+  let body = "";
+  if (c.status === "pass") body = `Nothing. ${esc(CHEER[c.priority] || CHEER.important)}`;
+  else if (c.status === "na") body = "Nothing: it does not apply to this project.";
+  else if (c.status === "review") body = "Record the verdict with its evidence in <code>review.json</code>.";
+  else if (c.recommendation) body = linkify(c.recommendation);
+  if (!body) return "";
+  const gate = c.priority === "critical" && (c.status === "fail" || c.status === "partial")
+    ? `<div class="muted xnote">Critical: until it is met, the aspect score is capped at ${c.status === "fail" ? 49 : 74}.</div>` : "";
+  return body + gate;
+}
+function moreAbout(m, refs, extra = "", first = "") {
   const row = (k, v) => v ? `<tr><th>${k}</th><td>${v}</td></tr>` : "";
-  const body = row("How we check", m.looks_at ? plain(m.looks_at) : "") + row("Partly met", plain(m.partial_when || "")) + row("Not met", plain(m.not_met_when || ""))
-    + row("Not counted", plain(m.na_when || "")) + row("Blind spots", m.limits ? `<span class="muted">${plain(m.limits)}</span>` : "")
-    + row("Known flaw", m.known_gap ? `<span class="muted">${plain(m.known_gap)}</span>` : "") + row("Why it matters", basisHtml(m)) + extra;
+  const unseen = [m.limits, m.known_gap].filter(Boolean).map(plain).join(" ");  // blind spots and known flaws: one honest note
+  const how = (m.looks_at ? plain(m.looks_at) : "") + (unseen ? `<div class="muted" style="margin-top:6px"><b>Not seen:</b> ${unseen}</div>` : "");
+  const body = first + row("How we check", how) + row("Why it matters", basisHtml(m, refs)) + extra;
   return body ? `<details class="more"><summary>How this is checked, and why it matters</summary><table class="kv"><tbody>${body}</tbody></table></details>` : "";
 }
 function checkDetail(c) {
   if (!c) return "";
   const m = c.method || {}, h = REPORT.repo.head || {}, gh = REPORT.repo.source.startsWith("github.com/");
   const assessed = `<tr><th>Assessed</th><td>${c.source === "review" ? "Reviewer" : "Scanner"}${h.sha ? ` · commit ${gh ? `<a class="fl" href="https://${REPORT.repo.source}/commit/${h.sha}" target="_blank" rel="noopener">${h.sha.slice(0, 8)}</a>` : `<code>${h.sha.slice(0, 8)}</code>`}` : ""} · ${fdate(REPORT.generated_at)}</td></tr>`;
-  return `<div class="dhead"><span class="cid">${esc(c.id)}</span>${prio(c.priority)}</div>
-    <h2>${esc(c.title)}</h2>
-    ${verdictBox(c)}
-    <div class="acc"><span class="lbl">Accepted when</span>${plain(m.accepted || m.met_when || c.title)}</div>
-    <div class="found"><span class="lbl">What we found</span>${c.evidence.length ? `<ul class="evl">${c.evidence.map(evidenceItem).join("")}</ul>` : `<span class="muted">No evidence recorded.</span>`}</div>
-    ${moreAbout(m, assessed)}`;
+  const accepted = `<tr><th>Accepted when</th><td>${plain(m.accepted || m.met_when || c.title)}</td></tr>`;
+  const found = c.evidence.length ? `<ul class="evl">${c.evidence.map(evidenceItem).join("")}</ul>` : `<span class="muted">Nothing found.</span>`;
+  const todo = whatToDo(c);
+  return `<div class="dhead"><span class="cid">${esc(c.id)}</span></div>
+    <table class="kv main"><tbody>
+      <tr><th>Expected</th><td>${esc(c.title)}</td></tr>
+      <tr><th>Found</th><td>${found}${foundNote(c)}</td></tr>
+      ${todo ? `<tr><th>What to do</th><td>${todo}</td></tr>` : ""}
+    </tbody></table>
+    ${moreAbout(m, REPORT.references, assessed, accepted)}`;
 }
 
 /* =================== CAPABILITIES: the profile, laid out exactly like the assessment =================== */
@@ -672,7 +667,7 @@ function capAspect(a) {
         <td class="cid">${esc(r.id)}${!r.own && ov(r.id) && Object.keys(ov(r.id)).length ? ` <span class="dot1" title="Differs from Standard"></span>` : ""}</td>
         <td><select data-prio="${i}" ${r.on ? "" : "disabled"} aria-label="Criticality">${PRIOS.map((p) => `<option value="${p}" ${r.priority === p ? "selected" : ""}>${PRIO_LABEL[p]}</option>`).join("")}</select></td>
         <td>${esc(r.text)}</td>
-        <td class="st"><label class="sw" title="${r.on ? "Assessed" : "Not assessed"}"><input type="checkbox" data-on="${i}" ${r.on ? "checked" : ""} ${r.own ? "disabled" : ""}><i></i></label></td></tr>`).join(""), "On")}
+        <td class="on"><input type="checkbox" class="onck" data-on="${i}" ${r.on ? "checked" : ""} ${r.own ? "disabled" : ""} title="${r.own ? "Your own capabilities are always assessed" : r.on ? "Assessed: untick to switch off" : "Not assessed: tick to switch on"}" aria-label="Assessed"></td></tr>`).join(""), "On")}
       <button class="icon-btn" type="button" id="cap-add" style="margin-top:10px">+ Add your own capability</button></div>
       <div class="card detail" id="cap-detail"></div></div>`;
   const draw = (i) => { $("#cap-detail").innerHTML = capDetail(rows[i]); capBindDetail(rows[i]); };
@@ -699,12 +694,12 @@ function capDetail(r) {
       <div class="acc"><span class="lbl">Accepted when</span><textarea class="txt" data-f="met_when" maxlength="1000" placeholder="In plain words, e.g. the runbook shows a rotation in the last 90 days." style="width:100%">${esc(c.met_when)}</textarea></div>
       <div class="muted" style="font-size:12px">No rule checks this one: a reviewer (a person or an agent) records the verdict in <code>review.json</code>.</div>`; }
   const m = CAP.cat.methods[r.id] || {}, changed = Object.keys(ov(r.id)).length;
-  return `<div class="dhead"><span class="cid">${esc(r.id)}</span>${prio(r.priority)}${changed ? `<button class="ghost" style="visibility:visible;margin-left:auto" id="cap-reset" type="button">Reset to Standard</button>` : ""}</div>
+  return `<div class="dhead"><span class="cid">${esc(r.id)}</span>${changed ? `<button class="ghost" style="visibility:visible;margin-left:auto" id="cap-reset" type="button">Reset to Standard</button>` : ""}</div>
     <h2>${esc(r.text)}</h2>
     ${r.on ? "" : `<div class="vbox"><div><b>Switched off.</b> <span class="muted">It is not assessed with this profile.</span></div></div>`}
     <div class="acc"><span class="lbl">Accepted when</span>${acceptedEditable(r.id)}</div>
     ${(CAP.cat.params[r.id] || []).length ? `<div class="muted" style="font-size:12px;margin:-4px 0 10px">Change the number to adapt it; the standard is ${(CAP.cat.params[r.id]).map((p) => fmtNum(p.default) + (p.unit === "%" ? "%" : p.unit ? " " + p.unit : "")).join(", ")}.</div>` : ""}
-    ${moreAbout(m)}`;
+    ${moreAbout(m, CAP.cat.references)}`;
 }
 function capBindDetail(r) {
   if (!r) return;

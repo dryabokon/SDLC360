@@ -67,9 +67,9 @@ picker, choose a profile and press **Assess**. Local folders are only read, neve
 
 <details><summary><b>3 · Read the assessment</b></summary>
 
-The **Overview** shows every aspect at once, **where to start** (the open capabilities that matter most, with what
-to do) and **what is going well**. Each aspect is a list of capabilities with their status. Click one to see the
-verdict: what to do if it is not met yet, or a well-deserved nod if it is; when it is accepted; and what we found.
+The **Overview** shows every aspect at once: a maturity radar and the score of each aspect. Each aspect is a list of
+capabilities with their status. Click one to see what was **expected**, what we **found** and
+**what to do**. When it is accepted, how it is checked and why it matters are folded away below.
 
 ![An aspect: capabilities on the left, the selected one on the right](docs/images/aspect.png)
 </details>

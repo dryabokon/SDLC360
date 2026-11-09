@@ -13,7 +13,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from . import profiles
-from .acceptance import criteria, method_for
+from .acceptance import criteria, method_for, reference_cards
 from .dimensions import DIMENSIONS
 from .render import render_app
 from .repo import check_target
@@ -106,6 +106,7 @@ def catalog(draft: dict | None = None) -> dict:
     out["descriptions"] = {d.id: d.description for d in DIMENSIONS}
     out["accepted"] = {cid: c.get("accepted", "") for cid, c in criteria().items()}  # with {key} placeholders: the app puts inputs there
     out["methods"] = {c["id"]: method_for(c["id"], params.get(c["id"])) for its in out["aspects"].values() for c in its}
+    out["references"] = reference_cards({b["source"] for m in out["methods"].values() for b in m["basis"]})
     return out
 
 

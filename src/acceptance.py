@@ -53,20 +53,48 @@ VERDICT_RE = re.compile(r"^- \*\*([A-Za-z ]+):\*\*\s*(.*)$")
 CITATION_RE = re.compile(r"^>\s*— \[([\w.-]+)\]\([^)]*\),?\s*(.*?)\s*·\s*(direct|supporting)\s*$")
 
 
+FILE_RE = re.compile(r"^\s*-\s+(commit|local)\s+(\S+)\s+([0-9a-f]{64})\s*(\S*)\s*$")
+
+
 @lru_cache(maxsize=1)
 def references() -> dict[str, dict]:
-    """<folder> -> {id, title, publisher, published, url, license, ...} from assessment/references/<folder>/README.md."""
+    """<folder> -> {id, title, publisher, published, url, license, ...} from assessment/references/<folder>/README.md.
+
+    Also `files` (the retrieved originals: where they are kept, SHA-256, where they came from) and `key_points`
+    (the bullets under "## Key points"). Together they are the reference card the app shows instead of a bare link,
+    so a citation stays checkable when the publisher's page moves or changes.
+    """
     out = {}
     for md in sorted(REFERENCES.glob("*/README.md")):
-        meta: dict[str, str] = {"folder": md.parent.name}
+        meta: dict = {"folder": md.parent.name, "files": [], "key_points": []}
         text = md.read_text(encoding="utf-8")
-        front = text.split("---", 2)[1] if text.startswith("---") else ""
-        for line in front.splitlines():
+        parts = text.split("---", 2) if text.startswith("---") else ["", "", text]
+        for line in parts[1].splitlines():
             m = re.match(r"^(\w+):\s*(.+)$", line)
-            if m and m.group(1) != "files":
+            f = FILE_RE.match(line)
+            if f:
+                meta["files"].append(
+                    {"stored": "in git" if f.group(1) == "commit" else "local copy", "name": f.group(2), "sha256": f.group(3), "from": f.group(4)}
+                )
+            elif m and m.group(1) != "files":
                 meta[m.group(1)] = m.group(2).strip()
+        section = ""
+        for line in parts[2].splitlines():
+            if line.startswith("## "):
+                section = line[3:].strip().lower()
+            elif section == "key points" and line.startswith("- "):
+                meta["key_points"].append(line[2:].strip())
+            elif section == "key points" and line.startswith("  ") and line.strip() and meta["key_points"]:
+                meta["key_points"][-1] += " " + line.strip()  # wrapped bullet
         out[md.parent.name] = meta
     return out
+
+
+def reference_cards(source_ids: set[str]) -> dict[str, dict]:
+    """The cards of the cited references, embedded in a report so it stays self-contained (also as a static file)."""
+    keys = ("title", "publisher", "authors", "published", "kind", "retrieved", "license", "url", "files", "key_points")
+    refs = references()
+    return {s: {k: refs[s][k] for k in keys if k in refs[s]} for s in sorted(source_ids) if s in refs}
 
 
 def parse(text: str) -> dict[str, dict]:

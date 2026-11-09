@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Start the SDLC360 web app in the background: http://127.0.0.1:${PORT:-8360}/
 # Usage: ./start.sh [--open]      (PORT=8361 ./start.sh to use another port)
+# Works from Git Bash, Linux, macOS and WSL. Under WSL without Python 3.12 it runs the Windows .venv interpreter,
+# so the server lives on the Windows side; WSL's own curl may not reach it (NAT networking), hence curl.exe below.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT"
@@ -15,16 +17,22 @@ for py in .venv/Scripts/python.exe .venv/bin/python python3 python; do
 done
 [[ -n "${PY:-}" ]] || { echo "Python 3.12+ not found."; exit 1; }
 
-if curl -sf "${URL}api/projects" >/dev/null 2>&1; then
+up() {
+    curl -sf "${URL}api/projects" >/dev/null 2>&1 && return 0
+    command -v curl.exe >/dev/null 2>&1 && curl.exe -sf "${URL}api/projects" >/dev/null 2>&1
+}
+
+if up; then
     echo "SDLC360 already running at $URL"
     exit 0
 fi
 
+echo "Starting SDLC360 at $URL ..."
 mkdir -p .cache
 nohup "$PY" -u sdlc.py serve --port "$PORT" > "$LOG" 2>&1 < /dev/null &
 pid=$!
 for ((i = 0; i < 100; i++)); do
-    if curl -sf "${URL}api/projects" >/dev/null 2>&1; then
+    if up; then
         echo "SDLC360 running at $URL"
         echo "Log:  $LOG"
         echo "Stop: ./stop.sh"
@@ -38,5 +46,5 @@ for ((i = 0; i < 100; i++)); do
     fi
     sleep 0.1
 done
-echo "SDLC360 is still starting; see $LOG"
+echo "SDLC360 is still starting; open $URL in a few seconds, or see $LOG"
 exit 1

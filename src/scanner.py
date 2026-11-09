@@ -8,7 +8,7 @@ import time
 from datetime import UTC, datetime
 
 from . import __version__
-from .acceptance import method_for
+from .acceptance import method_for, reference_cards
 from .checklist import CRITICAL_CAP, PRIORITY_WEIGHT, priority_from_weight
 from .dimensions import DIMENSIONS
 from .model import band, grade
@@ -169,6 +169,10 @@ def finalize(report: dict, review: dict | None = None) -> dict:
         d["grade"], d["band"] = grade(d["score"]), band(d["score"])
     scored = [d["score"] for d in report["dimensions"] if d["score"] is not None]
     overall = round(sum(scored) / len(scored), 1) if scored else None
+    # cited references travel with the report: the app links a quote to this card, not to a page that may move
+    report["references"] = reference_cards(
+        {b["source"] for d in report["dimensions"] for c in d["checks"] for b in (c.get("method") or {}).get("basis", [])}
+    )
     report["overall"] = {"score": overall, "grade": grade(overall), "band": band(overall), "dimensions_scored": len(scored)}
     if review:
         report["review"] = review
