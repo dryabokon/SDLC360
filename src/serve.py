@@ -12,15 +12,16 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from . import calibration, profiles
+from . import agent_usage, calibration, profiles
 from .acceptance import criteria, method_for, reference_cards
 from .dimensions import DIMENSIONS
 from .render import render_app
 from .repo import check_target
-from .runner import DEFAULT_CACHE, DEFAULT_RUNS, RUN_ID_RE, list_projects, rerender, run_scan
+from .runner import DEFAULT_CACHE, DEFAULT_RUNS, PROJECT_ROOT, RUN_ID_RE, list_projects, rerender, run_scan
 from .scanner import finalize
 
 log = logging.getLogger("sdlc360")
+TELEMETRY = PROJECT_ROOT / ".cache" / "telemetry"  # OTLP/JSON from Claude Code (OTEL_EXPORTER_OTLP_ENDPOINT=this server)
 JOBS: dict[str, dict] = {}
 SCAN_LOCK = threading.Lock()  # one scan at a time: shared clone cache + CPU bound
 
@@ -203,6 +204,12 @@ def make_handler(runs_dir: Path, cache_dir: Path):
                         ),
                     }
                 )
+            if path == "/api/agent":  # how a coding agent was used on the open local project
+                run = parse_qs(urlparse(self.path).query).get("run", [""])[0]
+                f = runs_dir / run / "report.json"
+                if not RUN_ID_RE.match(run) or not f.is_file():
+                    return self._json({"error": "run not found"}, 404)
+                return self._json(agent_usage.report(json.loads(f.read_text(encoding="utf-8"))["repo"]["source"]))
             parts = path.split("/")
             if len(parts) == 4 and parts[1:3] == ["api", "calibration"]:
                 try:
@@ -233,6 +240,12 @@ def make_handler(runs_dir: Path, cache_dir: Path):
                 threading.Thread(target=self.server.shutdown, daemon=True).start()
                 return
             path = urlparse(self.path).path
+            if path in ("/v1/metrics", "/v1/logs", "/v1/traces"):  # Claude Code telemetry, kept as it comes
+                raw = self.rfile.read(int(self.headers.get("Content-Length", 0) or 0))
+                TELEMETRY.mkdir(parents=True, exist_ok=True)
+                with (TELEMETRY / f"{path.rsplit('/', 1)[1]}.jsonl").open("ab") as fh:
+                    fh.write(raw.replace(b"\n", b" ") + b"\n")
+                return self._json({})
             try:
                 body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0) or 0)) or b"{}")
             except ValueError:

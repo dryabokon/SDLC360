@@ -48,7 +48,7 @@ An unmet critical capability caps its aspect at 49 out of 100, whatever else pas
 
 ## Your journey
 
-Five steps, all in the browser.
+Six steps, all in the browser.
 
 <details><summary><b>1 · Start the app</b></summary>
 
@@ -90,7 +90,14 @@ and a matrix of every check on every reference repository. Click a rule to open 
 ![Calibration: every check on every reference repository](docs/images/calibration.png)
 </details>
 
-<details><summary><b>5 · Fix and re-assess</b></summary>
+<details><summary><b>5 · See how the agent is used</b> (local projects)</summary>
+
+**Agent use**, the last tab, reads the coding agent's session logs on this machine (Claude Code, read only) and the
+git history: hours, commits, cost at API prices, and findings with an example from the project, why it matters and
+what to do, for business, team lead or developer. Prompts and answers are never shown. Prototype.
+</details>
+
+<details><summary><b>6 · Fix and re-assess</b></summary>
 
 After changes, press **Re-assess**. The new run appears next to the earlier ones, so progress is visible.
 </details>

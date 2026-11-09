@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Agent use** tab (prototype) for local projects: how a coding agent was used, from Claude Code session logs and
+  git history. In short (hours, commits, cost at API prices), findings with an example from the project, why it
+  matters and what to do, filtered for business, team lead or developer, then sessions and commit by commit.
+- The app receives Claude Code telemetry (OTLP/JSON on `/v1/metrics`, `/v1/logs`) into `.cache/telemetry/`.
+
 - **Calibration** in the Overview of the **Criteria** page (or `python sdlc.py calibrate`): the reference set
   with the reason each repository is in it, your own repositories added to it, and **Run calibration**. A calibration
   assesses each repository at its latest commit with the Standard criteria and saves a snapshot of every verdict in

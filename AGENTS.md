@@ -35,6 +35,9 @@ Read `README.md` first, then `docs/architecture.md`.
   Quotes must be verbatim from `assessment/references/`.
 - `src/scanner.py`: `scan()` produces raw `auto_checks`; `finalize()` applies checklist, review and the critical gate.
   `finalize()` must stay idempotent: re-rendering a run never re-scans.
+- `src/agent_usage.py`: the Agent use tab (prototype): Claude Code session logs (`~/.claude/projects/`, read only)
+  joined with `git log`; findings with an example, why it matters and what to do. `serve.py` also keeps Claude Code
+  telemetry posted to `/v1/*` in `.cache/telemetry/`.
 - `src/runner.py`: one scan = one run folder; `src/serve.py`: local web app; `src/template.html`: the whole UI.
 - `tests/unit`, `tests/integration`: the integration fixtures are real throw-away git repos (`tests/conftest.py`).
 
@@ -46,5 +49,7 @@ Read `README.md` first, then `docs/architecture.md`.
 - A changed heuristic needs a test. A fixed false positive gets a regression test in `tests/unit/test_heuristics.py`.
 - Thresholds, scores and ranking are computed in Python. The template only renders them.
 - Scores are shown as verdicts with evidence. Do not add fractional weights to checks that are not in the checklist.
+- Commit without `-q` and end the message with the `Co-Authored-By` trailer: the Agent use tab links sessions to
+  commits by them. One finished task, one commit.
 - Never commit `.env`, `runs/*` or `.cache/`. Test secrets are assembled at runtime (`"AKIA" + "..."`).
 - Before finishing: ruff, mypy and pytest are green; README / docs / this file are updated if behaviour changed.
