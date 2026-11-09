@@ -1,0 +1,14 @@
+{
+  "description": "The commit each reference repository is assessed at. Moved on only by a calibration at the latest commits.",
+  "pins": {
+    "anthropics/claude-agent-sdk-python": "2209f2c134fee914c0f75733b631a5fc238ca846",
+    "encode/httpx": "b5addb64f0161ff6bfe94c124ef76f6a1fba5254",
+    "fastapi/full-stack-fastapi-template": "aabb90126964a164e02aff39e7c385bb0598236d",
+    "fastapi/typer": "00381d6c8f91cd8bc7273aeae2179e791db6e9d4",
+    "huggingface/smolagents": "96f33faaf028479119ec8d34507b47694cf14e34",
+    "modelcontextprotocol/python-sdk": "77001c96f9507be0f4d009b83210a384a5e08bda",
+    "openai/openai-agents-python": "1fc77bbc8ac1446690f6ba62dd0d52779bdcf43f",
+    "pydantic/pydantic-ai": "6e6aa81f316586097ec5062fcad9adf36b322ca6",
+    "textualize/rich": "3a109ccdffe5b2d0e30684a304fbd388e99ce57b"
+  }
+}

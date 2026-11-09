@@ -7,6 +7,7 @@ Everything that defines the assessment lives here. The code in `src/` only execu
 | [profiles/](profiles/) | **Which capabilities count for you**: on / off, priority, thresholds, your own capabilities. `standard.json` is the published baseline, `prototype.json` a relaxed example | anyone, in the **Criteria** page of the app (no file editing needed) |
 | [capabilities.md](capabilities.md) | **The catalog**: every capability, grouped by aspect, with its standard priority | whoever adds or rewords a scanner rule |
 | [acceptance-criteria/](acceptance-criteria/) | **How each capability is judged**: what is checked, when it is met, partially met or not met, what the check cannot see, and why we expect it. One file per aspect | whoever changes a rule in `src/dimensions/`, in the same pull request |
+| [calibration/](calibration/) | **Which repositories the rules are calibrated on**: `reference-set.json` is the default set, `custom.json` the ones you add, `pins.json` the commit each one is assessed at | anyone, in the Overview of the **Criteria** page |
 | [references/](references/README.md) | **Why we expect it**: published guidance (whitepapers, research reports, standards, specifications, engineering articles) that the criteria quote | whoever adds or replaces a reference |
 
 In the app, **Apply to this run** re-judges the open run with a profile at once (on / off, priorities, your own

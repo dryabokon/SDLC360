@@ -36,15 +36,18 @@ button,input{font:inherit;color:inherit}.muted{color:var(--muted)}.spacer{flex:1
 .bbtn svg{width:15px;height:15px;flex:none}.bbtn.ico,.bbtn.ico:hover:not(:disabled){padding:0;width:30px;justify-content:center;border:0;background:none;opacity:.85}.bbtn.ico:hover:not(:disabled){opacity:1}.bbtn.ico svg{fill:currentColor;width:16px;height:16px}
 .ctxbar{border-bottom:1px solid var(--line);padding:0 16px;display:flex;align-items:center;gap:12px;white-space:nowrap;min-width:0}
 .ctxbar .ttl{font-size:15px;font-weight:650;overflow:hidden;text-overflow:ellipsis;flex:none;max-width:40%}
-.ctxbar .cmeta{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.ctxbar .cmeta{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto}
 [hidden]{display:none!important}
 .icon-btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;height:30px;min-width:30px;padding:0 10px;cursor:pointer;display:inline-grid;place-items:center}
 .icon-btn:hover{border-color:var(--faint)}.icon-btn svg{width:15px;height:15px;fill:currentColor}
 .icon-btn.pri{background:var(--text);color:var(--surface);border-color:var(--text)}
 .icon-btn:disabled{opacity:.4;cursor:default}
 /* project picker */
-.picker{position:relative;height:100%;display:flex;align-items:center}
-.panel{position:absolute;top:40px;right:0;z-index:20;color:var(--text);width:440px;background:var(--surface);border:1px solid var(--line);border-radius:10px;
+.picker{position:relative;height:100%;display:flex;align-items:center;flex:none}
+.pick{display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:100%;border:0;background:none;padding:4px 8px;margin-left:-8px;border-radius:6px;cursor:pointer}
+.pick .ttl{max-width:none;flex:none}.pick .chev{width:15px;height:15px;flex:none;color:var(--muted)}
+.pick:hover:not(:disabled),.pick[aria-expanded=true]{background:var(--fill)}.pick:disabled{cursor:default}.pick:disabled .chev{display:none}
+.panel{position:absolute;top:40px;left:0;z-index:20;color:var(--text);width:min(560px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--line);border-radius:10px;
   box-shadow:0 12px 40px rgba(0,0,0,.18);padding:6px;display:none;white-space:normal}
 .panel.on{display:block}
 .panel h3{padding:6px 8px 4px}
@@ -245,6 +248,23 @@ select:focus,.txt:focus,.inl:focus{outline:2px solid var(--series-1);outline-off
 #cap-tab td.on{text-align:center}
 .add form select{height:32px;max-width:150px}
 @media (max-width:1100px){.ov2{grid-template-columns:1fr}.pbar{flex-wrap:wrap}}
+.calbox{margin:0 0 12px;padding:8px 10px;border-radius:8px;background:var(--fill)}.calbox>.lbl{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600;margin-bottom:3px}
+.rulelnk{color:inherit;text-decoration:none}.rulelnk:hover{color:var(--series-1);text-decoration:underline}
+.lnkchip{text-decoration:none;color:var(--text);cursor:pointer;height:24px;font-size:12px;background:var(--surface)}.lnkchip:hover{border-color:var(--faint)}
+.rchips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+.rchip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 9px;border:1px solid var(--line);border-radius:13px;background:var(--fill);font-size:12.5px;cursor:default}
+.rchip button{border:0;background:none;color:var(--muted);cursor:pointer;padding:0;font-size:14px;line-height:1}.rchip button:hover{color:var(--bad-text)}
+.cktab.matrix{width:auto;table-layout:fixed}.matrix th,.matrix td{padding:4px 8px}.matrix td{vertical-align:middle}.matrix tbody tr{cursor:default}.matrix tbody tr:hover td{background:none}
+.matrix th.rot{height:150px;vertical-align:bottom;padding:0 0 8px;text-align:center}
+.matrix th.rot span{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;text-transform:none;letter-spacing:0;font-size:11.5px;font-weight:500;color:var(--ink-2)}
+.matrix td.mx{text-align:center;padding:4px 0}.matrix td.mx a{display:inline-grid;place-items:center;width:24px;height:22px;border-radius:5px}.matrix td.mx a:hover{background:var(--line)}
+.matrix td.chg a,.chgk{box-shadow:0 0 0 2px var(--series-2)}.chgk{border-radius:50%}
+.matrix tr.agg td{border-bottom:2px solid var(--line);padding:6px 8px}.matrix td.sc{text-align:center;font-weight:650;font-size:11.5px;padding:4px 0}.matrix tr.agg td.sc{cursor:pointer}
+.matrix tr.grp td{background:var(--fill);font-weight:600;padding:5px 8px}.matrix tr.grp td.sc{padding:5px 0}
+.cktab.tight th{padding:6px 10px 5px}.cktab.tight td{padding:5px 10px;vertical-align:middle}
+.caladd{display:flex;gap:6px;align-items:center}.caladd .lbl{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600;margin-right:6px;white-space:nowrap}
+.caladd .txt{width:260px;height:26px}.caladd .icon-btn{height:26px}
+.sbar{display:flex;width:110px;height:6px;border-radius:3px;overflow:hidden;background:var(--line);margin-top:4px}.sbar>i{display:block;height:100%}
 .lnk{color:var(--series-1);text-decoration:none;cursor:pointer}.lnk:hover{text-decoration:underline}
 .hidden{display:none!important}
 @media (max-width:1100px){.dimgrid{grid-template-columns:1fr}.detail{position:static;max-height:none}.ov{grid-template-columns:1fr 1fr}.ov>.card:last-child{grid-column:1/-1}.fill,.dyn{height:auto}
@@ -254,11 +274,15 @@ select:focus,.txt:focus,.inl:focus{outline:2px solid var(--series-1);outline-off
 </head>
 <body>
 <header class="brand">
-  <a class="logo" href="#assessment/overview" id="home" title="SDLC 360°: overview of the open project"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.5-6"/><path d="M20.5 3.5V8H16"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg><b>SDLC 360°</b></a>
-  <span class="what">Engineering maturity of repositories built with AI agents</span>
+  <a class="logo" href="#assessment/overview" id="home" title="SDLC 360°: overview of the open project"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5 20.2 7.25v9.5L12 21.5 3.8 16.75v-9.5z"/><path d="M12 2.5v19M3.8 7.25l16.4 9.5M20.2 7.25 3.8 16.75" stroke-width="1" opacity=".55"/><path d="M12 6.2 17.2 9.6 15.6 15 12 17.4 7.6 14.5 8.2 9.8z" stroke-width="1.6"/><g fill="currentColor" stroke="none"><circle cx="12" cy="6.2" r="1.5"/><circle cx="17.2" cy="9.6" r="1.5"/><circle cx="15.6" cy="15" r="1.5"/><circle cx="12" cy="17.4" r="1.5"/><circle cx="7.6" cy="14.5" r="1.5"/><circle cx="8.2" cy="9.8" r="1.5"/></g></svg><b>SDLC 360°</b></a>
+  <span class="what">AI-maturity assessment</span>
   <span class="spacer"></span>
+  <button type="button" class="bbtn" id="crit-btn" title="Assessment criteria: which capabilities count, how critical they are, and the numbers they are accepted at"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg><span>Criteria</span></button>
+  <button class="bbtn ico" id="theme" type="button" aria-label="Toggle theme"></button>
+</header>
+<div class="ctxbar" id="ctxbar">
   <div class="picker" id="picker">
-    <button type="button" class="bbtn" id="pick-btn" aria-haspopup="true" aria-expanded="false" title="Open an assessed project or assess a new one"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v8.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/></svg><span>Projects</span></button>
+    <button type="button" class="pick" id="pick-btn" aria-haspopup="true" aria-expanded="false" title="Switch to another project or assess a new one"><span class="ttl" id="proj-name">—</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
     <div class="fsdlg" id="fsdlg" role="dialog" aria-modal="true" aria-label="Choose a local git folder"><div class="fsbox">
       <header><button class="icon-btn" type="button" id="fs-up" title="Parent folder">↑</button><div class="fspath" id="fs-path"></div>
         <button class="icon-btn" type="button" id="fs-close" title="Close">✕</button></header>
@@ -285,11 +309,7 @@ select:focus,.txt:focus,.inl:focus{outline:2px solid var(--series-1);outline-off
       </div>
     </div>
   </div>
-  <button type="button" class="bbtn" id="crit-btn" title="Assessment criteria: which capabilities count, how critical they are, and the numbers they are accepted at"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg><span>Criteria</span></button>
-  <button class="bbtn ico" id="theme" type="button" aria-label="Toggle theme"></button>
-</header>
-<div class="ctxbar" id="ctxbar">
-  <span class="ttl" id="proj-name">—</span><span class="cmeta" id="proj-meta"></span>
+  <span class="ttl" id="page-name" hidden></span><span class="cmeta" id="proj-meta"></span>
   <span class="spacer"></span>
   <span class="pbar hidden" id="cap-bar"></span>
   <button class="icon-btn" type="button" id="crit-back" hidden>Back to assessment</button>
@@ -350,20 +370,24 @@ function dimTip(d) {
 function bindDim(node, d) { node.addEventListener("mouseenter", (e) => showTip(e, dimTip(d))); node.addEventListener("mousemove", moveTip);
   node.addEventListener("mouseleave", hideTip); node.addEventListener("click", () => { hideTip(); go("assessment", d.id); }); }
 
-/* ---------- routing: #assessment/<sub> | #criteria (the settings; #capabilities before 0.6) ---------- */
+/* ---------- routing: #assessment/<sub> | #criteria (the settings and the calibration; #capabilities before 0.6) ---------- */
 let state = { view: "assessment", sub: "overview" };
-function go(view, sub) { state.view = view; if (sub) state.sub = sub; history.replaceState(null, "", state.view === "assessment" ? `#assessment/${state.sub}` : "#criteria"); render(); }
-(function parseHash() { const [v, s] = location.hash.slice(1).split("/"); if (v === "assessment") state.view = v; if (v === "criteria" || v === "capabilities") state.view = "capabilities"; if (s) state.sub = s; })();
+function go(view, sub) { state.view = view; if (sub) state.sub = sub; history.replaceState(null, "", view === "capabilities" ? "#criteria" : `#assessment/${state.sub}`); render(); }
+(function parseHash() { const [v, s] = location.hash.slice(1).split("/"); if (v === "assessment") state.view = v;
+  if (v === "criteria" || v === "capabilities" || v === "calibration") state.view = "capabilities"; if (s) state.sub = s; })();
 $("#crit-btn").onclick = () => go(state.view === "capabilities" ? "assessment" : "capabilities");
 $("#crit-back").onclick = () => go("assessment");
 $("#home").onclick = (e) => { e.preventDefault(); if (REPORT) go("assessment", "overview"); };
-function context() {  // the second header row: what is open
-  const crit = state.view === "capabilities";
-  $("#crit-btn").classList.toggle("on", crit); $("#crit-btn").hidden = MODE !== "app";
-  $("#crit-back").hidden = !crit || !REPORT;
-  if (crit) { $("#proj-name").textContent = "Assessment criteria";
-    $("#proj-meta").textContent = "Which capabilities count, how critical they are, and the numbers they are accepted at. Saved as a profile."; return; }
-  if (!REPORT) { $("#proj-name").textContent = "No project open"; $("#proj-meta").textContent = ""; return; }
+const PAGES = {
+  capabilities: ["Assessment criteria", "Which capabilities count, how critical they are, and the numbers they are accepted at. Saved as a profile."],
+};
+function context() {  // the second header row: the open project (a selector), or the page that is open
+  const page = PAGES[state.view];
+  $("#crit-btn").classList.toggle("on", state.view === "capabilities"); $("#crit-btn").hidden = MODE !== "app";
+  $("#crit-back").hidden = !page || !REPORT;
+  $("#picker").hidden = !!page; $("#page-name").hidden = !page;
+  if (page) { $("#page-name").textContent = page[0]; $("#proj-meta").textContent = page[1]; return; }
+  if (!REPORT) { $("#proj-name").textContent = MODE === "app" ? "Open a project" : "No project open"; $("#proj-meta").textContent = ""; return; }
   const r = REPORT.repo, h = r.head || {};
   $("#proj-name").textContent = r.source.replace(/^github\.com\//, "").replace(/^.*[\\/](?=[^\\/]+$)/, "");
   $("#proj-meta").textContent = [r.source.startsWith("github.com/") ? "GitHub" : "Local folder", h.sha ? "commit " + h.sha.slice(0, 8) : "",
@@ -516,10 +540,10 @@ function aspectHead(name, description, right) {
   return `<div class="card dimhead" style="padding:10px 14px">
     <div style="flex:1;min-width:260px"><h2 style="font-size:15px">${esc(name)}</h2><div class="muted" style="font-size:12px">${esc(description)}</div></div>${right}</div>`;
 }
-function capTable(id, rows, last) {
+function capTable(id, rows, last, ref = "") {
   return `<div class="card" style="padding:0"><table class="cktab" id="${id}" tabindex="0" style="outline:none">
-    <colgroup><col style="width:178px"><col style="width:112px"><col><col style="width:84px"></colgroup>
-    <thead><tr><th>ID</th><th>Criticality</th><th>Description</th><th>${last}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    <colgroup><col style="width:${ref ? 150 : 178}px"><col style="width:112px"><col>${ref ? `<col style="width:68px">` : ""}<col style="width:${ref ? 44 : 84}px"></colgroup>
+    <thead><tr><th>ID</th><th>Criticality</th><th>Description</th>${ref ? `<th title="${esc(ref)}">Ref. set</th>` : ""}<th>${last}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 function bindRows(tab, n, get, set, draw) {
   const rows = document.querySelectorAll(`#${tab} tbody tr`);
@@ -614,7 +638,7 @@ function capOpen(id) {
   return Promise.all([api("/api/profiles"), api(`/api/profiles/${encodeURIComponent(id)}`)]).then(([list, prof]) => {
     CAP.list = list; CAP.id = id; CAP.saved = prof; CAP.delArm = false;
     CAP.draft = clone({ name: prof.name, description: prof.description, capabilities: prof.capabilities, custom: prof.custom });
-    store("sdlc360-profile", id); return capCatalog();
+    store("sdlc360-profile", id); return Promise.all([capCatalog(), calEnsure()]).then(() => renderCapabilities());
   });
 }
 function capCatalog() {
@@ -640,45 +664,23 @@ function profileBar() {
   const builtin = CAP.saved.builtin, dirty = capDirty();
   return `<span id="cap-msg" class="${CAP.err ? "err" : "muted"}">${esc(CAP.msg || (dirty ? "Unsaved changes" : ""))}</span>
     <label class="fld"><span>Profile</span><select id="cap-prof">${CAP.list.map((p) => `<option value="${esc(p.id)}" ${p.id === CAP.id ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select></label>
-    ${builtin ? "" : `<button class="icon-btn pri" id="cap-save" type="button" ${dirty ? "" : "disabled"}>Save</button>`}
-    <input id="cap-newname" class="txt" placeholder="New profile name" maxlength="60" style="width:150px"><button class="icon-btn" id="cap-copy" type="button">Save as new</button>`;
+    ${builtin ? "" : `<button class="icon-btn pri" id="cap-save" type="button" ${dirty ? "" : "disabled"}>Save</button>
+      <button class="icon-btn" id="cap-del" type="button" title="Delete this profile">${CAP.delArm ? "Click again to delete" : "Delete"}</button>`}
+    <input id="cap-newname" class="txt" placeholder="New profile name" maxlength="60" style="width:150px"><button class="icon-btn" id="cap-copy" type="button">Save as new</button>
+    ${REPORT && CURRENT_RUN ? `<button class="icon-btn" id="cap-apply" type="button" ${dirty ? "disabled" : ""}
+      title="${dirty ? "Save first. " : ""}Re-judge the open run${current ? " of " + esc(current.name) : ""} with this profile, without scanning again">Apply to open run</button>` : ""}`;
 }
 function renderCapabilities() {
   const cat = CAP.cat, aspects = Object.keys(cat.aspects);
   if (CAP.sub !== "overview" && !cat.aspects[CAP.sub]) CAP.sub = "overview";
   $("#cap-nav").innerHTML = subnavHtml("capabilities", aspects, cat.names, CAP.sub);
-  $("#cap-bar").innerHTML = profileBar();
   $("#cap-nav").querySelectorAll("button[data-s]").forEach((b) => b.onclick = () => { CAP.sub = b.dataset.s; renderCapabilities(); });
+  $("#cap-bar").innerHTML = profileBar();
   if (CAP.sub === "overview") capOverview(); else capAspect(CAP.sub);
   capBindBar();
 }
-function capOverview() {
-  const cat = CAP.cat, d = CAP.draft, builtin = CAP.saved.builtin, aspects = Object.keys(cat.aspects);
-  const runName = REPORT ? REPORT.repo.source.replace(/^github\.com\//, "").replace(/^.*[\\/](?=[^\\/]+$)/, "") : "";
-  $("#cap-pane").innerHTML = `<div class="ov2" style="margin-top:0">
-    <div class="card"><h3>Profile</h3>
-      <h2 style="font-size:17px;margin:6px 0 4px">${esc(d.name)}</h2>
-      ${builtin ? `<p class="muted" style="margin:0 0 8px">${esc(d.description)}</p><p style="margin:0">Standard is the published baseline and stays as it is. Change anything in the aspects, then <b>Save as new</b>.</p>`
-        : `<textarea id="cap-desc" class="txt" maxlength="300" placeholder="What this profile is for" style="width:100%">${esc(d.description)}</textarea>
-           <div style="margin-top:8px"><button class="icon-btn" id="cap-del" type="button">${CAP.delArm ? "Click again to delete" : "Delete this profile"}</button></div>`}</div>
-    <div class="card"><h3>Use it</h3>
-      <p style="margin:6px 0">In each aspect, switch capabilities on or off, set how critical they are, and adjust the numbers in <b>Accepted when</b>. Add your own capabilities in plain words.</p>
-      <p class="muted" style="margin:0 0 8px">On / off, criticality and your own capabilities apply to a run right away. New numbers take effect when the project is assessed again.</p>
-      ${REPORT ? `<div>The open run of <b>${esc(runName)}</b> uses <b>${esc(profileName(REPORT))}</b>. <button class="icon-btn" id="cap-apply" type="button" ${capDirty() ? "disabled title='Save first'" : ""}>Apply “${esc(CAP.saved.name)}” to this run</button></div>
-        ${(REPORT.thresholds_changed || []).length ? `<div class="note" style="margin-top:8px">New numbers for ${REPORT.thresholds_changed.map((x) => `<code>${esc(x)}</code>`).join(", ")}: press <b>Re-assess</b> on the project to use them.</div>` : ""}` : ""}</div>
-  </div>
-  <div class="card" style="padding:0;margin-top:12px"><table class="cktab"><colgroup><col><col style="width:140px"><col style="width:140px"><col style="width:140px"></colgroup>
-    <thead><tr><th>Aspect</th><th>Capabilities on</th><th>Critical</th><th>Your own</th></tr></thead><tbody>${aspects.map((a) => { const rows = capRows(a), on = rows.filter((r) => r.on);
-      return `<tr data-a="${a}"><td><b>${esc(cat.names[a] || a)}</b></td><td>${on.length} of ${rows.length}</td><td>${on.filter((r) => r.priority === "critical").length}</td><td>${rows.filter((r) => r.own).length || "–"}</td></tr>`; }).join("")}</tbody></table></div>`;
-  $("#cap-pane").querySelectorAll("tr[data-a]").forEach((tr) => tr.onclick = () => { CAP.sub = tr.dataset.a; renderCapabilities(); });
-  const desc = $("#cap-desc"); if (desc) desc.oninput = () => { d.description = desc.value; capDirtyUi(); };
-  const del = $("#cap-del");
-  if (del) del.onclick = () => { if (!CAP.delArm) { CAP.delArm = true; del.textContent = "Click again to delete"; return; }
-    api(`/api/profiles/${encodeURIComponent(CAP.id)}/delete`, {}).then(() => { capSay(`Deleted “${CAP.saved.name}”.`); renderProfileSelect(); return capOpen("standard"); }).catch((e) => capSay(e.message, true)); };
-  const apply = $("#cap-apply");
-  if (apply) apply.onclick = () => { if (!CURRENT_RUN) return;
-    api(`/api/runs/${encodeURIComponent(CURRENT_RUN)}/apply`, { profile: CAP.id }).then((rep) => { REPORT = rep; SEL = {}; capSay(`Applied: overall ${fmt(rep.overall.score)}.`);
-      return api("/api/projects").then((ps) => { PROJECTS = ps; renderProjects(); renderCapabilities(); }); }).catch((e) => capSay(e.message, true)); };
+function capOverview() {  // the calibration and its matrix; profile actions are in the bar above
+  $("#cap-pane").innerHTML = `<div id="cal-box"></div>`; calMount();
 }
 function capAspect(a) {
   const rows = capRows(a), on = rows.filter((r) => r.on);
@@ -688,8 +690,8 @@ function capAspect(a) {
     <div class="dimgrid"><div>${capTable("cap-tab", rows.map((r, i) => `<tr data-i="${i}" class="${r.on ? "" : "off"}">
         <td class="cid">${esc(r.id)}${!r.own && ov(r.id) && Object.keys(ov(r.id)).length ? ` <span class="dot1" title="Differs from Standard"></span>` : ""}</td>
         <td><select data-prio="${i}" ${r.on ? "" : "disabled"} aria-label="Criticality">${PRIOS.map((p) => `<option value="${p}" ${r.priority === p ? "selected" : ""}>${PRIO_LABEL[p]}</option>`).join("")}</select></td>
-        <td>${esc(r.text)}</td>
-        <td class="on"><input type="checkbox" class="onck" data-on="${i}" ${r.on ? "checked" : ""} ${r.own ? "disabled" : ""} title="${r.own ? "Your own capabilities are always assessed" : r.on ? "Assessed: untick to switch off" : "Not assessed: tick to switch on"}" aria-label="Assessed"></td></tr>`).join(""), "On")}
+        <td>${esc(r.text)}</td>${CAL.res ? `<td class="st">${calCell(r)}</td>` : ""}
+        <td class="on"><input type="checkbox" class="onck" data-on="${i}" ${r.on ? "checked" : ""} ${r.own ? "disabled" : ""} title="${r.own ? "Your own capabilities are always assessed" : r.on ? "Assessed: untick to switch off" : "Not assessed: tick to switch on"}" aria-label="Assessed"></td></tr>`).join(""), "On", CAL.res ? calNote() : "")}
       <button class="icon-btn" type="button" id="cap-add" style="margin-top:10px">+ Add your own capability</button></div>
       <div class="card detail" id="cap-detail"></div></div>`;
   const draw = (i) => { $("#cap-detail").innerHTML = capDetail(rows[i]); capBindDetail(rows[i]); };
@@ -721,10 +723,12 @@ function capDetail(r) {
     ${r.on ? "" : `<div class="vbox"><div><b>Switched off.</b> <span class="muted">It is not assessed with this profile.</span></div></div>`}
     <div class="acc"><span class="lbl">Accepted when</span>${acceptedEditable(r.id)}</div>
     ${(CAP.cat.params[r.id] || []).length ? `<div class="muted" style="font-size:12px;margin:-4px 0 10px">Change the number to adapt it; the standard is ${(CAP.cat.params[r.id]).map((p) => fmtNum(p.default) + (p.unit === "%" ? "%" : p.unit ? " " + p.unit : "")).join(", ")}.</div>` : ""}
+    ${calBlock(r)}
     ${moreAbout(m, CAP.cat.references)}`;
 }
 function capBindDetail(r) {
   if (!r) return;
+  bindOpen($("#cap-detail"));
   const d = CAP.draft;
   if (r.own) { const c = d.custom[r.idx];
     $("#cap-detail").querySelectorAll("[data-f]").forEach((f) => f.oninput = () => { c[f.dataset.f] = f.value; capDirtyUi();
@@ -739,6 +743,14 @@ function capBindDetail(r) {
 function capDirtyUi() { const s = $("#cap-save"); if (s) s.disabled = !capDirty(); if (!CAP.err) capSay(capDirty() ? "Unsaved changes" : ""); }
 function capBindBar() {
   const d = CAP.draft;
+  const del = $("#cap-del");
+  if (del) del.onclick = () => { if (!CAP.delArm) { CAP.delArm = true; del.textContent = "Click again to delete"; return; }
+    api(`/api/profiles/${encodeURIComponent(CAP.id)}/delete`, {}).then(() => { capSay(`Deleted “${CAP.saved.name}”.`); renderProfileSelect(); return capOpen("standard"); }).catch((e) => capSay(e.message, true)); };
+  const apply = $("#cap-apply");
+  if (apply) apply.onclick = () => api(`/api/runs/${encodeURIComponent(CURRENT_RUN)}/apply`, { profile: CAP.id }).then((rep) => { REPORT = rep; SEL = {};
+    const later = (rep.thresholds_changed || []).length;
+    capSay(`Applied “${CAP.saved.name}”: overall ${fmt(rep.overall.score)}.` + (later ? ` New numbers for ${later} capabilities take effect at the next Re-assess.` : ""));
+    return api("/api/projects").then((ps) => { PROJECTS = ps; renderProjects(); renderCapabilities(); }); }).catch((e) => capSay(e.message, true));
   $("#cap-prof").onchange = (e) => { CAP.msg = ""; CAP.sel = {}; capOpen(e.target.value); };
   const ownOk = () => d.custom.every((c) => c.text.trim()) || (capSay("Give each of your own capabilities a text, or remove it.", true), false);
   const save = $("#cap-save");
@@ -751,11 +763,160 @@ function capBindBar() {
     api(`/api/profiles/${id}`, Object.assign(clone(d), { name })).then(() => { capSay(`Saved as “${name}”.`); renderProfileSelect(); return capOpen(id); }).catch((e) => capSay(e.message, true)); };
 }
 
+/* ---------- the reference set in the Criteria page: how each rule did in the latest calibration ---------- */
+function calEnsure() { return CAL.data ? Promise.resolve() : api("/api/calibration").then((d) => { CAL.data = d; CAL.res = d.result; }).catch(() => {}); }
+const calCheck = (cid) => CAL.res ? CAL.res.checks.find((c) => c.id === cid) : null;
+const calNote = () => CAL.res ? `Calibration of ${fdate(CAL.res.started_at)}: ${CAL.res.totals.ok} reference repositories, Standard criteria` : "";
+function calCell(r) {
+  const c = !r.own && calCheck(r.id);
+  if (!c) return `<span class="muted">–</span>`;
+  if (!c.assessed) return `<span class="muted">N/A</span>`;
+  const cls = !c.counts.pass ? "fail" : c.counts.pass === c.assessed ? "pass" : "partial";
+  const own = Object.keys(ov(r.id).params || {}).length;
+  return `${rag(cls)}${c.counts.pass}/${c.assessed}${own ? `<span class="muted" title="Calibrated with the standard numbers; this profile uses its own"> *</span>` : ""}`;
+}
+function calBlock(r) {  // the rule against the reference set: the facts, then what they suggest
+  if (r.own) return "";
+  const c = calCheck(r.id);
+  if (!CAL.res) return `<div class="calbox"><span class="lbl">On the reference set</span><span class="muted">Not calibrated yet. Run a calibration to see how this rule does on well-run projects.</span></div>`;
+  if (!c) return `<div class="calbox"><span class="lbl">On the reference set</span><span class="muted">Not in the latest calibration (a new rule): run the calibration again.</span></div>`;
+  const n = c.assessed, met = c.counts.pass, custom = Object.keys(ov(r.id).params || {}).length;
+  const read = !n ? "It applies to none of them."
+    : !met ? "None of them meets it. Open a few and look at what was found before deciding anything: a rare practice is not a wrong rule."
+    : met === n ? "All of them meet it."
+    : "Open those that do not meet it to see what was found.";
+  return `<div class="calbox"><span class="lbl">On the reference set</span>
+    <div><b>Met by ${met} of ${n}</b>${c.counts.partial ? `, partly by ${c.counts.partial}` : ""} <span class="muted">· ${esc(calNote())}${custom ? " (standard numbers, not yours)" : ""}</span></div>
+    <div class="rchips" style="margin:6px 0">${c.verdicts.map((v) => `<a href="#" class="rchip lnkchip" data-run="${esc(v.run_id)}" data-aspect="${esc(c.aspect)}" data-check="${esc(c.id)}"
+      title="${esc(repoName(v.target))}: ${VLABEL[v.status] || v.status}. Open its run at this capability.">${rag(v.status in VERDICT ? v.status : "na")}${esc(shortRepo(v.target))}</a>`).join("")}</div>
+    <div class="muted" style="font-size:12px">${read}</div></div>`;
+}
+/* =================== CALIBRATION: the reference set, one button, and what the run produced =================== */
+const CAL = { data: null, res: null, job: null, busy: false, msg: "", err: false, loading: false };
+const shortSha = (s) => s ? s.slice(0, 8) : "?";
+const isGithub = (t) => !/^([A-Za-z]:|[\\/~.])/.test(t);
+const repoName = (t) => isGithub(t) ? t.replace(/^https?:\/\/github\.com\//, "") : t.replace(/^.*[\\/](?=[^\\/]+$)/, "");
+function calLoad() {
+  CAL.loading = true;
+  return api("/api/calibration").then((d) => { CAL.data = d; CAL.res = d.result; CAL.loading = false;
+    if (d.job && !CAL.busy) calPoll(d.job); else renderCalibration(); })
+    .catch((e) => { CAL.loading = false; const b = $("#cal-box"); if (b) b.innerHTML = `<div class="card err">${esc(e.message)}</div>`; });
+}
+function calMount() {  // the calibration block of the Criteria overview
+  if (MODE !== "app") return;
+  if (!CAL.data) { if (!CAL.loading) calLoad(); return; }
+  renderCalibration();
+}
+function calSay(msg, err = false) { CAL.msg = msg; CAL.err = err; const m = $("#cal-msg"); if (m) { m.textContent = msg; m.className = "hint" + (err ? " err" : ""); } }
+function renderCalibration() {
+  const box = $("#cal-box"); if (!box || !CAL.data) return;
+  box.innerHTML = `<div class="card">${calSet()}</div>
+    <div id="cal-result" style="margin-top:12px">${CAL.busy ? calProgress() : calResult()}</div>`;
+  $("#cal-run").onclick = () => calRun(false); $("#cal-latest").onclick = () => calRun(true);
+  calBindSet(); if (!CAL.busy) calBindResult();
+}
+function calSet() {
+  const d = CAL.data;
+  const chips = d.set.map((r, i) => `<span class="rchip" title="${esc([r.why, r.pin ? "pinned at " + shortSha(r.pin) : isGithub(r.target) ? "not pinned yet" : "local folder: read as it is"].filter(Boolean).join(" · "))}">${esc(repoName(r.target))}${isGithub(r.target) ? "" : ` <span class="muted">local</span>`}${r.builtin ? ""
+    : `<button type="button" data-rm="${i}" title="Remove from the reference set" aria-label="Remove ${esc(r.target)}" ${CAL.busy ? "disabled" : ""}>×</button>`}</span>`).join("");
+  return `<div class="chead" style="margin:0"><h3>Calibration · reference set of ${d.set.length} repositories</h3>
+      <span class="muted" style="font-size:12px">each assessed at a pinned commit with the Standard criteria, so a change between calibrations comes from the rules</span>
+      <span class="spacer"></span><button class="icon-btn" id="cal-latest" type="button" ${CAL.busy || !d.set.length ? "disabled" : ""}
+        title="Assess the latest commits and pin the set there. Verdicts may then change because the projects changed.">Move to latest commits</button>
+      <button class="icon-btn pri" id="cal-run" type="button" ${CAL.busy || !d.set.length ? "disabled" : ""}
+        title="Assess all ${d.set.length} reference repositories at their pinned commits: after changing a rule or adding a repository">${CAL.busy ? "Calibrating…" : "Run calibration"}</button></div>
+    <div class="rchips">${chips}
+      <form id="cal-add" class="caladd"><input id="cal-target" class="txt" placeholder="Add owner/repo or a local git folder" autocomplete="off" spellcheck="false">
+        <button class="icon-btn" type="submit" ${CAL.busy ? "disabled" : ""}>Add</button></form></div>
+    ${CAL.msg ? `<div id="cal-msg" class="hint${CAL.err ? " err" : ""}">${esc(CAL.msg)}</div>` : `<div id="cal-msg" class="hint"></div>`}`;
+}
+function calBindSet() {
+  const f = $("#cal-add"); if (!f) return;
+  f.onsubmit = (e) => { e.preventDefault(); const target = $("#cal-target").value.trim(); if (!target) return calSay("Enter a repository.", true);
+    api("/api/calibration/repos", { target })
+      .then((r) => { CAL.msg = `Added ${r.target}. It takes part in the next calibration.`; CAL.err = false; return calLoad(); }).catch((e) => calSay(e.message, true)); };
+  $("#cal-box").querySelectorAll("[data-rm]").forEach((b) => b.onclick = () => { const r = CAL.data.set[+b.dataset.rm];
+    api("/api/calibration/repos/remove", { target: r.target }).then(() => { CAL.msg = `Removed ${r.target}.`; CAL.err = false; return calLoad(); }).catch((e) => calSay(e.message, true)); });
+}
+/* ---------- running ---------- */
+function calRun(latest) { CAL.msg = ""; api("/api/calibration/run", { latest }).then(({ job }) => calPoll(job)).catch((e) => calSay(e.message, true)); }
+function calPoll(id) {
+  CAL.busy = true; CAL.job = { id, repos: CAL.data.set.map((r) => ({ target: r.target, status: "queued", message: "" })) };
+  renderCalibration();
+  const tick = () => api(`/api/jobs/${id}`).then((j) => {
+    CAL.job = j;
+    if (j.status === "done" || j.status === "error") { CAL.busy = false;
+      if (j.status === "error") { CAL.msg = "Calibration failed: " + j.error; CAL.err = true; }
+      api("/api/projects").then((ps) => { PROJECTS = ps; renderProjects(); }).catch(() => {});
+      return calLoad(); }
+    const out = $("#cal-result"); if (out) out.innerHTML = calProgress();
+    setTimeout(tick, 1200); }).catch(() => setTimeout(tick, 2500));
+  tick();
+}
+function calProgress() {
+  const rs = CAL.job.repos || [], done = rs.filter((r) => r.status === "done" || r.status === "failed").length;
+  const mk = { done: "✓", failed: "✕", queued: "·" }, what = (m) => /^resolving/.test(m) ? "fetching" : m === "scanning HEAD" ? "assessing the latest commit" : m;
+  return `<div class="card"><h3>Calibrating · ${done} of ${rs.length}</h3><ol class="steps">${rs.map((r) =>
+    `<li class="${r.status === "running" ? "run" : r.status === "queued" ? "" : "done"}">${r.status === "running" ? `<span class="spin"></span>` : `<span class="mk" ${r.status === "failed" ? `style="color:var(--bad-text)"` : ""}>${mk[r.status] || "·"}</span>`}
+      <span>${esc(repoName(r.target))}</span>${r.message && r.message !== "done" ? `<span class="muted" style="font-weight:400">· ${esc(r.status === "failed" ? r.message : what(r.message))}</span>` : ""}</li>`).join("")}</ol>
+    <div class="muted" style="font-size:12px;margin-top:8px">Each repository is fetched and assessed in turn. One that cannot be reached is recorded as failed, and the others go on.</div></div>`;
+}
+/* ---------- the result: one matrix, every check on every repository, with the aggregates on top ---------- */
+const VLABEL = { pass: "Met", partial: "Partly", fail: "Not met", na: "N/A", review: "Review" };
+const shortRepo = (t) => repoName(t).replace(/^[^/]+\//, "");
+const scoreCell = (v) => `<td class="mx sc" style="color:${v == null ? "var(--faint)" : bandColor(bandOf(v))}">${v == null ? "–" : Math.round(v)}</td>`;
+function calResult() {
+  const r = CAL.res;
+  if (!r) return `<div class="card"><h3>Result</h3><p style="margin:8px 0 0">No calibration yet. Press <b>Run calibration</b>: it takes a few minutes for ${CAL.data.set.length} repositories.</p></div>`;
+  const ok = r.repos.filter((x) => x.status === "ok"), failed = r.repos.filter((x) => x.status !== "ok");
+  const changed = new Set(((r.previous || {}).changes || []).map((c) => c.target + "|" + c.id));
+  const rows = [...r.checks].sort((a, b) => a.order - b.order);
+  const share = (cs) => { const a = cs.reduce((n, c) => n + c.assessed, 0), m = cs.reduce((n, c) => n + c.counts.pass, 0); return a ? `${Math.round(100 * m / a)}%` : "–"; };
+  let aspect = null;
+  const body = rows.map((c) => {
+    let head = "";
+    if (c.aspect !== aspect) { const its = r.checks.filter((x) => x.aspect === c.aspect);
+      head = `<tr class="grp"><td colspan="2">${esc(c.aspect_name || c.aspect)} <span class="muted">· ${its.length} checks</span></td>${ok.map((x) => scoreCell((x.dims || {})[c.aspect])).join("")}<td class="num" title="Share of met verdicts in this aspect">${share(its)}</td></tr>`; }
+    aspect = c.aspect;
+    const cells = ok.map((x) => { const v = c.verdicts.find((y) => y.target === x.target), st = v ? v.status : "na", ch = changed.has(x.target + "|" + c.id);
+      return `<td class="mx${ch ? " chg" : ""}"><a href="#" data-run="${esc(x.run_id)}" data-aspect="${esc(c.aspect)}" data-check="${esc(c.id)}"
+        title="${esc(repoName(x.target))}: ${VLABEL[st] || st}${ch ? " (changed since the previous calibration)" : ""}">${rag(st in VERDICT ? st : "na")}</a></td>`; }).join("");
+    return head + `<tr><td class="cid"><a href="#" class="rulelnk" data-rule="${esc(c.id)}" data-asp="${esc(c.aspect)}" title="Open this rule in ${esc(c.aspect_name || c.aspect)}">${esc(c.id)}</a></td>
+      <td><a href="#" class="rulelnk" data-rule="${esc(c.id)}" data-asp="${esc(c.aspect)}" title="Open this rule in ${esc(c.aspect_name || c.aspect)}">${esc(c.title)}</a></td>${cells}<td class="num">${c.assessed ? `${c.counts.pass}/${c.assessed}` : "N/A"}</td></tr>`;
+  }).join("");
+  return `<div class="card" style="padding:0">${failed.length ? `<div class="hint err" style="padding:10px 14px 0">Could not be assessed: ${failed.map((x) => esc(repoName(x.target))).join(", ")}</div>` : ""}
+    <div style="overflow-x:auto"><table class="cktab matrix"><colgroup><col style="width:170px"><col style="width:480px">${ok.map(() => `<col style="width:34px">`).join("")}<col style="width:56px"></colgroup>
+      <thead><tr><th>ID</th><th>Capability</th>${ok.map((x) => `<th class="rot" title="${esc(repoName(x.target))} · commit ${shortSha(x.commit)}"><span>${esc(shortRepo(x.target))}</span></th>`).join("")}<th class="num">Met</th></tr>
+        <tr class="agg"><td colspan="2"><b>Overall score</b> <span class="muted">· click a score to open that run</span></td>${ok.map((x) => scoreCell(x.score).replace("<td", `<td data-open="${esc(x.run_id)}" title="Open ${esc(repoName(x.target))}"`)).join("")}<td class="num">${share(r.checks)}</td></tr></thead>
+      <tbody>${body}</tbody></table></div>
+    <div class="muted" style="font-size:12px;padding:8px 14px 12px">Numbers are scores out of 100 (overall and per aspect); Met is the share of met verdicts. Click a rule to open it in its aspect; click a dot to open that repository's run at this capability.</div></div>`;
+}
+function calBindResult() {
+  const r = CAL.res; if (!r) return;
+  $("#cal-result").querySelectorAll("[data-open]").forEach((td) => td.onclick = () => openRun(td.dataset.open));
+  bindOpen($("#cal-result"));
+  $("#cal-result").querySelectorAll("[data-rule]").forEach((a) => a.onclick = (e) => { e.preventDefault(); capGoto(a.dataset.asp, a.dataset.rule); });
+}
+function capGoto(aspect, cid) {  // from the calibration matrix to the rule in its aspect
+  if (!CAP.cat || !CAP.cat.aspects[aspect]) return;
+  CAP.sub = aspect; CAP.sel[aspect] = Math.max(0, capRows(aspect).findIndex((r) => r.id === cid)); renderCapabilities();
+  $("#v-capabilities").scrollTop = 0; const row = document.querySelector("#cap-tab tr.sel"); if (row) row.scrollIntoView({ block: "nearest" });
+}
+function bindOpen(host) {
+  host.querySelectorAll("[data-run]").forEach((a) => a.onclick = (e) => { e.preventDefault(); openRun(a.dataset.run, a.dataset.aspect, a.dataset.check); });
+}
+function openRun(id, aspect, check) {  // a run of the calibration, opened like any project
+  return api(`/api/runs/${encodeURIComponent(id)}`).then((rep) => {
+    REPORT = rep; CURRENT_RUN = id; current = PROJECTS.find((p) => p.runs.some((x) => x.id === id)) || null; SEL = {};
+    if (aspect) { const d = rep.dimensions.find((x) => x.id === aspect); if (d) SEL[aspect] = Math.max(0, d.checks.findIndex((c) => c.id === check)); }
+    renderProjects(); go("assessment", aspect || "overview"); }).catch((e) => calSay(e.message, true));
+}
+
 /* =================== PROJECTS =================== */
 let PROJECTS = [], current = null, CURRENT_RUN = null;
 const panel = $("#panel"), pickBtn = $("#pick-btn");
 function setProjectName() { context(); }
-if (MODE === "static") { $("#picker").remove(); }
+if (MODE === "static") { $("#panel").remove(); $("#fsdlg").remove(); pickBtn.disabled = true; pickBtn.title = ""; }
 else {
   pickBtn.onclick = (e) => { e.stopPropagation(); const on = !panel.classList.contains("on"); panel.classList.toggle("on", on); pickBtn.setAttribute("aria-expanded", on); };
   document.addEventListener("click", (e) => { if (!$("#picker").contains(e.target)) panel.classList.remove("on"); });

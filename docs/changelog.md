@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- **Calibration** in the Overview of the **Criteria** page (or `python sdlc.py calibrate`): the reference set
+  with the reason each repository is in it, your own repositories added to it, and **Run calibration**. A calibration
+  assesses each repository at its latest commit with the Standard criteria and saves a snapshot of every verdict in
+  `runs/calibrations/<id>.json`. The result says what was assessed, by which scanner commit, what was recorded, how
+  each check split across the set, and which verdicts changed since the previous calibration: on the same commit (the
+  scanner changed them) or on a newer one (the project did).
+- The calibration result is one matrix: every check on every reference repository, with overall and per-aspect scores
+  on top. The **Criteria** page shows for each capability how it did on the reference set (column **Ref. set** and a
+  block in the details), so you can decide whether to keep, relax or switch it off. A rule in the matrix opens it in
+  its aspect.
+- The **Projects** button is gone: the project name in the second row is the selector.
+- Reference repositories are pinned to commits (`assessment/calibration/pins.json`): calibrations differ only where
+  the rules changed. **Move to latest commits** / `calibrate --latest` moves the pins on purpose.
+- Calibration runs are no longer listed under the projects; they open from the matrix.
+- The Criteria page shows **Ref. set** as `met/assessed`, marked `*` when the profile's numbers differ from the
+  standard ones the calibration used. The text under a rule states facts and does not advise switching a rare rule off.
+- **Apply to open run** and **Delete** moved to the profile bar.
+
 - New header: a black brand bar with the SDLC 360° mark, **Projects** and **Criteria** buttons and the theme switch
   on the right; below it, the open project with its source, commit, date and criteria. The Assessment / Capabilities
   tabs are gone: the assessment is the main view, and the settings are the **Criteria** page (`#criteria`;

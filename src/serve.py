@@ -12,7 +12,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from . import profiles
+from . import calibration, profiles
 from .acceptance import criteria, method_for, reference_cards
 from .dimensions import DIMENSIONS
 from .render import render_app
@@ -51,6 +51,35 @@ def _start_job(target: str, history: int, runs_dir: Path, cache_dir: Path, profi
 
     threading.Thread(target=work, daemon=True).start()
     return jid
+
+
+def _start_calibration(runs_dir: Path, cache_dir: Path, latest: bool = False) -> str:
+    """One job for the whole reference set; the app shows the state of each repository."""
+    repos = calibration.reference_set()
+    jid = uuid.uuid4().hex[:12]
+    job: dict = {"id": jid, "kind": "calibration", "status": "queued", "messages": [], "run_id": None, "error": None}
+    job["repos"] = [{"target": r["target"], "status": "queued", "message": ""} for r in repos]
+    JOBS[jid] = job
+
+    def step(i: int, status: str, msg: str) -> None:
+        job["repos"][i].update(status=status, message=msg)
+
+    def work() -> None:
+        with SCAN_LOCK:
+            job["status"] = "running"
+            try:
+                path = calibration.run_calibration(repos, latest=latest, runs_dir=runs_dir, cache_dir=cache_dir, progress=step)
+                job["run_id"], job["status"] = path.stem, "done"
+            except Exception as e:
+                log.exception("calibration failed")
+                job["error"], job["status"] = str(e), "error"
+
+    threading.Thread(target=work, daemon=True).start()
+    return jid
+
+
+def _busy() -> bool:
+    return any(j["status"] in ("queued", "running") for j in JOBS.values())
 
 
 HIDDEN_DIRS = {"node_modules", "__pycache__", ".venv", "venv", "$recycle.bin", "system volume information", ".git"}
@@ -162,7 +191,24 @@ def make_handler(runs_dir: Path, cache_dir: Path):
                     return self._json({"error": str(e)}, 400)
             if path == "/api/profiles":
                 return self._json(profiles.list_profiles())
+            if path == "/api/calibration":
+                return self._json(
+                    {
+                        "set": calibration.reference_set(),
+                        "kinds": calibration.KINDS,
+                        "snapshots": calibration.list_snapshots(runs_dir),
+                        "result": calibration.result(None, runs_dir),
+                        "job": next(
+                            (j["id"] for j in JOBS.values() if j.get("kind") == "calibration" and j["status"] in ("queued", "running")), None
+                        ),
+                    }
+                )
             parts = path.split("/")
+            if len(parts) == 4 and parts[1:3] == ["api", "calibration"]:
+                try:
+                    return self._json(calibration.result(parts[3], runs_dir))
+                except ValueError as e:
+                    return self._json({"error": str(e)}, 404)
             if len(parts) == 4 and parts[1:3] == ["api", "profiles"]:
                 try:
                     return self._json(profiles.load(parts[3]))
@@ -195,6 +241,16 @@ def make_handler(runs_dir: Path, cache_dir: Path):
                 return self._json({"error": "bad request"}, 400)
             parts = path.split("/")
             try:
+                if path == "/api/calibration/repos":
+                    kind = str(body.get("kind") or "application")
+                    return self._json(calibration.add_custom(str(body.get("target", "")), kind, str(body.get("why", ""))))
+                if path == "/api/calibration/repos/remove":
+                    calibration.remove_custom(str(body.get("target", "")))
+                    return self._json({"removed": body.get("target")})
+                if path == "/api/calibration/run":
+                    if _busy():
+                        return self._json({"error": "Another scan is still running - wait for it to finish."}, 409)
+                    return self._json({"job": _start_calibration(runs_dir, cache_dir, bool(body.get("latest")))}, 202)
                 if path == "/api/catalog":
                     return self._json(catalog(body.get("profile") if isinstance(body.get("profile"), dict) else None))
                 if len(parts) == 4 and parts[1:3] == ["api", "profiles"]:  # save (create or replace)
@@ -225,7 +281,7 @@ def make_handler(runs_dir: Path, cache_dir: Path):
                 info = check_target(target)
             except ValueError as e:
                 return self._json({"error": str(e)}, 400)
-            if any(j["status"] in ("queued", "running") for j in JOBS.values()):
+            if _busy():
                 return self._json({"error": "Another scan is still running - wait for it to finish."}, 409)
             self._json({"job": _start_job(target, history, runs_dir, cache_dir, profile), "kind": info["kind"], "display": info["display"]}, 202)
 

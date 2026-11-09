@@ -1,4 +1,4 @@
-"""Command line interface: `python sdlc.py scan|render|list|serve`."""
+"""Command line interface: `python sdlc.py scan|render|list|calibrate|serve`."""
 
 from __future__ import annotations
 
@@ -51,6 +51,25 @@ def cmd_list(a: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_calibrate(a: argparse.Namespace) -> int:
+    from .calibration import reference_set, result, run_calibration
+
+    repos = reference_set()
+
+    def say(i: int, status: str, msg: str) -> None:
+        if status != "running":
+            print(f"{status:7s} {repos[i]['target']}  {msg}", file=sys.stderr)
+
+    path = run_calibration(repos, latest=a.latest, runs_dir=Path(a.runs_dir), cache_dir=Path(a.cache_dir), progress=say)
+    s = result(path.stem, Path(a.runs_dir)) or {}
+    t, prev = s.get("totals", {}), s.get("previous")
+    print(str(path))
+    print(f"{t.get('ok')} of {t.get('repos')} repositories assessed, {t.get('verdicts')} verdicts on {t.get('checks')} checks")
+    if prev:
+        print(f"since {prev['id']}: {len(prev['changes'])} verdicts changed ({prev['by_scanner']} on the same commit)")
+    return 0
+
+
 def cmd_serve(a: argparse.Namespace) -> int:
     from .serve import serve
 
@@ -94,6 +113,10 @@ def main(argv: list[str] | None = None) -> int:
 
     ls = sub.add_parser("list", parents=[common], help="list scanned projects and their runs")
     ls.set_defaults(func=cmd_list)
+
+    cb = sub.add_parser("calibrate", parents=[common], help="assess the reference set with the Standard criteria and record every verdict")
+    cb.add_argument("--latest", action="store_true", help="assess the latest commits and pin the set there (default: the pinned commits)")
+    cb.set_defaults(func=cmd_calibrate)
 
     sv = sub.add_parser("serve", parents=[common], help="local web app: choose projects, scan, browse")
     sv.add_argument("--port", type=int, default=8360)

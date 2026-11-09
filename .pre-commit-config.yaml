@@ -15,7 +15,7 @@ repos:
     rev: v1.5.0
     hooks:
       - id: detect-secrets
-        exclude: ^tests/
+        exclude: ^(tests/|assessment/calibration/pins\.json$)  # pins are git commit SHAs, not secrets
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.17.4
     hooks:

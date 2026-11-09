@@ -1,0 +1,14 @@
+{
+  "description": "Well-run open-source repositories the scanner rules are calibrated on. When a strong project fails a check, either it really lacks the practice or the rule is wrong.",
+  "repos": [
+    {"target": "pydantic/pydantic-ai", "kind": "agentic", "why": "Agent framework with an agent harness, skills and strict CI."},
+    {"target": "openai/openai-agents-python", "kind": "agentic", "why": "Agent SDK of an LLM vendor, with AGENTS.md and a broad test suite."},
+    {"target": "modelcontextprotocol/python-sdk", "kind": "agentic", "why": "Reference SDK of the Model Context Protocol, built with coding agents."},
+    {"target": "anthropics/claude-agent-sdk-python", "kind": "agentic", "why": "Young agent SDK: shows how the rules treat a short history."},
+    {"target": "huggingface/smolagents", "kind": "agentic", "why": "Popular agent library with many outside contributors."},
+    {"target": "fastapi/typer", "kind": "library", "why": "Mature CLI library that calls no LLM: LLM checks must be not applicable."},
+    {"target": "encode/httpx", "kind": "library", "why": "Mature HTTP client with a long history and no agent conventions."},
+    {"target": "Textualize/rich", "kind": "library", "why": "Mature library, mostly one maintainer: tests the Code Review rules."},
+    {"target": "fastapi/full-stack-fastapi-template", "kind": "template", "why": "Project template with Docker and CI; commits a .env of template values."}
+  ]
+}

@@ -30,7 +30,8 @@ flowchart LR
 | `scanner.py` | `scan()` runs all aspects and keeps raw `auto_checks`. `finalize()` applies checklist, review and the critical gate | `finalize()` is idempotent and needs no repo |
 | `history.py` | Weekly velocity, and re-scoring of sampled past commits in temporary worktrees or shared clones | Never writes into a user's `.git` |
 | `runner.py` | Orchestrates a scan and writes `manifest.json`, `report.json`, `report.html` and `scan.log` | Owns the run-folder contract |
-| `serve.py` | JSON API plus app page. One scan at a time. Read-only folder browser. Saves profiles, applies one to a run | Binds to 127.0.0.1 and rejects foreign `Host` / `Origin` |
+| `calibration.py` | Reference set (`assessment/calibration/`), one calibration = one run per repository plus a snapshot of every verdict in `runs/calibrations/<id>.json`, comparison with the previous snapshot | Records and counts verdicts, judges nothing |
+| `serve.py` | JSON API plus app page. One scan or calibration at a time. Read-only folder browser. Saves profiles, applies one to a run, edits the user's reference repositories | Binds to 127.0.0.1 and rejects foreign `Host` / `Origin` |
 | `template.html` | The whole UI. Static mode embeds a report, app mode fetches from the API | Renders only; no scoring logic |
 
 ## Data flow of a scan

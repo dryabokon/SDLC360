@@ -14,6 +14,7 @@ Read `README.md` first, then `docs/architecture.md`.
 
 - run the app: `./start.sh` / `./stop.sh` (http://127.0.0.1:8360/)
 - scan: `python sdlc.py scan <url|owner/repo|path> [--no-history]`
+- calibrate: `python sdlc.py calibrate [--latest]` (as **Run calibration** in the app: pinned commits; writes `runs/calibrations/<id>.json`)
 - tests: `.venv/Scripts/python -m pytest --cov` (Linux/macOS: `.venv/bin/...`)
 - lint, format, types: `.venv/Scripts/ruff check .`, `.venv/Scripts/ruff format .`, `.venv/Scripts/mypy`
 - setup: `python -m venv .venv && .venv/Scripts/pip install -r requirements-dev.txt && .venv/Scripts/pre-commit install`
@@ -23,7 +24,9 @@ Read `README.md` first, then `docs/architecture.md`.
 - `sdlc.py`: CLI entry point; `src/cli.py` defines the commands.
 - `assessment/`: defines the assessment, see `assessment/README.md`. `capabilities.md` (catalog, standard priority),
   `profiles/<name>.json` (overrides edited on the Criteria page; `standard` is read-only),
-  `acceptance-criteria/<NN-aspect>.md` (how each one is judged, quotes), `references/<name>/` (published basis).
+  `acceptance-criteria/<NN-aspect>.md` (how each one is judged, quotes), `references/<name>/` (published basis),
+  `calibration/reference-set.json` (default reference repositories, read-only), `calibration/custom.json` (added in the app)
+  and `calibration/pins.json` (the commit each one is assessed at).
 - `src/profiles.py`: profiles and `PARAMS`, the thresholds a profile may change. A rule reads them with
   `repo.param(check_id, key)`, never a literal; its acceptance text quotes them as `{key}`.
 - `src/dimensions/<rules>.py`: scanner rules, grouped by topic. The aspect a check belongs to is its section in

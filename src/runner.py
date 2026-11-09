@@ -166,10 +166,24 @@ def rerender(run_dir: Path, review_path: Path | None = None, checklist: str | No
     return write_outputs(run_dir, finalize(report, review))
 
 
+def calibration_run_ids(runs_dir: Path = DEFAULT_RUNS) -> set[str]:
+    """Runs made by a calibration (runs/calibrations/*.json): they are opened from the calibration, not listed as projects."""
+    ids: set[str] = set()
+    for f in (Path(runs_dir) / "calibrations").glob("*.json"):
+        try:
+            ids |= {r["run_id"] for r in json.loads(f.read_text(encoding="utf-8")).get("repos", []) if r.get("run_id")}
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+    return ids
+
+
 def list_projects(runs_dir: Path = DEFAULT_RUNS) -> list[dict]:
     """Group runs by source repo; newest run first within each project."""
     projects: dict[str, dict] = {}
+    hidden = calibration_run_ids(runs_dir)
     for rep_path in sorted(Path(runs_dir).glob("*/report.json"), reverse=True):
+        if rep_path.parent.name in hidden:
+            continue
         try:
             rep = json.loads(rep_path.read_text(encoding="utf-8"))
         except (OSError, ValueError):

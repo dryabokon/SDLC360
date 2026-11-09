@@ -4,25 +4,41 @@ Well-run open-source projects serve as a sanity check for the scanner rules. Whe
 check, either the project really lacks the practice or the rule is wrong. Each rule fix gets a regression test in
 `tests/unit/test_heuristics.py`.
 
-## Reference set
+## Running a calibration
 
-Scores below are from 2026-11-06 with the default checklist and history 6.
+Open the Overview of the **Criteria** page and press **Run calibration**, or run `python sdlc.py calibrate`. The reference set is
+`assessment/calibration/reference-set.json` (read-only) plus the repositories added in the app
+(`assessment/calibration/custom.json`). Each repository is assessed at its latest commit with the Standard criteria,
+as a normal run, and the calibration saves one snapshot of every verdict in `runs/calibrations/<id>.json` together
+with the scanner version and the commit of each repository. The page shows what was assessed, by which scanner, what
+was recorded and how each check split across the set, and compares the snapshot with the previous one. A verdict
+that changed on the same commit was changed by the scanner; one on a newer commit may have been changed by the project.
 
-| Repository | Overall | Notes |
-|---|---|---|
-| pydantic/pydantic-ai | 86.9 (B) | highest; was gated on Runs for lacking `runs/` (removed since, see below) |
-| openai/openai-agents-python | 78.5 | |
-| modelcontextprotocol/python-sdk | 76.7 | |
-| anthropics/claude-agent-sdk-python | 64.8 | |
-| fastapi/typer | 59.9 | library: no skills, no runs, cost N/A |
-| huggingface/smolagents | 59.8 | |
-| fastapi/full-stack-fastapi-template | 53.1 | commits a `.env` (template values), so it is correctly flagged |
-| encode/httpx | 52.9 | mature library, but it lacks our AI-harness and runs conventions |
-| Textualize/rich | 50.8 | same |
+GitHub repositories are pinned: a calibration assesses the commits in `assessment/calibration/pins.json`, so two
+calibrations differ only where the rules changed. **Move to latest commits** (`python sdlc.py calibrate --latest`)
+assesses the latest commits and moves the pins there; commit `pins.json` with it. A repository added to the set is
+pinned at its first calibration. A local folder is read as it is and cannot be pinned. Calibration runs are opened
+from the matrix and are not listed under the projects.
 
-No repository is green on every aspect. Skills and cost tracking matter mostly for agentic projects, so libraries
-score lower there. The `runs/` folder capability was removed from the default checklist on 2026-11-06: it is a
-team convention, and reproducibility is now judged by lockfiles, pinned toolchains, entry points and provenance.
+## Reference set (2026-11-09)
+
+Nine aspects, Standard criteria, pinned commits (`assessment/calibration/pins.json`). Calibrating again at the same
+commits on the same day reproduced every one of the 593 verdicts.
+
+| Repository | Kind | Commit | Overall |
+|---|---|---|---|
+| pydantic/pydantic-ai | agentic | `6e6aa81f` | 91.9 (A) |
+| openai/openai-agents-python | agentic | `1fc77bbc` | 80.9 (B) |
+| modelcontextprotocol/python-sdk | agentic | `77001c96` | 80.6 (B) |
+| anthropics/claude-agent-sdk-python | agentic | `2209f2c1` | 70.1 (C) |
+| huggingface/smolagents | agentic | `96f33faa` | 65.3 (C) |
+| fastapi/typer | library | `00381d6c` | 61.9 (D) |
+| fastapi/full-stack-fastapi-template | template | `aabb9012` | 59.6 (D) |
+| Textualize/rich | library | `3a109ccd` | 56.2 (D) |
+| encode/httpx | library | `b5addb64` | 54.8 (D) |
+
+Seven checks are met by none of the nine (among them `arch.adr` and `ai.mcp`), fifteen by all of them. A check that
+no reference repository meets is not wrong by that fact alone: open the evidence of a few before changing it.
 
 ## False positives fixed during calibration
 

@@ -23,8 +23,9 @@ It answers questions like:
   research on AI-assisted delivery, NIST's secure development framework, OWASP's agentic risks, OpenSSF Scorecard,
   Anthropic's agent guidance and the AGENTS.md and Agent Skills standards. The few that rest on our own judgement
   say so. See [the references](assessment/references/README.md).
-- **Calibrated on well-run open-source projects.** For example, `pydantic/pydantic-ai` scores 91 (A). Each false
-  alarm found on such projects became a fix and a regression test ([calibration](docs/calibration.md)).
+- **Calibrated on well-run open-source projects.** Nine reference repositories are assessed at pinned commits, and
+  the Criteria page shows how every rule does on them (for example, `pydantic/pydantic-ai` scores 92, A). Each false
+  alarm found on them became a fix and a regression test ([calibration](docs/calibration.md)).
 
 ## What it looks at
 
@@ -60,8 +61,9 @@ Requirements: Python 3.12+ and git. Nothing to install: the tool uses only the P
 
 <details><summary><b>2 · Choose a project and assess it</b></summary>
 
-Press **Projects** at the top right. Paste a GitHub URL or `owner/repo`, or pick a local git folder with the folder
-picker, choose a profile and press **Assess**. Local folders are only read, never changed.
+Click the project name under the black bar (or **Open a project**): it lists the assessed projects. Paste a GitHub
+URL or `owner/repo`, or pick a local git folder with the folder picker, choose a profile and press **Assess**. Local
+folders are only read, never changed.
 </details>
 
 <details><summary><b>3 · Read the assessment</b></summary>
@@ -75,11 +77,17 @@ capabilities with their status. Click one to see what was **expected**, what we 
 
 <details><summary><b>4 · Make it yours</b></summary>
 
-The **Criteria** page (button at the top right) has the same layout. Switch capabilities on or off, set how critical each one is, change
-the numbers in **Accepted when** ("There are at least **5** test files"), and add capabilities of your own in plain
-words. Save it as a profile; **Apply to this run** re-judges the open assessment at once.
+The **Criteria** page (button at the top right) has the same layout. Switch capabilities on or off, set how critical
+each one is, change the numbers in **Accepted when** ("There are at least **5** test files"), and add capabilities of
+your own in plain words. Save it as a profile; **Apply to open run** re-judges the open assessment at once.
 
-![Capabilities: the same aspects, with switches, criticality and editable acceptance](docs/images/capabilities.png)
+The column **Ref. set** and the block *On the reference set* show how each rule does on the reference repositories.
+The **Overview** of the Criteria page holds the calibration: the reference set (add your own), **Run calibration**,
+and a matrix of every check on every reference repository. Click a rule to open it, a dot to open that run.
+
+![Criteria: the same aspects, with switches, criticality, editable acceptance and the reference set](docs/images/capabilities.png)
+
+![Calibration: every check on every reference repository](docs/images/calibration.png)
 </details>
 
 <details><summary><b>5 · Fix and re-assess</b></summary>
