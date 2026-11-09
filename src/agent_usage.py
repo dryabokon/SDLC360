@@ -18,6 +18,8 @@ import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from .model import band, grade
+
 LOGS_ROOT = Path.home() / ".claude" / "projects"
 IDLE = timedelta(minutes=5)  # a gap longer than this between two entries is not counted as active time
 LINK_AFTER = timedelta(minutes=30)
@@ -183,139 +185,224 @@ def _day(iso: str | None) -> str:
     return t.strftime("%d %b %Y") if t else "?"
 
 
-def findings(sessions: list[dict], commits: list[dict], skills_available: list[str]) -> list[dict]:
-    """Plain findings with an example from this project: what we see, why it matters, what to do."""
+def _check(cid: str, title: str, status: str, evidence: list[str], fix: str, accepted: str, looks_at: str, why: str, limits: str = "") -> dict:
+    """A check shaped like the scanner's, so the app shows it the same way: Expected, Found, What to do."""
+    return {
+        "id": cid,
+        "title": title,
+        "status": status,
+        "score": {"pass": 1.0, "partial": 0.5, "fail": 0.0}.get(status),
+        "weight": 1,
+        "priority": "important",
+        "source": "auto",
+        "evidence": evidence,
+        "recommendation": fix if status in ("fail", "partial") else "",
+        "method": {"accepted": accepted, "looks_at": looks_at, "limits": limits, "basis": [], "convention": why},
+    }
+
+
+def _level(value: float, good: float, fair: float, higher_is_better: bool = True) -> str:
+    if higher_is_better:
+        return "pass" if value >= good else "partial" if value >= fair else "fail"
+    return "pass" if value <= good else "partial" if value <= fair else "fail"
+
+
+def checks(sessions: list[dict], commits: list[dict], skills_available: list[str]) -> list[dict]:
+    """The agent-use rules with their verdicts on this project; the evidence names real sessions and commits."""
     out: list[dict] = []
-    agent = [c for c in commits if c["agent"] and not c["merge"]]
-    costed = [s for s in sessions if s["cost"] is not None]
+    own = [c for c in commits if not c["merge"]]
+    agent = [c for c in own if c["agent"]]
+    linked = [c for c in own if c.get("session")]
+    work = [s for s in sessions if s["api_calls"] >= 10]
 
-    def add(tone: str, title: str, seen: str, example: str, why: str, fix: str, who: list[str]) -> None:
-        out.append({"tone": tone, "title": title, "seen": seen, "example": example, "why": why, "fix": fix, "who": who})
+    def na(cid: str, title: str, why_na: str, accepted: str, looks_at: str, why: str) -> None:
+        out.append(_check(cid, title, "na", [why_na], "", accepted, looks_at, why))
 
-    if agent:
-        share = len(agent) / max(1, len([c for c in commits if not c["merge"]]))
-        add(
-            "good",
-            "Agent work is visible in the history",
-            f"{len(agent)} of {len([c for c in commits if not c['merge']])} commits ({share:.0%}) say an agent co-authored them.",
-            f"Latest: {_subj(agent[0])}.",
-            "You can tell which code the agent wrote, so its quality can be followed over time.",
-            "Keep the Co-Authored-By trailer on every agent commit.",
-            ["Team lead"],
+    # 1. attribution
+    t = ("agent.attributed", "Commits made with an agent say so.")
+    acc = "At least 90% of the commits made during agent sessions carry a Co-Authored-By trailer of the agent."
+    how = "Commits made while a session was active (from its first to its last message, plus 30 minutes) are checked for an agent trailer."
+    why = "Only attributed code can be followed: how much the agent writes, and how its code holds up later."
+    if linked:
+        tagged = [c for c in linked if c["agent"]]
+        miss = next((c for c in linked if not c["agent"]), None)
+        out.append(
+            _check(
+                *t,
+                _level(len(tagged) / len(linked), 0.9, 0.5),
+                [f"{len(tagged)}/{len(linked)} commits made during agent sessions carry the trailer"]
+                + ([f"{_subj(miss)} has no agent trailer"] if miss else []),
+                "Keep the agent's Co-Authored-By trailer in every commit message (AGENTS.md says so for this project).",
+                acc,
+                how,
+                why,
+                "A person committing during a session is counted as the session's commit.",
+            )
         )
-    idle = [s for s in costed if s["commits"] == 0 and (s["cost"] or 0) >= 1]
-    if idle:
-        worst = max(idle, key=lambda s: s["cost"] or 0)
-        add(
-            "improve",
-            "Some sessions ended without a commit",
-            f"{len(idle)} of {len(costed)} sessions with a recorded cost produced no commit, "
-            f"together {_money(sum(s['cost'] or 0 for s in idle))} at API prices.",
-            f"Session of {_day(worst['start'])}: {worst['active_hours']} active hours, {_money(worst['cost'])}, no commit.",
-            "Work that is not committed cannot be reviewed, reused or measured; "
-            "often it is exploration that should have been a short, separate session.",
-            "End each task with a commit, even a small one; keep exploration in short sessions and say so in the first prompt.",
-            ["Developer", "Business"],
+    else:
+        na(*t, "No commit was made during a recorded session.", acc, how, why)
+
+    # 2. work lands
+    t = ("agent.lands", "Agent sessions end in a commit.")
+    acc = "At least 80% of the working sessions (10 or more steps) produce a commit."
+    how = "Each session is matched with the commits made while it was active."
+    why = "Work that is not committed cannot be reviewed, reused or measured; its cost buys nothing that lasts."
+    if work:
+        empty = [s for s in work if not s.get("commits")]
+        ev = [f"{len(work) - len(empty)}/{len(work)} working sessions produced a commit"]
+        ev += [
+            f"Session of {_day(s['start'])} ({s['active_hours']} active hours"
+            + (f", {_money(s['cost'])}" if s["cost"] is not None else "")
+            + ") made no commit"
+            for s in empty[:3]
+        ]
+        out.append(
+            _check(
+                *t,
+                _level((len(work) - len(empty)) / len(work), 0.8, 0.5),
+                ev,
+                "End each task with a commit, even a small one. Keep exploration in a short session of its own and say so in the first prompt.",
+                acc,
+                how,
+                why,
+                "A session that only explores or answers questions is fine without a commit; the rule cannot tell it apart.",
+            )
         )
-    big = sorted([c for c in agent if c["code_files"] > BIG_COMMIT_FILES], key=lambda c: -c["code_files"])
+    else:
+        na(*t, "No working session was recorded.", acc, how, why)
+
+    # 3. small commits
+    t = ("agent.small_commits", "Agent commits are small enough to review.")
+    acc = f"At most 10% of the agent's commits change more than {BIG_COMMIT_FILES} files (generated files and lockfiles not counted)."
+    how = "Files changed per agent commit, from git log."
+    why = "Nobody reads a 30-file change line by line, so the agent's mistakes slip through, and a problem cannot be traced to one decision."
     if agent:
+        big = sorted([c for c in agent if c["code_files"] > BIG_COMMIT_FILES], key=lambda c: -c["code_files"])
         med = statistics.median(c["code_files"] for c in agent)
-        if big:
-            b = big[0]
-            add(
-                "improve",
-                "Agent commits are too big to review",
-                f"{len(big)} of {len(agent)} agent commits change more than {BIG_COMMIT_FILES} files; the median is {med:g}.",
-                f"{_subj(b)}: {b['code_files']} files, +{b['add']} −{b['rm']} lines.",
-                "Nobody reads a 20-file change line by line, so agent mistakes slip through, and a problem cannot be traced to one decision.",
-                "One task, one commit: ask the agent to commit after each finished step, and to stop and commit before starting the next idea.",
-                ["Developer", "Team lead"],
+        ev = [f"{len(big)}/{len(agent)} agent commits change more than {BIG_COMMIT_FILES} files", f"median: {med:g} files per commit"]
+        ev += [f"{_subj(c)}: {c['code_files']} files, +{c['add']} −{c['rm']} lines" for c in big[:3]]
+        out.append(
+            _check(
+                *t,
+                _level(len(big) / len(agent), 0.1, 0.3, higher_is_better=False),
+                ev,
+                "One task, one commit: ask the agent to commit after each finished step, before it starts the next idea.",
+                acc,
+                how,
+                why,
             )
-        else:
-            add(
-                "good",
-                "Agent commits stay reviewable",
-                f"The median agent commit changes {med:g} files.",
-                "",
-                "Small changes are reviewed for real.",
-                "Keep it so.",
-                ["Team lead"],
-            )
-    if commits and not any(c["merge"] for c in commits) and agent:
-        add(
-            "improve",
-            "Agent code goes straight to the main branch",
-            "There is not a single merge in the history: every change was committed directly.",
-            f"{agent[0]['sha'][:8]} went to the branch without a pull request.",
-            "No second pair of eyes and no automatic gate between the agent's output and the shared code.",
-            "Let the agent work on a branch and open a pull request; CI and a reviewer approve it.",
-            ["Team lead", "Business"],
         )
+    else:
+        na(*t, "No agent commit in the history.", acc, how, why)
+
+    # 4. tests
+    t = ("agent.tests", "Agent changes come with tests.")
+    acc = "At least half of the agent's commits also change a test."
+    how = "Whether an agent commit touches a test file (tests/, test_*.py, *_test.go, *.test.ts, …)."
+    why = "A test is the cheapest proof that the agent's code does what was asked, and it guards that code later."
     if agent:
-        with_tests = [c for c in agent if c["tests"]]
-        share = len(with_tests) / len(agent)
-        without = next((c for c in agent if not c["tests"] and c["code_files"] >= 3), None)
-        add(
-            "good" if share >= 0.5 else "improve",
-            "Tests come with the agent's changes" if share >= 0.5 else "Agent changes rarely come with tests",
-            f"{len(with_tests)} of {len(agent)} agent commits ({share:.0%}) also change tests.",
-            f"For example {_subj(without)} changes {without['code_files']} files and no test." if without else "",
-            "A test is the cheapest proof that the agent's code does what was asked, and it guards it later.",
-            "Ask for the test in the same prompt as the change, and keep the test command in CLAUDE.md / AGENTS.md so the agent runs it.",
-            ["Developer"],
+        with_t = [c for c in agent if c["tests"]]
+        ex = [c for c in agent if not c["tests"] and c["code_files"] >= 3][:3]
+        out.append(
+            _check(
+                *t,
+                _level(len(with_t) / len(agent), 0.5, 0.25),
+                [f"{len(with_t)}/{len(agent)} agent commits change a test"] + [f"{_subj(c)} changes {c['code_files']} files and no test" for c in ex],
+                "Ask for the test in the same prompt as the change, and keep the test command in CLAUDE.md / AGENTS.md so the agent runs it.",
+                acc,
+                how,
+                why,
+                "Documentation and configuration commits need no test, but they are counted.",
+            )
         )
+    else:
+        na(*t, "No agent commit in the history.", acc, how, why)
+
+    # 5. friction
+    t = ("agent.friction", "The agent rarely fails or waits for permission.")
+    acc = "At most 3% of the agent's tool calls fail or are refused."
+    how = "Failed tool results and refused tool calls in the session logs, against all tool calls."
+    why = "Each failure is a retry paid in time and tokens; each permission stop waits for a person."
     calls = sum(s["tool_calls"] for s in sessions)
     if calls:
-        err = sum(s["tool_errors"] for s in sessions)
-        den = sum(s["denied"] for s in sessions)
-        worst = max(sessions, key=lambda s: s["tool_errors"] + s["denied"])
-        add(
-            "improve" if (err + den) / calls > 0.05 else "good",
-            "The agent often hits errors and permission stops" if (err + den) / calls > 0.05 else "The agent works with little friction",
-            f"{err} failed tool calls and {den} refused ones out of {calls} ({(err + den) / calls:.0%}).",
-            f"Session of {_day(worst['start'])}: {worst['tool_errors']} failures, {worst['denied']} refusals in {worst['tool_calls']} calls.",
-            "Each failure is a retry the developer pays for in time and tokens; each permission stop waits for a human.",
-            "Allow the safe read-only commands the agent keeps asking for, and write the working commands (test, lint, run) into CLAUDE.md.",
-            ["Developer"],
+        err, den = sum(s["tool_errors"] for s in sessions), sum(s["denied"] for s in sessions)
+        worst = sorted(sessions, key=lambda s: -(s["tool_errors"] + s["denied"]))[:2]
+        out.append(
+            _check(
+                *t,
+                _level((err + den) / calls, 0.03, 0.06, higher_is_better=False),
+                [f"{err + den}/{calls} tool calls failed ({err}) or were refused ({den})"]
+                + [f"session of {_day(s['start'])}: {s['tool_errors']} failed, {s['denied']} refused of {s['tool_calls']}" for s in worst],
+                "Allow the safe read-only commands the agent keeps asking for, and write the working commands (test, lint, run) into CLAUDE.md.",
+                acc,
+                how,
+                why,
+                "A failed test run is counted as a failure, though running tests that fail is part of the work.",
+            )
         )
-    if costed:
-        longs = [s for s in sessions if s["active_hours"] >= LONG_SESSION_HOURS]
-        short = [s for s in sessions if s["active_hours"] < LONG_SESSION_HOURS and s["api_calls"] >= 10]
+    else:
+        na(*t, "No tool call was recorded.", acc, how, why)
+
+    # 6. lean context
+    t = ("agent.lean_context", "Sessions stay focused, so the context stays lean.")
+    acc = f"No more than a third of the working sessions run longer than {LONG_SESSION_HOURS:g} active hours."
+    how = "Active hours per session (pauses over 5 minutes left out) and the tokens read on every step."
+    why = "Every step re-reads the whole conversation: in a long session each small change is slower and more expensive."
+    if work:
+        longs = sorted([s for s in work if s["active_hours"] >= LONG_SESSION_HOURS], key=lambda s: -s["context_per_call"])
+        short = [s for s in work if s["active_hours"] < LONG_SESSION_HOURS]
+        ev = [f"{len(longs)}/{len(work)} working sessions ran {LONG_SESSION_HOURS:g}+ active hours"]
         if longs and short:
-            lc = statistics.mean(s["context_per_call"] for s in longs)
-            sc = statistics.mean(s["context_per_call"] for s in short)
-            if lc > 1.2 * sc:
-                ex = max(longs, key=lambda s: s["context_per_call"])
-                add(
-                    "improve",
-                    "Long sessions carry a heavy context",
-                    f"In sessions of {LONG_SESSION_HOURS:g}+ active hours every step reads {lc / 1000:,.0f}k tokens of context, "
-                    f"in shorter ones {sc / 1000:,.0f}k.",
-                    f"Session of {_day(ex['start'])}: {ex['active_hours']} active hours, {ex['context_per_call'] / 1000:,.0f}k tokens per step.",
-                    "Every step re-reads the whole conversation: a long session makes each small change slower and more expensive.",
-                    "Start a fresh session (/clear) for each new task; keep what must survive in CLAUDE.md or memory.",
-                    ["Developer", "Business"],
-                )
-    used = {k for s in sessions for k in s["skills"]}
-    if skills_available:
-        unused = [k for k in skills_available if k not in used]
-        rare = len(unused) > len(skills_available) / 2
-        add(
-            "improve" if rare else "good",
-            ("The project's skills are not used" if len(unused) == len(skills_available) else "Most of the project's skills are not used")
-            if rare
-            else "The project's skills are in use",
-            f"{len(skills_available)} skills are defined; {len(skills_available) - len(unused)} were invoked in {len(sessions)} sessions.",
-            f"Never invoked: {', '.join(unused[:5])}." if unused else "",
-            "A skill is the team's tested recipe; when it is not used, the agent improvises the same work each time.",
-            "Name the skills in CLAUDE.md and make each description say when to use it, in the words people type.",
-            ["Team lead", "Developer"],
+            ev.append(
+                f"tokens read per step: {statistics.mean(s['context_per_call'] for s in longs) / 1000:,.0f}k in long sessions, "
+                f"{statistics.mean(s['context_per_call'] for s in short) / 1000:,.0f}k in shorter ones"
+            )
+        ev += [
+            f"session of {_day(s['start'])}: {s['active_hours']} active hours, {s['context_per_call'] / 1000:,.0f}k tokens per step"
+            for s in longs[:2]
+        ]
+        out.append(
+            _check(
+                *t,
+                _level(len(longs) / len(work), 0.0, 1 / 3, higher_is_better=False),
+                ev,
+                "Start a fresh session (/clear) for each new task; keep what must survive in CLAUDE.md or memory.",
+                acc,
+                how,
+                why,
+            )
         )
-    return sorted(out, key=lambda f: f["tone"] == "good")  # what to improve first
+    else:
+        na(*t, "No working session was recorded.", acc, how, why)
+
+    # 7. skills
+    t = ("agent.skills_used", "The project's skills are used.")
+    acc = "At least half of the skills defined in the project were invoked in a recorded session."
+    how = "Skills in .claude/skills/ and .agents/skills/ against Skill calls in the session logs."
+    why = "A skill is the team's tested recipe; when it is not used, the agent improvises the same work each time."
+    if skills_available:
+        used = {k for s in sessions for k in s["skills"]}
+        unused = [k for k in skills_available if k not in used]
+        out.append(
+            _check(
+                *t,
+                _level((len(skills_available) - len(unused)) / len(skills_available), 0.5, 0.01),
+                [f"{len(skills_available) - len(unused)}/{len(skills_available)} skills were invoked"]
+                + ([f"never invoked: {', '.join(unused)}"] if unused else []),
+                "Name the skills in CLAUDE.md and make each description say when to use it, in the words people type.",
+                acc,
+                how,
+                why,
+                "A slash command typed by a person is not seen as a skill call.",
+            )
+        )
+    else:
+        na(*t, "The project defines no skills.", acc, how, why)
+    return out
 
 
 def report(source: str, root: Path | None = None) -> dict:
-    """The agent-use tab of one local project."""
+    """The agent-use tab of one local project: one aspect, laid out like the others."""
     d = log_dir(source, root)
     repo = Path(source)
     if d is None or not repo.is_dir():
@@ -328,29 +415,41 @@ def report(source: str, root: Path | None = None) -> dict:
     commits = git_commits(repo)
     _link(sessions, commits)
     skills = sorted({p.parent.name for base in (".claude/skills", ".agents/skills") for p in (repo / base).glob("*/SKILL.md")})
-    agent = [c for c in commits if c["agent"] and not c["merge"]]
-    costed = [s for s in sessions if s["cost"] is not None]
-    linked = [c for c in commits if c.get("session")]
-    total = sum(s["cost"] or 0 for s in costed)
+    own = [c for c in commits if not c["merge"]]
+    costed = {s["id"] for s in sessions if s["cost"] is not None}
+    total = sum(s["cost"] or 0 for s in sessions)
+    paid = [c for c in own if c.get("session") in costed]
+    cs = checks(sessions, commits, skills)
+    scored = [c["score"] for c in cs if c["score"] is not None]
+    score = round(100 * sum(scored) / len(scored), 1) if scored else None
+    summary = {
+        "first": sessions[0]["start"] if sessions else None,
+        "last": sessions[-1]["end"] if sessions else None,
+        "sessions": len(sessions),
+        "active_hours": round(sum(s["active_hours"] for s in sessions), 1),
+        "commits": len(own),
+        "agent_commits": len([c for c in own if c["agent"]]),
+        "cost": round(total, 2),
+        "cost_sessions": len(costed),
+        "cost_per_commit": round(total / len(paid), 2) if paid else None,
+    }
     return {
         "available": True,
         "logs": str(d),
-        "summary": {
-            "first": sessions[0]["start"] if sessions else None,
-            "last": sessions[-1]["end"] if sessions else None,
-            "sessions": len(sessions),
-            "active_hours": round(sum(s["active_hours"] for s in sessions), 1),
-            "commits": len([c for c in commits if not c["merge"]]),
-            "agent_commits": len(agent),
-            "linked_commits": len(linked),
-            "cost": round(total, 2),
-            "cost_sessions": len(costed),
-            "cost_per_commit": round(total / len([c for c in linked if c["session"] in {s["id"] for s in costed}]), 2)
-            if any(c["session"] in {s["id"] for s in costed} for c in linked)
-            else None,
-            "skills_available": skills,
+        "summary": summary,
+        "aspect": {
+            "id": "agent",
+            "name": "Agent use",
+            "description": "How a coding agent works on this project: its session logs on this machine (read only) and the git history.",
+            "score": score,
+            "uncapped_score": score,
+            "grade": grade(score),
+            "band": band(score),
+            "capped_by": [],
+            "adjust": 0,
+            "review_notes": [],
+            "checks": cs,
         },
-        "findings": findings(sessions, commits, skills),
-        "sessions": sessions[::-1],
-        "commits": commits[:60],
+        "sessions": sessions[::-1],  # not shown yet: the data for the trend over time
+        "commits": commits[:200],
     }

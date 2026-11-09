@@ -249,8 +249,6 @@ select:focus,.txt:focus,.inl:focus{outline:2px solid var(--series-1);outline-off
 .add form select{height:32px;max-width:150px}
 @media (max-width:1100px){.ov2{grid-template-columns:1fr}.pbar{flex-wrap:wrap}}
 .calbox{margin:0 0 12px;padding:8px 10px;border-radius:8px;background:var(--fill)}.calbox>.lbl{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600;margin-bottom:3px}
-.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(520px,1fr));gap:12px;margin-top:12px}.fnd .fhead{display:flex;gap:8px;align-items:center;margin-bottom:6px;font-size:14px}
-.fnd.good{border-left:3px solid var(--good)}.fnd.improve{border-left:3px solid var(--warning)}.fnd .kv th{width:120px}
 .rulelnk{color:inherit;text-decoration:none}.rulelnk:hover{color:var(--series-1);text-decoration:underline}
 .lnkchip{text-decoration:none;color:var(--text);cursor:pointer;height:24px;font-size:12px;background:var(--surface)}.lnkchip:hover{border-color:var(--faint)}
 .rchips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
@@ -527,53 +525,22 @@ function renderAssessment() {
   if (state.sub === "overview") overview(); else if (state.sub === "agent") agentView(); else dimension(dims.find((d) => d.id === state.sub));
 }
 
-/* =================== AGENT USE (prototype): session logs + git, explained for business, team lead and developer =================== */
-const AG = { run: null, data: null, who: "All" };
+/* =================== AGENT USE (prototype): rules about how the agent works, laid out like an aspect =================== */
+const AG = { run: null, data: null };
 function agentView() {
   if (AG.run !== CURRENT_RUN) { AG.run = CURRENT_RUN; AG.data = null;
     $("#assess-pane").innerHTML = `<div class="card muted">Reading the agent's session logs and the git history…</div>`;
     api(`/api/agent?run=${encodeURIComponent(CURRENT_RUN)}`).then((d) => { AG.data = d; if (state.sub === "agent") agentView(); })
       .catch((e) => { $("#assess-pane").innerHTML = `<div class="card err">${esc(e.message)}</div>`; });
     return; }
-  if (!AG.data) return;
-  const d = AG.data;
+  const d = AG.data; if (!d) return;
   if (!d.available) { $("#assess-pane").innerHTML = `<div class="card"><h3>Agent use</h3><p style="margin:8px 0 0">${esc(d.reason)}</p></div>`; return; }
-  const s = d.summary, good = d.findings.filter((f) => f.tone === "good").length, bad = d.findings.length - good;
-  const money = (v) => v == null ? "–" : "$" + (v >= 10 ? Math.round(v).toLocaleString() : v.toFixed(2));
-  const day = (iso) => iso ? fdate(iso) : "?";
-  const who = ["All", "Business", "Team lead", "Developer"];
-  const shown = d.findings.filter((f) => AG.who === "All" || f.who.includes(AG.who));
-  const card = (f) => `<div class="card fnd ${f.tone}"><div class="fhead"><span class="rag ${f.tone === "good" ? "pass" : "partial"}"></span><b>${esc(f.title)}</b>
-      <span class="spacer"></span>${f.who.map((w) => `<span class="tag">${esc(w)}</span>`).join("")}</div>
-    <table class="kv"><tbody><tr><th>What we see</th><td>${esc(f.seen)}</td></tr>${f.example ? `<tr><th>Example</th><td>${esc(f.example)}</td></tr>` : ""}
-      <tr><th>Why it matters</th><td>${esc(f.why)}</td></tr><tr><th>${f.tone === "good" ? "Keep" : "What to do"}</th><td>${esc(f.fix)}</td></tr></tbody></table></div>`;
-  const sess = d.sessions.map((x) => `<tr><td>${esc(day(x.start))}<div class="muted cid">${esc(x.id.slice(0, 8))}</div></td>
-      <td class="num">${x.active_hours}<span class="muted"> / ${x.span_hours}</span></td><td class="num">${x.prompts}</td><td class="num">${x.tool_calls}</td>
-      <td class="num">${x.tool_errors} / ${x.denied}</td><td class="num">${Math.round(x.context_per_call / 1000)}k</td><td class="num">${money(x.cost)}</td>
-      <td class="num">${x.commits}</td><td class="num">${money(x.cost_per_commit)}</td><td>${Object.keys(x.skills).map(esc).join(", ") || "–"}</td></tr>`).join("");
-  const sid = Object.fromEntries(d.sessions.map((x) => [x.id, day(x.start)]));
-  const cmts = d.commits.map((c) => `<tr><td>${esc(day(c.date))}</td><td class="cid">${esc(c.sha.slice(0, 8))}</td><td>${esc(c.subject)}</td>
-      <td>${c.merge ? `<span class="muted">merge</span>` : c.agent ? "agent" : `<span class="muted">person</span>`}</td><td class="num">${c.files}</td>
-      <td class="num"><span class="up">+${c.add}</span> <span class="down">−${c.rm}</span></td><td>${c.merge ? "" : c.tests ? "yes" : `<span class="muted">no</span>`}</td>
-      <td class="muted">${c.session ? esc(sid[c.session] || "") : "–"}</td><td class="num">${money(c.cost)}</td></tr>`).join("");
-  $("#assess-pane").innerHTML = `
-    <div class="card"><h3>In short</h3>
-      <p style="margin:8px 0 4px;font-size:14px">From ${esc(day(s.first))} to ${esc(day(s.last))} a coding agent worked <b>${s.active_hours} active hours</b> in ${s.sessions} sessions
-        and co-authored <b>${s.agent_commits} of ${s.commits} commits</b>. Recorded cost <b>${money(s.cost)}</b> for the ${s.cost_sessions} sessions that report it${s.cost_per_commit != null ? `, about <b>${money(s.cost_per_commit)} per commit</b>` : ""}.</p>
-      <p class="muted" style="margin:0;font-size:12px">The cost is what Claude Code records: tokens at API list prices. On a subscription it is not what was paid; it is the value of the work at API prices. Unfinished sessions do not report one yet.</p>
-      <p style="margin:8px 0 0"><b>${good}</b> things go well, <b>${bad}</b> can be better. Each one below says what we see, an example from this project, why it matters and what to do.</p></div>
-    <div class="pbar" style="margin:12px 0 0"><span class="muted" style="font-size:12px">Explain for</span>${who.map((w) => `<button class="icon-btn ${AG.who === w ? "pri" : ""}" data-who="${w}" type="button">${w}</button>`).join("")}</div>
-    <div class="fgrid">${shown.map(card).join("") || `<div class="card muted">Nothing for this audience.</div>`}</div>
-    <div class="card" style="padding:0;margin-top:12px"><div style="padding:12px 14px 4px"><h3>Sessions</h3></div><div style="overflow-x:auto"><table class="cktab tight">
-      <thead><tr><th>Started</th><th class="num" title="Active hours (pauses over 5 minutes left out) / from first to last message">Active / span h</th><th class="num">Prompts</th><th class="num">Tool calls</th>
-        <th class="num" title="Failed / refused tool calls">Failed / refused</th><th class="num" title="Tokens read on every step: the size of the conversation">Context per step</th><th class="num">Cost</th><th class="num">Commits</th><th class="num">Per commit</th><th>Skills used</th></tr></thead>
-      <tbody>${sess}</tbody></table></div></div>
-    <div class="card" style="padding:0;margin-top:12px"><div style="padding:12px 14px 4px"><h3>Commit by commit</h3><span class="muted" style="font-size:12px">latest ${d.commits.length}; a commit belongs to the session that was active when it was made; its cost is the session's cost shared over its commits</span></div>
-      <div style="overflow-x:auto"><table class="cktab tight"><colgroup><col style="width:100px"><col style="width:84px"><col><col style="width:64px"><col style="width:56px"><col style="width:110px"><col style="width:56px"><col style="width:100px"><col style="width:70px"></colgroup>
-      <thead><tr><th>Date</th><th>Commit</th><th>Subject</th><th>By</th><th class="num">Files</th><th class="num">Lines</th><th>Tests</th><th>Session</th><th class="num">≈ Cost</th></tr></thead>
-      <tbody>${cmts}</tbody></table></div></div>
-    <div class="muted" style="font-size:12px;margin:10px 2px">Prototype. Read from <code>${esc(d.logs)}</code> (Claude Code session logs, read only) and <code>git log</code>; prompts and answers are not shown.</div>`;
-  $("#assess-pane").querySelectorAll("[data-who]").forEach((b) => b.onclick = () => { AG.who = b.dataset.who; agentView(); });
+  const s = d.summary, money = (v) => v == null ? "–" : "$" + (v >= 10 ? Math.round(v).toLocaleString() : v.toFixed(2));
+  const line = `${s.first ? fdate(s.first) : "?"} – ${s.last ? fdate(s.last) : "?"}: ${s.active_hours} active hours in ${s.sessions} sessions, `
+    + `${s.agent_commits} of ${s.commits} commits by the agent, ${money(s.cost)} at API prices`
+    + (s.cost_per_commit != null ? ` (about ${money(s.cost_per_commit)} per commit)` : "")
+    + `. On a subscription that is not what was paid. Read from the agent's session logs on this machine and git history.`;
+  dimension(Object.assign({}, d.aspect, { description: line }));
 }
 
 function overview() {

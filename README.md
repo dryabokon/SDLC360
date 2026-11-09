@@ -93,8 +93,9 @@ and a matrix of every check on every reference repository. Click a rule to open 
 <details><summary><b>5 · See how the agent is used</b> (local projects)</summary>
 
 **Agent use**, the last tab, reads the coding agent's session logs on this machine (Claude Code, read only) and the
-git history: hours, commits, cost at API prices, and findings with an example from the project, why it matters and
-what to do, for business, team lead or developer. Prompts and answers are never shown. Prototype.
+git history. It looks like an aspect: rules such as "agent commits are small enough to review" or "sessions end in a
+commit", each with what was found (the real sessions and commits) and what to do. Prompts and answers are never
+shown. Prototype.
 </details>
 
 <details><summary><b>6 · Fix and re-assess</b></summary>

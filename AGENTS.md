@@ -36,7 +36,7 @@ Read `README.md` first, then `docs/architecture.md`.
 - `src/scanner.py`: `scan()` produces raw `auto_checks`; `finalize()` applies checklist, review and the critical gate.
   `finalize()` must stay idempotent: re-rendering a run never re-scans.
 - `src/agent_usage.py`: the Agent use tab (prototype): Claude Code session logs (`~/.claude/projects/`, read only)
-  joined with `git log`; findings with an example, why it matters and what to do. `serve.py` also keeps Claude Code
+  joined with `git log`, judged by rules shaped like scanner checks. `serve.py` also keeps Claude Code
   telemetry posted to `/v1/*` in `.cache/telemetry/`.
 - `src/runner.py`: one scan = one run folder; `src/serve.py`: local web app; `src/template.html`: the whole UI.
 - `tests/unit`, `tests/integration`: the integration fixtures are real throw-away git repos (`tests/conftest.py`).

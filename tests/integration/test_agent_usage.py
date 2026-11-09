@@ -68,12 +68,23 @@ def test_sessions_are_counted_linked_and_explained(make_repo, tmp_path):
     assert not by_subject["Add b by hand"]["agent"] and by_subject["Add b by hand"]["session"] is None
     assert r["summary"]["agent_commits"] == 1 and r["summary"]["cost_per_commit"] == 2.5
 
-    titles = [f["title"] for f in r["findings"]]
-    assert "Agent code goes straight to the main branch" in titles
-    assert "The project's skills are in use" in titles
-    assert all(f["seen"] and f["why"] and f["fix"] and f["who"] for f in r["findings"])
-    tones = [f["tone"] for f in r["findings"]]
-    assert tones == sorted(tones, key=lambda t: t == "good")  # what to improve first
+    a = r["aspect"]
+    by_id = {c["id"]: c for c in a["checks"]}
+    assert set(by_id) == {
+        "agent.attributed",
+        "agent.lands",
+        "agent.small_commits",
+        "agent.tests",
+        "agent.friction",
+        "agent.lean_context",
+        "agent.skills_used",
+    }
+    assert by_id["agent.attributed"]["status"] == "pass" and by_id["agent.skills_used"]["status"] == "pass"
+    assert by_id["agent.tests"]["status"] == "fail" and by_id["agent.tests"]["recommendation"]  # the agent commit changed no test
+    assert by_id["agent.friction"]["status"] == "fail"  # 1 of 2 tool calls failed
+    assert by_id["agent.lands"]["status"] == "na"  # fewer than 10 steps: not a working session
+    assert all(c["method"]["accepted"] and c["method"]["looks_at"] and c["method"]["convention"] for c in a["checks"])
+    assert a["score"] is not None and a["grade"]
 
 
 def test_no_logs_or_github(tmp_path):

@@ -2,9 +2,9 @@
 
 ## Unreleased
 
-- **Agent use** tab (prototype) for local projects: how a coding agent was used, from Claude Code session logs and
-  git history. In short (hours, commits, cost at API prices), findings with an example from the project, why it
-  matters and what to do, filtered for business, team lead or developer, then sessions and commit by commit.
+- **Agent use** tab (prototype) for local projects, laid out like an aspect: seven rules about how the coding agent
+  works (attributed, sessions end in a commit, small commits, tests, little friction, lean context, skills used),
+  judged from Claude Code session logs and git history; Found names the real sessions and commits.
 - The app receives Claude Code telemetry (OTLP/JSON on `/v1/metrics`, `/v1/logs`) into `.cache/telemetry/`.
 
 - **Calibration** in the Overview of the **Criteria** page (or `python sdlc.py calibrate`): the reference set
