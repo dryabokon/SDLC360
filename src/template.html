@@ -186,6 +186,25 @@ svg text{fill:var(--ink-2);font-size:12px}svg .tick{fill:var(--faint);font-size:
 .summary ul{margin:2px 0 0;padding-left:16px}.summary b{color:var(--faint);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em}
 /* dimension page */
 .dimhead{display:flex;align-items:center;gap:18px;flex-direction:row;flex-wrap:wrap}
+.tlgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}.tlwide{grid-column:1/-1}
+.tlsplit{display:grid;grid-template-columns:minmax(0,38fr) minmax(0,62fr);gap:12px;align-items:start}
+.tlleft{padding:0;position:sticky;top:48px;max-height:calc(100vh - 170px);overflow:auto}
+.tlleft thead th{position:sticky;top:0;background:var(--surface);z-index:1}
+.tlleft{overflow-x:hidden}.tlleft .tltab th,.tlleft .tltab td{padding:3px 4px;font-size:12px;line-height:1.3}.tlleft .tltab th{padding-top:6px;padding-bottom:5px;font-size:10px}.tlleft .tltab th{letter-spacing:.03em}
+.tlright{display:flex;flex-direction:column;gap:12px}.tlright .tlcard h3{margin:0 0 4px;cursor:help}
+.tlcurv{font-size:11px;font-weight:650;fill:var(--text)}.tlhi{color:var(--bad-text);font-weight:650}.tllo{color:var(--good-text)}.tltab tr[data-sha]{cursor:default}
+@media (max-width:1000px){.tlsplit{grid-template-columns:1fr}.tlleft{position:static;max-height:none}}.tlverdict{padding:12px 14px}.tlverdict .chead{gap:8px}.tlst{font-size:12px;display:inline-flex;align-items:center;gap:5px;color:var(--ink-2)}
+.tlsw{display:inline-block;width:16px;border-top:2px solid;vertical-align:middle;margin-right:5px}.tlsw.dash{border-top-style:dashed}
+.tltab tr.sel td{background:var(--fill)}.tlhit{cursor:pointer}
+@media (max-width:1200px){.tlgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:760px){.tlgrid{grid-template-columns:1fr}}
+.tlhint{font-size:11.5px;margin-top:2px;min-height:30px}.tlv{margin:6px 0 4px}.tlv b{font-size:20px;font-weight:650}.tlv span{font-size:12px}
+.tlplot{min-width:0;overflow:hidden}.tlplot svg{display:block}.tlcol{cursor:pointer}.tlcol:hover rect:first-child{fill:var(--fill)}
+.tlsubj{max-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tltick{font-size:10.5px;fill:var(--muted)}.tltick.on{fill:var(--text);font-weight:650}.tlnum{font-size:10.5px;fill:var(--ink-2)}
+.tlhead{font-size:14px;margin:6px 0 6px;max-width:980px}.tltab td{white-space:nowrap}.tltab td.tlsubj{white-space:nowrap}
+.tlmark{font-size:11px;border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--ink-2);cursor:help}
+.tlfacts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px 16px;margin-top:8px}
+.tlfacts div{display:flex;flex-direction:column}.tlfacts b{font-size:16px}.tlfacts span{font-size:11.5px}
 .dimhead .num{font-size:34px;font-weight:700;line-height:1;letter-spacing:-.02em}
 .dimhead .num small{font-size:13px;color:var(--muted);font-weight:500}
 .grade{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:9px;border:2px solid;font-weight:750;font-size:20px;flex:none}
@@ -258,7 +277,6 @@ select:focus,.txt:focus,.inl:focus{outline:2px solid var(--series-1);outline-off
 .matrix th.rot{height:150px;vertical-align:bottom;padding:0 0 8px;text-align:center}
 .matrix th.rot span{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;text-transform:none;letter-spacing:0;font-size:11.5px;font-weight:500;color:var(--ink-2)}
 .matrix td.mx{text-align:center;padding:4px 0}.matrix td.mx a{display:inline-grid;place-items:center;width:24px;height:22px;border-radius:5px}.matrix td.mx a:hover{background:var(--line)}
-.matrix td.chg a,.chgk{box-shadow:0 0 0 2px var(--series-2)}.chgk{border-radius:50%}
 .matrix tr.agg td{border-bottom:2px solid var(--line);padding:6px 8px}.matrix td.sc{text-align:center;font-weight:650;font-size:11.5px;padding:4px 0}.matrix tr.agg td.sc{cursor:pointer}
 .matrix tr.grp td{background:var(--fill);font-weight:600;padding:5px 8px}.matrix tr.grp td.sc{padding:5px 0}
 .cktab.tight th{padding:6px 10px 5px}.cktab.tight td{padding:5px 10px;vertical-align:middle}
@@ -518,11 +536,12 @@ function subnavHtml(view, ids, names, sel, right = "") {
 const agentTab = () => MODE === "app" && REPORT && !REPORT.repo.source.startsWith("github.com/");
 function renderAssessment() {
   const dims = REPORT.dimensions, agent = agentTab();
-  if (state.sub !== "overview" && !(agent && state.sub === "agent") && !dims.some((d) => d.id === state.sub)) state.sub = "overview";
+  if (state.sub !== "overview" && !(agent && (state.sub === "agent" || state.sub === "timeline")) && !dims.some((d) => d.id === state.sub)) state.sub = "overview";
   $("#subnav").innerHTML = subnavHtml("assessment", dims.map((d) => d.id), Object.fromEntries(dims.map((d) => [d.id, d.name])), state.sub,
-    agent ? `<span class="spacer"></span><button data-s="agent" class="${state.sub === "agent" ? "on" : ""}" title="How a coding agent was used on this project: from its session logs and git history">Agent use</button>` : "");
+    agent ? `<span class="spacer"></span><button data-s="agent" class="${state.sub === "agent" ? "on" : ""}" title="How Claude Code works on this project: from its session logs on this machine and git history. Other agents are not read.">Claude Code efficiency</button>`
+      + `<button data-s="timeline" class="${state.sub === "timeline" ? "on" : ""}" title="Is a change getting dearer or slower? Cost and time of a typical change, commit by commit">Timeline</button>` : "");
   $("#subnav").querySelectorAll("button[data-s]").forEach((b) => b.onclick = () => go("assessment", b.dataset.s));
-  if (state.sub === "overview") overview(); else if (state.sub === "agent") agentView(); else dimension(dims.find((d) => d.id === state.sub));
+  if (state.sub === "overview") overview(); else if (state.sub === "agent" || state.sub === "timeline") agentView(); else dimension(dims.find((d) => d.id === state.sub));
 }
 
 /* =================== AGENT USE (prototype): rules about how the agent works, laid out like an aspect =================== */
@@ -530,17 +549,84 @@ const AG = { run: null, data: null };
 function agentView() {
   if (AG.run !== CURRENT_RUN) { AG.run = CURRENT_RUN; AG.data = null;
     $("#assess-pane").innerHTML = `<div class="card muted">Reading the agent's session logs and the git history…</div>`;
-    api(`/api/agent?run=${encodeURIComponent(CURRENT_RUN)}`).then((d) => { AG.data = d; if (state.sub === "agent") agentView(); })
+    const run = CURRENT_RUN;  // a late answer for another project must not overwrite this one
+    api(`/api/agent?run=${encodeURIComponent(run)}`).then((d) => { if (AG.run !== run) return; AG.data = d; if (state.sub === "agent" || state.sub === "timeline") agentView(); })
       .catch((e) => { $("#assess-pane").innerHTML = `<div class="card err">${esc(e.message)}</div>`; });
     return; }
   const d = AG.data; if (!d) return;
-  if (!d.available) { $("#assess-pane").innerHTML = `<div class="card"><h3>Agent use</h3><p style="margin:8px 0 0">${esc(d.reason)}</p></div>`; return; }
+  if (!d.available) { $("#assess-pane").innerHTML = `<div class="card"><h3>Claude Code efficiency</h3><p style="margin:8px 0 0">${esc(d.reason)}</p></div>`; return; }
+  if (state.sub === "timeline") return timelineView(d.timeline);
   const s = d.summary, money = (v) => v == null ? "–" : "$" + (v >= 10 ? Math.round(v).toLocaleString() : v.toFixed(2));
   const line = `${s.first ? fdate(s.first) : "?"} – ${s.last ? fdate(s.last) : "?"}: ${s.active_hours} active hours in ${s.sessions} sessions, `
     + `${s.agent_commits} of ${s.commits} commits by the agent, ${money(s.cost)} at API prices`
     + (s.cost_per_commit != null ? ` (about ${money(s.cost_per_commit)} per commit)` : "")
     + `. On a subscription that is not what was paid. Read from the agent's session logs on this machine and git history.`;
   dimension(Object.assign({}, d.aspect, { description: line }));
+}
+
+/* ---------- Timeline (prototype): the agent's commits on the left; on the right two size-adjusted indices, cost and time of a typical change. Python computes them ---------- */
+const TL = { sel: null };
+const tlTok = (v) => v >= 1e9 ? (v / 1e9).toFixed(2) + "B" : v >= 1e6 ? (v / 1e6).toFixed(1) + "M" : v >= 1e3 ? Math.round(v / 1e3) + "k" : String(Math.round(v));
+const tlMoney = (v) => "$" + (v >= 10 ? Math.round(v).toLocaleString() : v.toFixed(2));
+function timelineView(t) {
+  if (!t || !t.series || !t.series.length) { $("#assess-pane").innerHTML = `<div class="card"><h3>Timeline</h3><p style="margin:8px 0 0">No commits by Claude Code with their sessions yet.</p></div>`; return; }
+  $("#assess-pane").innerHTML = `<div class="tlsplit"><div class="card tlleft" id="tl-commits"></div>
+    <div class="tlright">${t.indices.map((ix) => `<div class="card tlcard"><h3 title="${esc(ix.hint + " 100 = the first " + t.window + " commits; each point is the last " + t.window + " commits.")}">${esc(ix.name)}</h3>
+      <div class="tlplot" data-k="${ix.key}"></div></div>`).join("")}</div></div>`;
+  tlCommits(t); tlDraw(t); requestAnimationFrame(() => tlDraw(t));  // again once the page's scrollbar is there
+  window.onresize = () => { if (state.view === "assessment" && state.sub === "timeline") tlDraw(t); };
+}
+function tlDraw(t) {
+  const s = t.series, n = s.length, H = 170, L = 40, B = 16;
+  document.querySelectorAll("#assess-pane .tlplot").forEach((box) => {
+    const k = box.dataset.k, W = Math.max(200, box.clientWidth - 2), pw = W - L - 8;
+    const vals = s.map((p) => p[k]).filter((v) => v != null);
+    box._at = null;
+    if (!vals.length) { box.innerHTML = `<div class="muted" style="font-size:12px;padding:30px 0;text-align:center">Not enough commits yet.</div>`; return; }
+    const lo = Math.min(50, ...vals) * 0.9, hi = Math.max(150, ...vals) * 1.05;
+    const X = (i) => L + (n === 1 ? pw / 2 : i * pw / (n - 1)), Y = (v) => 6 + (H - 12) * (1 - (v - lo) / (hi - lo));
+    const marks = [Math.round(lo / 50) * 50 || 50, 100, Math.floor(hi / 50) * 50].filter((v, i, a) => v > lo && v < hi && a.indexOf(v) === i);
+    const grid = marks.map((v) => `<line x1="${L}" x2="${W}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v === 100 ? "var(--axis)" : "var(--grid)"}"${v === 100 ? ` stroke-dasharray="4 4"` : ""}/>`
+      + `<text x="${L - 6}" y="${Y(v) + 3.5}" text-anchor="end" class="tltick">${v}</text>`).join("");
+    let d = "", pen = false;
+    s.forEach((p, i) => { const v = p[k]; if (v == null) { pen = false; return; } d += `${pen ? "L" : "M"}${X(i).toFixed(1)},${Y(v).toFixed(1)}`; pen = true; });
+    const step = n > 1 ? pw / (n - 1) : pw;
+    const hits = s.map((p, i) => `<rect class="tlhit" data-sha="${p.sha}" x="${X(i) - step / 2}" y="0" width="${step}" height="${H}" fill="transparent"><title>${esc(`commit ${i + 1} · ${p.sha} · ${fdate(p.date)}: ${p[k] == null ? "–" : p[k]} (start = 100)`)}</title></rect>`).join("");
+    const ticks = `<text x="${L}" y="${H + 12}" class="tltick">commit 1</text><text x="${W - 8}" y="${H + 12}" text-anchor="end" class="tltick">commit ${n}</text>`;
+    box.innerHTML = `<svg width="${W}" height="${H + B}">${grid}<path d="${d}" fill="none" stroke="var(--series-1)" stroke-width="2" stroke-linejoin="round"/>`
+      + `<g class="tlcur" visibility="hidden"><line y1="2" y2="${H - 2}" stroke="var(--text)" stroke-width="1.5"/><circle r="4.5" fill="var(--series-1)" stroke="var(--surface)" stroke-width="2"/><text class="tlcurv" y="12"></text></g>${ticks}${hits}</svg>`;
+    box._at = (sha) => {  // the cursor: where a commit of the table is on this chart
+      const g = box.querySelector(".tlcur"), i = s.findIndex((p) => p.sha === sha);
+      if (i < 0) { g.setAttribute("visibility", "hidden"); return; }
+      const x = X(i), v = s[i][k], ln = g.querySelector("line"), c = g.querySelector("circle"), tx = g.querySelector("text");
+      ln.setAttribute("x1", x); ln.setAttribute("x2", x);
+      c.setAttribute("visibility", v == null ? "hidden" : "visible"); if (v != null) { c.setAttribute("cx", x); c.setAttribute("cy", Y(v)); }
+      tx.textContent = v == null ? "–" : String(v); tx.setAttribute("x", x > W - 70 ? x - 6 : x + 6); tx.setAttribute("text-anchor", x > W - 70 ? "end" : "start");
+      g.setAttribute("visibility", "visible");
+    };
+  });
+  tlCursor(TL.sel);
+  document.querySelectorAll("#assess-pane .tlhit").forEach((r) => r.onclick = () => { TL.sel = r.dataset.sha; tlCursor(TL.sel); tlMarkRow(true); });
+}
+function tlCursor(sha) { document.querySelectorAll("#assess-pane .tlplot").forEach((b) => b._at && b._at(sha)); }
+function tlMarkRow(scroll) {
+  document.querySelectorAll("#tl-commits tr[data-sha]").forEach((r) => r.classList.toggle("sel", r.dataset.sha === TL.sel));
+  const row = document.querySelector(`#tl-commits tr[data-sha="${TL.sel}"]`); if (row && scroll) row.scrollIntoView({ block: "center", behavior: "smooth" });
+}
+function tlCommits(t) {
+  const day = (s) => new Date(s).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  const x = (v) => v == null ? "–" : `<span class="${v >= 2 ? "tlhi" : v <= 0.5 ? "tllo" : ""}">${v.toFixed(1)}×</span>`;
+  $("#tl-commits").innerHTML = `<table class="cktab tltab"><colgroup><col style="width:48px"><col><col style="width:42px"><col style="width:46px"><col style="width:46px"><col style="width:36px"><col style="width:44px"><col style="width:44px"></colgroup>
+      <thead><tr><th>Date</th><th>Commit</th><th class="num">Lines</th><th class="num" title="Tokens the agent read for this commit">Tok.</th><th class="num">Cost</th><th class="num" title="Active minutes of the agent">Min</th>
+        <th class="num" title="Cost against a usual change of this size on this project">Cost×</th><th class="num" title="Time against a usual change of this size on this project">Time×</th></tr></thead>
+      <tbody>${t.commits.map((c) => `<tr data-sha="${c.sha}" class="${c.sha === TL.sel ? "sel" : ""}"><td class="muted">${esc(day(c.date))}</td><td class="tlsubj" title="${esc(c.sha + " · " + c.full)}">${esc(c.subject)}</td>
+        <td class="num">${c.lines.toLocaleString()}</td><td class="num">${c.read ? tlTok(c.read) : "–"}</td><td class="num">${c.cost == null ? "–" : tlMoney(c.cost)}</td>
+        <td class="num">${c.minutes == null ? "–" : Math.round(c.minutes)}</td><td class="num">${x(c.cost_x)}</td><td class="num">${x(c.time_x)}</td></tr>`).join("")}</tbody></table>`;
+  document.querySelectorAll("#tl-commits tr[data-sha]").forEach((r) => {
+    r.onmouseenter = () => tlCursor(r.dataset.sha);
+    r.onclick = () => { TL.sel = r.dataset.sha; tlMarkRow(false); tlCursor(TL.sel); };
+  });
+  $("#tl-commits").onmouseleave = () => tlCursor(TL.sel);
 }
 
 function overview() {
@@ -832,7 +918,7 @@ function renderCalibration() {
   const box = $("#cal-box"); if (!box || !CAL.data) return;
   box.innerHTML = `<div class="card">${calSet()}</div>
     <div id="cal-result" style="margin-top:12px">${CAL.busy ? calProgress() : calResult()}</div>`;
-  $("#cal-run").onclick = () => calRun(false); $("#cal-latest").onclick = () => calRun(true);
+  $("#cal-run").onclick = () => calRun(true);
   calBindSet(); if (!CAL.busy) calBindResult();
 }
 function calSet() {
@@ -840,11 +926,10 @@ function calSet() {
   const chips = d.set.map((r, i) => `<span class="rchip" title="${esc([r.why, r.pin ? "pinned at " + shortSha(r.pin) : isGithub(r.target) ? "not pinned yet" : "local folder: read as it is"].filter(Boolean).join(" · "))}">${esc(repoName(r.target))}${isGithub(r.target) ? "" : ` <span class="muted">local</span>`}${r.builtin ? ""
     : `<button type="button" data-rm="${i}" title="Remove from the reference set" aria-label="Remove ${esc(r.target)}" ${CAL.busy ? "disabled" : ""}>×</button>`}</span>`).join("");
   return `<div class="chead" style="margin:0"><h3>Calibration · reference set of ${d.set.length} repositories</h3>
-      <span class="muted" style="font-size:12px">each assessed at a pinned commit with the Standard criteria, so a change between calibrations comes from the rules</span>
-      <span class="spacer"></span><button class="icon-btn" id="cal-latest" type="button" ${CAL.busy || !d.set.length ? "disabled" : ""}
-        title="Assess the latest commits and pin the set there. Verdicts may then change because the projects changed.">Move to latest commits</button>
-      <button class="icon-btn pri" id="cal-run" type="button" ${CAL.busy || !d.set.length ? "disabled" : ""}
-        title="Assess all ${d.set.length} reference repositories at their pinned commits: after changing a rule or adding a repository">${CAL.busy ? "Calibrating…" : "Run calibration"}</button></div>
+      <span class="muted" style="font-size:12px">each assessed with the Standard criteria at its latest commit, which is then pinned</span>
+      <span class="spacer"></span><button class="icon-btn" id="cal-run" type="button" ${CAL.busy || !d.set.length ? "disabled" : ""}
+        title="${CAL.busy ? "Calibrating…" : `Refresh the calibration: assess all ${d.set.length} reference repositories at their latest commits and pin them there`}" aria-label="Refresh the calibration">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg></button></div>
     <div class="rchips">${chips}
       <form id="cal-add" class="caladd"><input id="cal-target" class="txt" placeholder="Add owner/repo or a local git folder" autocomplete="off" spellcheck="false">
         <button class="icon-btn" type="submit" ${CAL.busy ? "disabled" : ""}>Add</button></form></div>
@@ -887,9 +972,8 @@ const shortRepo = (t) => repoName(t).replace(/^[^/]+\//, "");
 const scoreCell = (v) => `<td class="mx sc" style="color:${v == null ? "var(--faint)" : bandColor(bandOf(v))}">${v == null ? "–" : Math.round(v)}</td>`;
 function calResult() {
   const r = CAL.res;
-  if (!r) return `<div class="card"><h3>Result</h3><p style="margin:8px 0 0">No calibration yet. Press <b>Run calibration</b>: it takes a few minutes for ${CAL.data.set.length} repositories.</p></div>`;
+  if (!r) return `<div class="card"><h3>Result</h3><p style="margin:8px 0 0">No calibration yet. Press the refresh button: it takes a few minutes for ${CAL.data.set.length} repositories.</p></div>`;
   const ok = r.repos.filter((x) => x.status === "ok"), failed = r.repos.filter((x) => x.status !== "ok");
-  const changed = new Set(((r.previous || {}).changes || []).map((c) => c.target + "|" + c.id));
   const rows = [...r.checks].sort((a, b) => a.order - b.order);
   const share = (cs) => { const a = cs.reduce((n, c) => n + c.assessed, 0), m = cs.reduce((n, c) => n + c.counts.pass, 0); return a ? `${Math.round(100 * m / a)}%` : "–"; };
   let aspect = null;
@@ -898,9 +982,9 @@ function calResult() {
     if (c.aspect !== aspect) { const its = r.checks.filter((x) => x.aspect === c.aspect);
       head = `<tr class="grp"><td colspan="2">${esc(c.aspect_name || c.aspect)} <span class="muted">· ${its.length} checks</span></td>${ok.map((x) => scoreCell((x.dims || {})[c.aspect])).join("")}<td class="num" title="Share of met verdicts in this aspect">${share(its)}</td></tr>`; }
     aspect = c.aspect;
-    const cells = ok.map((x) => { const v = c.verdicts.find((y) => y.target === x.target), st = v ? v.status : "na", ch = changed.has(x.target + "|" + c.id);
-      return `<td class="mx${ch ? " chg" : ""}"><a href="#" data-run="${esc(x.run_id)}" data-aspect="${esc(c.aspect)}" data-check="${esc(c.id)}"
-        title="${esc(repoName(x.target))}: ${VLABEL[st] || st}${ch ? " (changed since the previous calibration)" : ""}">${rag(st in VERDICT ? st : "na")}</a></td>`; }).join("");
+    const cells = ok.map((x) => { const v = c.verdicts.find((y) => y.target === x.target), st = v ? v.status : "na";
+      return `<td class="mx"><a href="#" data-run="${esc(x.run_id)}" data-aspect="${esc(c.aspect)}" data-check="${esc(c.id)}"
+        title="${esc(repoName(x.target))}: ${VLABEL[st] || st}">${rag(st in VERDICT ? st : "na")}</a></td>`; }).join("");
     return head + `<tr><td class="cid"><a href="#" class="rulelnk" data-rule="${esc(c.id)}" data-asp="${esc(c.aspect)}" title="Open this rule in ${esc(c.aspect_name || c.aspect)}">${esc(c.id)}</a></td>
       <td><a href="#" class="rulelnk" data-rule="${esc(c.id)}" data-asp="${esc(c.aspect)}" title="Open this rule in ${esc(c.aspect_name || c.aspect)}">${esc(c.title)}</a></td>${cells}<td class="num">${c.assessed ? `${c.counts.pass}/${c.assessed}` : "N/A"}</td></tr>`;
   }).join("");

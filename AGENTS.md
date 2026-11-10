@@ -14,7 +14,7 @@ Read `README.md` first, then `docs/architecture.md`.
 
 - run the app: `./start.sh` / `./stop.sh` (http://127.0.0.1:8360/)
 - scan: `python sdlc.py scan <url|owner/repo|path> [--no-history]`
-- calibrate: `python sdlc.py calibrate [--latest]` (as **Run calibration** in the app: pinned commits; writes `runs/calibrations/<id>.json`)
+- calibrate: `python sdlc.py calibrate [--latest]` (the app's refresh button is `--latest`: moves the pins; writes `runs/calibrations/<id>.json`)
 - tests: `.venv/Scripts/python -m pytest --cov` (Linux/macOS: `.venv/bin/...`)
 - lint, format, types: `.venv/Scripts/ruff check .`, `.venv/Scripts/ruff format .`, `.venv/Scripts/mypy`
 - setup: `python -m venv .venv && .venv/Scripts/pip install -r requirements-dev.txt && .venv/Scripts/pre-commit install`
@@ -35,7 +35,7 @@ Read `README.md` first, then `docs/architecture.md`.
   Quotes must be verbatim from `assessment/references/`.
 - `src/scanner.py`: `scan()` produces raw `auto_checks`; `finalize()` applies checklist, review and the critical gate.
   `finalize()` must stay idempotent: re-rendering a run never re-scans.
-- `src/agent_usage.py`: the Agent use tab (prototype): Claude Code session logs (`~/.claude/projects/`, read only)
+- `src/agent_usage.py`: the Claude Code efficiency and Timeline tabs (prototype): Claude Code session logs (`~/.claude/projects/`, read only)
   joined with `git log`, judged by rules shaped like scanner checks. `serve.py` also keeps Claude Code
   telemetry posted to `/v1/*` in `.cache/telemetry/`.
 - `src/runner.py`: one scan = one run folder; `src/serve.py`: local web app; `src/template.html`: the whole UI.
@@ -49,7 +49,7 @@ Read `README.md` first, then `docs/architecture.md`.
 - A changed heuristic needs a test. A fixed false positive gets a regression test in `tests/unit/test_heuristics.py`.
 - Thresholds, scores and ranking are computed in Python. The template only renders them.
 - Scores are shown as verdicts with evidence. Do not add fractional weights to checks that are not in the checklist.
-- Commit without `-q` and end the message with the `Co-Authored-By` trailer: the Agent use tab links sessions to
+- Commit without `-q` and end the message with the `Co-Authored-By` trailer: the Claude Code efficiency tab links sessions to
   commits by them. One finished task, one commit.
 - Never commit `.env`, `runs/*` or `.cache/`. Test secrets are assembled at runtime (`"AKIA" + "..."`).
 - Before finishing: ruff, mypy and pytest are green; README / docs / this file are updated if behaviour changed.

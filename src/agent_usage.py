@@ -12,6 +12,8 @@ price. On a subscription this is not what was paid; it is the value of the work 
 from __future__ import annotations
 
 import json
+import math
+import random
 import re
 import statistics
 import subprocess
@@ -28,6 +30,8 @@ LONG_SESSION_HOURS = 3.0
 TEST_PATH = re.compile(r"(^|/)(tests?|spec|__tests__)/|(^|/)test_[^/]+\.py$|_test\.(py|go)$|\.(test|spec)\.[jt]sx?$")
 AGENT_TRAILER = re.compile(r"^(Co-Authored-By|Agent-Session):.*\b(claude|anthropic|copilot|codex|cursor|gemini|aider|devin)\b", re.I | re.M)
 GENERATED = re.compile(r"(\.lock|lock\.json|\.min\.js|\.svg|\.csv|\.parquet|\.ipynb)$|(^|/)(dist|build|vendor|node_modules)/")
+# lines of source and docs: what it takes to change them is the measure; data files (gt.txt, .onnx, .json) are not
+CODE = re.compile(r"\.(py|pyi|js|jsx|ts|tsx|html|css|sh|bat|ps1|go|rs|cs|cpp|cc|c|h|hpp|java|kt|sql|toml|ya?ml|md)$", re.I)
 _CACHE: dict[tuple[str, float, int], dict] = {}
 
 
@@ -57,7 +61,18 @@ def parse_session(f: Path) -> dict:
     tok = {"input": 0, "output": 0, "cache_read": 0, "cache_write": 0}
     n = {"prompts": 0, "api_calls": 0, "tool_calls": 0, "tool_errors": 0, "denied": 0, "subagents": 0}
     skills: dict[str, int] = {}
+    reads: list[tuple[float, int]] = []  # (time, tokens the request read: input + cache), for each commit's effort
+    at: dict[str, list[float]] = {"prompts": [], "calls": [], "errors": []}  # when each happened, for each commit's share
     cost = None
+    days: dict[str, dict[str, float]] = {}  # per local day, for the timeline: a session can span days
+
+    def day(t: datetime | None, key: str, v: float = 1) -> None:
+        if t:
+            d = days.setdefault(
+                t.astimezone().date().isoformat(), {"hours": 0, "tool_calls": 0, "tool_errors": 0, "denied": 0, "output_tokens": 0, "read_tokens": 0}
+            )
+            d[key] += v
+
     for line in f.open(encoding="utf-8", errors="replace"):
         try:
             e = json.loads(line)
@@ -72,6 +87,7 @@ def parse_session(f: Path) -> dict:
             cost = float(e["totalCostUSD"])
         if e.get("toolDenialKind"):
             n["denied"] += 1
+            day(t, "denied")
         m = e.get("message")
         if not isinstance(m, dict):
             continue
@@ -84,37 +100,57 @@ def parse_session(f: Path) -> dict:
                 n["api_calls"] += 1
                 tok["input"] += u.get("input_tokens") or 0
                 tok["output"] += u.get("output_tokens") or 0
+                day(t, "output_tokens", u.get("output_tokens") or 0)
+                read = (u.get("input_tokens") or 0) + (u.get("cache_read_input_tokens") or 0) + (u.get("cache_creation_input_tokens") or 0)
+                day(t, "read_tokens", read)
+                if t:
+                    reads.append((t.timestamp(), read))
                 tok["cache_read"] += u.get("cache_read_input_tokens") or 0
                 tok["cache_write"] += u.get("cache_creation_input_tokens") or 0
             for b in content if isinstance(content, list) else []:
                 if isinstance(b, dict) and b.get("type") == "tool_use":
                     n["tool_calls"] += 1
+                    day(t, "tool_calls")
+                    if t:
+                        at["calls"].append(t.timestamp())
                     if b.get("name") == "Agent":
                         n["subagents"] += 1
                     if b.get("name") == "Skill":
                         name = str((b.get("input") or {}).get("skill") or "?")
                         skills[name] = skills.get(name, 0) + 1
         elif e.get("type") == "user" and not e.get("isMeta"):
-            if isinstance(content, str):
-                n["prompts"] += 1 if not content.startswith("<") else 0
+            if isinstance(content, str) and not content.startswith("<"):
+                n["prompts"] += 1
+                if t:
+                    at["prompts"].append(t.timestamp())
             for b in content if isinstance(content, list) else []:
                 if isinstance(b, dict) and b.get("type") == "tool_result" and b.get("is_error"):
                     n["tool_errors"] += 1
+                    day(t, "tool_errors")
+                    if t:
+                        at["errors"].append(t.timestamp())
                 elif isinstance(b, dict) and b.get("type") == "text" and not str(b.get("text", "")).startswith("<"):
                     n["prompts"] += 1
+                    if t:
+                        at["prompts"].append(t.timestamp())
     times.sort()
     active = sum((min(b - a, IDLE) for a, b in zip(times, times[1:], strict=False)), timedelta())
+    for a, b in zip(times, times[1:], strict=False):
+        day(b, "hours", min(b - a, IDLE).total_seconds() / 3600)
     context = (tok["input"] + tok["cache_read"] + tok["cache_write"]) / n["api_calls"] if n["api_calls"] else 0
     out = {
         "id": f.stem,
         "start": times[0].isoformat() if times else None,
         "end": times[-1].isoformat() if times else None,
         "active_hours": round(active.total_seconds() / 3600, 2),
+        "by_day": {d: {k: round(v, 3) for k, v in x.items()} for d, x in sorted(days.items())},
         "span_hours": round((times[-1] - times[0]).total_seconds() / 3600, 1) if times else 0,
         "tokens": tok,
         "context_per_call": round(context),
         "cost": round(cost, 2) if cost is not None else None,
         "skills": skills,
+        "reads": sorted(reads),
+        "at": {k: sorted(v) for k, v in at.items()},
         **n,
     }
     _CACHE[key] = out
@@ -133,13 +169,17 @@ def git_commits(repo: Path) -> list[dict]:
     for rec in raw.split("\x1e")[1:]:
         head, _, stat = rec.rpartition("\x1f")
         sha, date, parents, subject, body = head.split("\x1f")[:5]
-        files, add, rm = [], 0, 0
+        files, add, rm, code_add, code_rm, code_paths = [], 0, 0, 0, 0, []
         for ln in stat.strip().splitlines():
             parts = ln.split("\t")
             if len(parts) == 3:
                 files.append(parts[2])
-                add += int(parts[0]) if parts[0].isdigit() else 0
-                rm += int(parts[1]) if parts[1].isdigit() else 0
+                a, r = (int(parts[0]) if parts[0].isdigit() else 0), (int(parts[1]) if parts[1].isdigit() else 0)
+                add, rm = add + a, rm + r
+                if CODE.search(parts[2]) and not GENERATED.search(parts[2]):
+                    code_add, code_rm = code_add + a, code_rm + r
+                    if a:
+                        code_paths.append(parts[2])
         out.append(
             {
                 "sha": sha,
@@ -152,6 +192,9 @@ def git_commits(repo: Path) -> list[dict]:
                 "tests": any(TEST_PATH.search(p) for p in files),
                 "add": add,
                 "rm": rm,
+                "code_add": code_add,
+                "code_lines": code_add + code_rm,
+                "code_paths": code_paths,
             }
         )
     return out
@@ -401,6 +444,143 @@ def checks(sessions: list[dict], commits: list[dict], skills_available: list[str
     return out
 
 
+def _effort(sessions: list[dict], commits: list[dict]) -> None:
+    """Each agent commit's effort since its session's previous commit (or start): tokens read, active minutes, prompts,
+    tool calls and failures. Its cost is its share of the session's reading times the session's cost. What a session
+    does after its last commit goes to no commit.
+    """
+    for s in sessions:
+        mine = sorted((c for c in commits if c.get("session") == s["id"]), key=lambda c: c["date"])
+        reads = s.get("reads", [])
+        total = sum(r for _, r in reads)
+        since = 0.0
+        at = s.get("at", {})
+        for c in mine:
+            t = _ts(c["date"]).timestamp()  # type: ignore[union-attr]
+            mine_reads = [(ts, r) for ts, r in reads if since < ts <= t]
+            c["read"] = sum(r for _, r in mine_reads)
+            times = [ts for ts, _ in mine_reads]  # active time: gaps between the agent's requests, a pause over IDLE cut
+            c["minutes"] = round(sum(min(b - a, IDLE.total_seconds()) for a, b in zip(times, times[1:], strict=False)) / 60, 1)
+            for k in ("prompts", "calls", "errors"):
+                c[k] = sum(1 for ts in at.get(k, []) if since < ts <= t)
+            c["effort_cost"] = round(s["cost"] * c["read"] / total, 2) if s["cost"] is not None and total else None
+            since = t
+
+
+def _short(subject: str) -> str:
+    """The first clause of a commit subject: enough to recognise it in a table."""
+    s = re.split(r"; | - | \(|\. ", subject, maxsplit=1)[0].strip()
+    return s if len(s) <= 70 else s[:67].rstrip() + "…"
+
+
+# The two indices: what a change costs and how long it takes, against a change of the same size on the same project.
+# Effort grows far slower than size (about lines^0.3 on the projects measured), so per-line figures only measure commit
+# size; the index compares each commit with what a change of its size usually takes here (a log-log fit).
+INDICES = [
+    (
+        "cost",
+        "Cost of a typical change",
+        "read",
+        "Tokens and cost at API list prices of a change, against a change of the same size on this project.",
+    ),
+    (
+        "time",
+        "Time of a typical change",
+        "minutes",
+        "Minutes the agent worked on a change (pauses over 5 minutes left out), against a change of the same size here.",
+    ),
+]
+BOOTSTRAP = 1000  # resamples for the 95% range of first window vs last window
+
+
+def _fit(xs: list[float], ys: list[float]) -> tuple[float, float]:
+    """Least squares y = a + b*x."""
+    mx, my = sum(xs) / len(xs), sum(ys) / len(ys)
+    sxx = sum((x - mx) ** 2 for x in xs)
+    b = sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=True)) / sxx if sxx else 0.0
+    return my - b * mx, b
+
+
+def _index(cs: list[dict], key: str, window: int) -> dict | None:
+    """One index over the commits (oldest first): the rolling series rebased so the first window is 100, the ratio of the
+    last window to the first with its 95% range, and the effort of a change of median size then and now."""
+    data = [c for c in cs if c.get(key, 0) > 0 and c["code_lines"] > 0]
+    if len(data) < 2 * window:
+        return None
+    xs, ys = [math.log(c["code_lines"]) for c in data], [math.log(c[key]) for c in data]
+    a, b = _fit(xs, ys)
+    res = {c["sha"]: y - a - b * x for c, x, y in zip(data, xs, ys, strict=True)}
+    r = list(res.values())
+    base = sum(r[:window]) / window
+    rng = random.Random(0)  # the same data always gives the same range
+    boot = sorted(
+        math.exp(sum(rng.choice(r[-window:]) for _ in range(window)) / window - sum(rng.choice(r[:window]) for _ in range(window)) / window)
+        for _ in range(BOOTSTRAP)
+    )
+    ratio = math.exp(sum(r[-window:]) / window - base)
+    lo, hi = boot[int(0.025 * BOOTSTRAP)], boot[int(0.975 * BOOTSTRAP) - 1]
+    size = statistics.median(c["code_lines"] for c in data)
+    typical = math.exp(a + b * math.log(size) + base)
+    series = {}
+    for i in range(window - 1, len(data)):
+        series[data[i]["sha"]] = round(100 * math.exp(sum(r[i - window + 1 : i + 1]) / window - base))
+    return {
+        "ratio": round(ratio, 2),
+        "lo": round(lo, 2),
+        "hi": round(hi, 2),
+        "clear": lo > 1 or hi < 1,  # the 95% range leaves out 'no change'
+        "exponent": round(b, 2),
+        "size": round(size),
+        "first": typical,
+        "last": typical * ratio,
+        "per_commit": {sha: round(math.exp(v), 2) for sha, v in res.items()},  # this commit against a usual one of its size
+        "series": series,
+    }
+
+
+def timeline(sessions: list[dict], commits: list[dict], repo: Path | None = None) -> dict:
+    """Is changing this project getting dearer or slower for the agent? Two size-adjusted indices over its commits.
+
+    Each agent commit since the first session gets its effort (tokens, active minutes, cost share since its session's
+    previous commit). Each index compares a commit with a change of the same size on this project and is drawn over
+    the last `window` commits, 100 = the first window. The template only draws it.
+    """
+    del repo  # history alone is enough now; kept for the caller
+    started = [s for s in sessions if s["start"]]
+    first = min((t for s in started if (t := _ts(s["start"])) is not None), default=None)
+    agent = [c for c in commits if c["agent"] and not c["merge"] and first and (_ts(c["date"]) or first) >= first]
+    _effort(started, agent)
+    measured = [c for c in reversed(agent) if c.get("read") and c["code_lines"]]  # oldest first
+    window = max(5, min(20, len(measured) // 5))
+    costed = [c for c in measured if c.get("effort_cost") is not None]
+    usd_per_token = sum(c["effort_cost"] for c in costed) / max(1, sum(c["read"] for c in costed)) if costed else None
+    indices = []
+    for key, name, field, hint in INDICES:
+        ix = _index(measured, field, window)
+        indices.append({"key": key, "name": name, "hint": hint, "usd_per_token": usd_per_token if key == "cost" else None, **(ix or {})})
+    by_key = {i["key"]: i for i in indices}
+    series = [{"sha": c["sha"][:8], "date": c["date"], **{k: by_key[k].get("series", {}).get(c["sha"]) for k in by_key}} for c in measured]
+    rows = [
+        {
+            "sha": c["sha"][:8],
+            "date": c["date"],
+            "subject": _short(c["subject"]),
+            "full": c["subject"],
+            "lines": c["code_lines"],
+            "read": c.get("read"),
+            "cost": c.get("effort_cost"),
+            "minutes": c.get("minutes"),
+            "cost_x": by_key["cost"].get("per_commit", {}).get(c["sha"]),
+            "time_x": by_key["time"].get("per_commit", {}).get(c["sha"]),
+        }
+        for c in agent
+    ]
+    for i in indices:
+        i.pop("per_commit", None)
+        i.pop("series", None)
+    return {"commits": rows[:300], "series": series, "indices": indices, "window": window, "measured": len(measured)}
+
+
 def report(source: str, root: Path | None = None) -> dict:
     """The agent-use tab of one local project: one aspect, laid out like the others."""
     d = log_dir(source, root)
@@ -439,8 +619,9 @@ def report(source: str, root: Path | None = None) -> dict:
         "summary": summary,
         "aspect": {
             "id": "agent",
-            "name": "Agent use",
-            "description": "How a coding agent works on this project: its session logs on this machine (read only) and the git history.",
+            "name": "Claude Code efficiency",
+            "description": "How Claude Code works on this project: its session logs on this machine (read only) "
+            "and the git history. Other agents are not read.",
             "score": score,
             "uncapped_score": score,
             "grade": grade(score),
@@ -450,6 +631,7 @@ def report(source: str, root: Path | None = None) -> dict:
             "review_notes": [],
             "checks": cs,
         },
-        "sessions": sessions[::-1],  # not shown yet: the data for the trend over time
+        "timeline": timeline(sessions, commits, repo),
+        "sessions": sessions[::-1],
         "commits": commits[:200],
     }

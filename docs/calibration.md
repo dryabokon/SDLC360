@@ -6,7 +6,7 @@ check, either the project really lacks the practice or the rule is wrong. Each r
 
 ## Running a calibration
 
-Open the Overview of the **Criteria** page and press **Run calibration**, or run `python sdlc.py calibrate`. The reference set is
+Open the Overview of the **Criteria** page and press the refresh button, or run `python sdlc.py calibrate`. The reference set is
 `assessment/calibration/reference-set.json` (read-only) plus the repositories added in the app
 (`assessment/calibration/custom.json`). Each repository is assessed at its latest commit with the Standard criteria,
 as a normal run, and the calibration saves one snapshot of every verdict in `runs/calibrations/<id>.json` together
@@ -15,8 +15,9 @@ was recorded and how each check split across the set, and compares the snapshot 
 that changed on the same commit was changed by the scanner; one on a newer commit may have been changed by the project.
 
 GitHub repositories are pinned: a calibration assesses the commits in `assessment/calibration/pins.json`, so two
-calibrations differ only where the rules changed. **Move to latest commits** (`python sdlc.py calibrate --latest`)
-assesses the latest commits and moves the pins there; commit `pins.json` with it. A repository added to the set is
+calibrations differ only where the rules changed. The refresh button in the app (`python sdlc.py calibrate --latest`)
+assesses the latest commits and moves the pins there; commit `pins.json` with it. To recheck a rule change on the
+same commits, run `python sdlc.py calibrate` without `--latest`. A repository added to the set is
 pinned at its first calibration. A local folder is read as it is and cannot be pinned. Calibration runs are opened
 from the matrix and are not listed under the projects.
 
