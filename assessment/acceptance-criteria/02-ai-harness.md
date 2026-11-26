@@ -7,9 +7,11 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** An agent instruction file (`AGENTS.md`, `CLAUDE.md` or Copilot instructions) sits in the project root.
 
+**The habit.** Give the agent a written briefing at the root of the repository: CLAUDE.md or AGENTS.md.
+
 **How we check.** Tracked files with the exact (case-sensitive) name `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursorrules`, `.windsurfrules` anywhere, `.github/copilot-instructions.md`, and files under root `.cursor/rules/`. `CLAUDE.local.md` is personal configuration (see `ai.no_local_leak`) and does not count.
 
-- **Met:** One of those files sits at the repo root or under `.github/`.
+- **Met:** One of those files sits at the repo root or under `.github/`, or `.claude/CLAUDE.md` (Claude Code reads it as the project file).
 - **Partially met:** Only nested ones exist (e.g. `pkg/CLAUDE.md`) or only `.cursor/rules/*` files.
 - **Not met:** None found.
 
@@ -33,7 +35,9 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** The instruction file covers commands, layout, conventions and tests, in 8 to 800 lines.
 
-**How we check.** The main file: `CLAUDE.md`, else `AGENTS.md`, else `.github/copilot-instructions.md`, else the first root/.github instruction file. Symlinks are followed, as are up to 5 `@file.md` import lines. In headings plus the first 20,000 characters it looks for four topics: commands (build/run/install/make/npm/pip/cargo…), testing (`test…`), layout (architect/structure/layout/directory/module), conventions (convention/style/guideline/rule/must/never/always). It also counts lines.
+**The habit.** Tell the agent exactly how to build, test and lint, where things are and what never to do.
+
+**How we check.** The main file: `CLAUDE.md`, else `AGENTS.md`, else `.github/copilot-instructions.md`, else the first root/.github instruction file. Symlinks are followed, as are up to 5 `@file.md` import lines. In headings plus the first 20,000 characters it looks for four topics: commands (written as code, in backticks or a code block: `make`, `npm`, `uv`, `pip`, `python`, `pytest`, `cargo`, `go test`, `docker`, `./script`…; the word "build" in a sentence is not a command), testing (`test…`), layout (architect/structure/layout/directory/module), conventions (convention/style/guideline/rule/must/never/always). It also counts lines.
 
 - **Met:** All four topics are present and the combined text is 8–800 lines.
 - **Partially met:** Everything else between the extremes, e.g. three topics at any size, all four but under 8 or over 800 lines, or one topic in a 25–400-line file.
@@ -60,6 +64,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## ai.instructions_fresh: The instruction file matches the current code (no stale paths).
 
 **Accepted when.** The paths named in the instruction file exist, and the file is kept up to date with the code.
+
+**The habit.** When the code moves, update the agent's briefing in the same change.
 
 **How we check.** In the main file (or the imported file for a ≤3-line wrapper): relative markdown links and backticked paths with an extension or trailing slash. Each must resolve from the file's folder, the repo root, or as a path suffix of any file. Also compares the file's last commit with the latest commit touching source code. Score = 0.6 × share of paths resolving + 0.4 × freshness (1.0 within 30 days, falling to 0 at 365 days behind).
 
@@ -89,6 +95,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** Shared agent settings (`.claude/settings.json`) say what agents may and may not do.
 
+**The habit.** Write down in the repository what the agent may run and what it must never touch.
+
 **How we check.** Root `.claude/settings.json`, parsed as JSON for a non-empty `permissions` key.
 
 - **Met:** The file exists and has a non-empty `permissions` entry.
@@ -117,15 +125,17 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** Agent hooks in `.claude/settings.json` run formatting, linting or tests automatically.
 
-**How we check.** A non-empty `hooks` key in `.claude/settings.json`. Otherwise any file under root `.claude/hooks/` or `.husky/`, or any `.pre-commit-config.yaml` / `lefthook.yml` anywhere.
+**The habit.** Let hooks check the agent's work automatically instead of asking it nicely.
 
-- **Met:** `.claude/settings.json` declares agent hooks.
-- **Partially met:** No agent hooks, but one of those hook files exists (0.6).
-- **Not met:** Neither.
+**How we check.** The commands of the agent hooks in `.claude/settings.json`: a hook is a guardrail when its command formats, lints, tests, scans for secrets or guards (format, lint, ruff, prettier, eslint, mypy, tsc, test, gitleaks, secret, guard, block, protect, deny, validate, pre-commit). Otherwise any file under root `.claude/hooks/` or `.husky/`, or any `.pre-commit-config.yaml` / `lefthook.yml` anywhere.
 
-**What the check cannot see.** What the hooks run is never inspected. Hooks in `settings.local.json` or plugins are not seen. `lefthook.yaml` / `.lefthook.yml` are missed (security reads `.lefthook.yml`).
+- **Met:** An agent hook checks or blocks something.
+- **Partially met:** No such agent hook, but one of those hook files exists (0.6).
+- **Not met:** Neither; agent hooks that only log or count tokens guard nothing (0.2).
 
-**Known flaw.** The checklist says hooks enforce formatting, linting and tests; the code never checks what they do, and a full pre-commit setup can never be Met without Claude agent hooks.
+**What the check cannot see.** Only the command line of a hook is read, not the script it runs: a script named after what it checks counts. Hooks in `settings.local.json` or plugins are not seen. `lefthook.yaml` / `.lefthook.yml` are missed (security reads `.lefthook.yml`).
+
+**Known flaw.** A full pre-commit setup can never be Met without Claude agent hooks.
 
 **Why we expect it.**
 
@@ -145,6 +155,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** Personal agent files (`settings.local.json`, `CLAUDE.local.md`) are not committed.
 
+**The habit.** Keep your personal agent settings out of git.
+
 **How we check.** Tracked files ending in `.claude/settings.local.json` or `CLAUDE.local.md` (case-sensitive, any depth).
 
 - **Met:** None is tracked.
@@ -162,6 +174,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## ai.extensions: Repeated workflows are packaged as skills, subagents or commands.
 
 **Accepted when.** At least 3 skills, subagents or commands package repeated workflows.
+
+**The habit.** If you explain the same task to the agent twice, save it as a skill.
 
 **How we check.** Counts files at any depth under the root folders `.claude/skills/`, `.claude/agents/` (`.md`), `.claude/commands/` (`.md`), `.github/prompts/` (`.md`), `.github/chatmodes/`, `.github/instructions/`, `.github/agents/`, `.cursor/rules/`, `.codex/`, `.claude-plugin/`, `.agents/skills/`, `.agents/agents/`.
 
@@ -189,6 +203,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** A CI workflow runs an AI agent, for example for code review or issue triage.
 
+**The habit.** Let an agent review every change in CI, so a second pair of eyes is always there.
+
 **How we check.** Text of `.github/workflows/*` (not delegated scripts) for `anthropics/claude-code-action`, `claude-code-base-action`, `openai/codex-action`, `coderabbit` or `copilot`, case-insensitive.
 
 - **Met:** Any of those strings appears.
@@ -213,13 +229,16 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 ## ai.scoped_context: Large codebases give agents scoped, per-package context.
 
-**Accepted when.** A large codebase also has instruction files inside its packages, not only at the root.
+**Accepted when.** A large codebase also has instruction files inside its packages, or rules that load only for the
+files they name, not only one file at the root.
 
-**How we check.** Counts non-test source files (excluding `vendor/`, `third_party/`, `docs/`, `examples/`, `.github/`); if over 300, looks for instruction files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursorrules`, `.windsurfrules`, `CLAUDE.local.md`) in any subfolder other than `.github/` and `.cursor/`.
+**The habit.** In a big codebase, give each part its own short rules, loaded only where they apply.
 
-- **Met:** Large repo with at least one nested instruction file.
+**How we check.** Counts non-test source files (excluding `vendor/`, `third_party/`, `docs/`, `examples/`, `.github/`); if over 300, looks for instruction files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursorrules`, `.windsurfrules`, `CLAUDE.local.md`) in any subfolder other than `.github/` and `.cursor/`, and for Claude Code rules (`.claude/rules/**/*.md`) with `paths:` in their frontmatter. A rule without `paths:` loads always, like the root file, and does not count.
+
+- **Met:** Large repo with at least one nested instruction file or path-scoped rule.
 - **Partially met:** never.
-- **Not met:** Large repo with no nested instruction file (0.3).
+- **Not met:** Large repo with neither (0.3).
 - **Not applicable:** 300 or fewer source files.
 
 **What the check cannot see.** A single nested file anywhere (even `docs/CLAUDE.md` or a personal `CLAUDE.local.md`) is Met for a 5,000-file monorepo. Whether packages are actually covered is not checked. Nested `.cursor/rules` folders are ignored.
@@ -241,6 +260,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## ai.mcp: External tools the project relies on are declared as MCP servers.
 
 **Accepted when.** The MCP servers the project relies on are declared in the repository (`.mcp.json` or similar).
+
+**The habit.** Declare the external tools the project needs in .mcp.json, so every teammate's agent has them.
 
 **How we check.** Any `.mcp.json` anywhere, root `.vscode/mcp.json` or `.cursor/mcp.json`.
 

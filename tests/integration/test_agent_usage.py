@@ -27,6 +27,7 @@ def _commit(root, rel, text, msg, when):
 def test_sessions_are_counted_linked_and_explained(make_repo, tmp_path):
     t0 = datetime(2026, 11, 1, 9, 0, tzinfo=UTC)
     root = make_repo({"README.md": "# x\n", ".claude/skills/ship/SKILL.md": "---\nname: ship\n---\n"}, name="proj")
+    subprocess.run(["git", "config", "user.email", "t@example.invalid"], cwd=root, check=True)  # this working copy commits as t
     _commit(root, "app/a.py", "a = 1\n", "Add a\n\nCo-Authored-By: Claude Opus <noreply@anthropic.com>", t0 + timedelta(minutes=20))
     _commit(root, "app/b.py", "b = 1\n", "Add b by hand", t0 + timedelta(days=3))
 
@@ -78,6 +79,9 @@ def test_sessions_are_counted_linked_and_explained(make_repo, tmp_path):
         "agent.friction",
         "agent.lean_context",
         "agent.skills_used",
+        "agent.cost_in_work",
+        "agent.cost_reread",
+        "agent.cost_no_commit",
     }
     assert by_id["agent.attributed"]["status"] == "pass" and by_id["agent.skills_used"]["status"] == "pass"
     assert by_id["agent.tests"]["status"] == "fail" and by_id["agent.tests"]["recommendation"]  # the agent commit changed no test
@@ -114,3 +118,36 @@ def test_telemetry_is_received_and_kept(tmp_path, monkeypatch):
     finally:
         httpd.shutdown()
         httpd.server_close()
+
+
+def test_a_colleagues_commit_is_not_mine(make_repo, tmp_path, monkeypatch):
+    """The sessions on a machine are one person's: a colleague's commit made during them is not linked to them."""
+    monkeypatch.delenv("SDLC360_AUTHOR", raising=False)
+    t0 = datetime(2026, 11, 1, 9, 0, tzinfo=UTC)
+    root = make_repo({"README.md": "# x\n"}, name="team")
+    subprocess.run(["git", "config", "user.email", "t@example.invalid"], cwd=root, check=True)
+    _commit(root, "a.py", "a = 1\n", "Mine\n\nCo-Authored-By: Claude <noreply@anthropic.com>", t0 + timedelta(minutes=10))
+    when = (t0 + timedelta(minutes=15)).isoformat()
+    (root / "b.py").write_text("b = 1\n", encoding="utf-8")
+    subprocess.run(["git", "add", "-A"], cwd=root, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "-c", "user.name=c", "-c", "user.email=colleague@example.invalid", "-c", "commit.gpgsign=false", "commit", "-q", "-m", "Theirs"],
+        cwd=root,
+        check=True,
+        capture_output=True,
+        env={**__import__("os").environ, "GIT_AUTHOR_DATE": when, "GIT_COMMITTER_DATE": when},
+    )
+    logs = tmp_path / "logs" / agent_usage.re.sub(r"[^A-Za-z0-9]", "-", str(root))
+    logs.mkdir(parents=True)
+    use = {"input_tokens": 10, "output_tokens": 100, "cache_read_input_tokens": 1000, "cache_creation_input_tokens": 50}
+    steps = [_entry("assistant", t0 + timedelta(minutes=i), requestId=f"r{i}", message={"usage": use, "content": []}) for i in range(1, 12)]
+    lines = [_entry("user", t0, message={"content": "go"}), *steps, json.dumps({"type": "cost-state", "totalCostUSD": 1.0})]
+    (logs / "s1.jsonl").write_text("\n".join(lines), encoding="utf-8")
+
+    r = agent_usage.report(str(root), tmp_path / "logs")
+    assert r["summary"]["author"] == "t@example.invalid"
+    assert [c["subject"] for c in r["commits"]] == ["Mine"]  # neither the colleague's commit nor the fixture's
+    assert r["sessions"][0]["commits"] == 1
+
+    monkeypatch.setenv("SDLC360_AUTHOR", "all")  # everyone's, as before
+    assert {c["subject"] for c in agent_usage.report(str(root), tmp_path / "logs")["commits"]} >= {"Mine", "Theirs"}

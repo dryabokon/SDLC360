@@ -6,6 +6,8 @@ import json
 from html import escape
 from pathlib import Path
 
+from . import hosting
+
 TEMPLATE = Path(__file__).with_name("template.html")
 
 
@@ -22,4 +24,7 @@ def render_html(report: dict) -> str:
 
 
 def render_app() -> str:
-    return _template().replace("__TITLE__", "SDLC 360°").replace('/*__MODE__*/"static"', '"app"')
+    page = _template().replace("__TITLE__", "SDLC 360°").replace('/*__MODE__*/"static"', '"app"')
+    if not hosting.cloud():
+        return page
+    return page.replace("/*__HOSTED__*/false", "true").replace("/*__GIT_HOSTS__*/[]", json.dumps(list(hosting.git_hosts())))

@@ -6,6 +6,7 @@ import re
 
 from ..model import Checks, Dimension, short
 from ..repo import Repo
+from ._util import on
 
 # High-confidence token formats. Values are never written to reports - only file:line and a masked prefix.
 SECRET_PATTERNS = {
@@ -44,7 +45,7 @@ SENSITIVE_FILES = [
     "*.env",
 ]
 SAFE_ENV = re.compile(r"(?i)\.(example|sample|template|dist|defaults?)$|example|\.env\.test$")
-SEC_TOOLS = r"codeql|gitleaks|trufflehog|detect-secrets|trivy|snyk|semgrep|bandit|pip-audit|npm audit|osv-scanner|dependency-review|grype|zizmor|checkov|tfsec|safety check|govulncheck|cargo audit|scorecard"
+SEC_TOOLS = r"sast\.gitlab-ci|secret-detection|dependency-scanning|codeql|gitleaks|trufflehog|detect-secrets|trivy|snyk|semgrep|bandit|pip-audit|npm audit|osv-scanner|dependency-review|grype|zizmor|checkov|tfsec|safety check|govulncheck|cargo audit|scorecard"
 
 
 def scan_secrets(repo: Repo) -> list[dict]:
@@ -94,8 +95,9 @@ def assess(repo: Repo):
             for x in findings[:10]
         ]
         or ["no token patterns found"],
-        "Rotate the exposed credentials immediately, purge them from history (git filter-repo / BFG), "
-        "and load secrets from env vars or a secret manager.",
+        "Treat each one below as leaked: revoke it and issue a new one today, remove it from the history (git filter-repo), "
+        "and read secrets from environment variables or a secret store.",
+        todo=[f"{x['file']}:{x['line']} ({x['kind']})" for x in findings if not x["in_test"]][:5],
     )
 
     sens = [
@@ -111,7 +113,8 @@ def assess(repo: Repo):
         4,
         1.0 if not sens else 0.0,
         [f"committed: {short(sens)}"] if sens else ["none committed"],
-        "Remove the files from the repo, rotate anything inside them, and add the patterns to .gitignore.",
+        "Remove these files from git (`git rm --cached`), replace any secret they held, and add their patterns to .gitignore.",
+        todo=sens[:5],
     )
 
     gi = "\n".join(repo.read(f) for f in repo.find(".gitignore"))
@@ -123,7 +126,12 @@ def assess(repo: Repo):
         2,
         sum(wanted[k][1] for k in got) if gi else 0.0,
         [f"covers: {', '.join(got) or 'nothing relevant'}"] if gi else ["no .gitignore"],
-        "Add `.env`, `.env.*` (with `!.env.example`), `*.pem`, `*.key`, `*.local.*` to .gitignore.",
+        "Add these lines to .gitignore: "
+        + ", ".join(
+            [s for k, s in ((".env", "`.env`, `.env.*` and `!.env.example`"), ("keys/certs", "`*.pem`, `*.key`, `*.p12`")) if k not in got]
+            or ["`.env`, `.env.*`, `!.env.example`, `*.pem`, `*.key`"]
+        )
+        + ".",
     )
 
     uses_env = bool(
@@ -160,7 +168,11 @@ def assess(repo: Repo):
         2,
         bool(dep),
         short(dep),
-        "Enable Dependabot (`.github/dependabot.yml`) for every package ecosystem plus github-actions.",
+        on(
+            repo,
+            "Add `.github/dependabot.yml` covering every package manager here and github-actions.",
+            "Add a `renovate.json` and run Renovate as a scheduled pipeline: it opens a merge request for each update.",
+        ),
     )
 
     tools = sorted(set(m.lower() for m in re.findall(SEC_TOOLS, repo.ci_text, re.I)))
@@ -170,7 +182,12 @@ def assess(repo: Repo):
         3,
         min(1.0, len(tools) / 2),
         [f"tools in workflows: {', '.join(tools) or 'none'}"],
-        "Add CodeQL (SAST), a dependency audit (dependency-review / pip-audit / npm audit) and gitleaks to CI.",
+        on(
+            repo,
+            "Add to CI: CodeQL for the code, dependency-review or pip-audit / npm audit for the dependencies, gitleaks for secrets.",
+            "In .gitlab-ci.yml include GitLab's `Security/SAST.gitlab-ci.yml` and `Security/Secret-Detection.gitlab-ci.yml` "
+            "templates, and add a dependency audit job (pip-audit / npm audit).",
+        ),
     )
 
     pc = "\n".join(repo.read(f) for f in repo.find(".pre-commit-config.yaml", ".husky/*", "lefthook.yml", ".lefthook.yml"))
@@ -199,14 +216,19 @@ def assess(repo: Repo):
     else:
         c.add("sec.workflow_permissions", "Least-privilege workflow tokens (`permissions:` set)", 1.5, None, "no workflows")
 
-    owners = repo.find("CODEOWNERS", ".github/CODEOWNERS", "docs/CODEOWNERS")
+    owners = repo.find("CODEOWNERS", ".github/CODEOWNERS", "docs/CODEOWNERS", ".gitlab/CODEOWNERS")
     c.add(
         "sec.codeowners",
         "CODEOWNERS for review ownership",
         0.5,
         bool(owners),
         short(owners),
-        "Add .github/CODEOWNERS so security-sensitive paths require an owner's review.",
+        on(
+            repo,
+            "Add .github/CODEOWNERS naming an owner for the sensitive paths, and require their review in branch protection.",
+            "Add CODEOWNERS (at the root or in .gitlab/) naming an owner for the sensitive paths; where your GitLab plan has it, "
+            "require code owner approval on the protected main branch.",
+        ),
     )
     return c.items
 

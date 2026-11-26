@@ -28,6 +28,20 @@ sentence in view, because it is edited there), in two parts: **How we check** (t
 known flaw) and **Why it matters** (each quote, with the card of its reference). "Partially met" is shown in the
 verdict only when that is the verdict; "Not met" and "Not applicable" stay in the file for developers.
 
+## What to do
+
+Every verdict ends with **What to do**, in the same shape for every check, the Claude Code efficiency ones included:
+
+It always starts with what to do, in plain text (no bold):
+
+- **Partially met / Not met:** the habit, then one step for this project that says how many are left and of what
+  ("Add the 3 missing topics to the README: …"; it names the files of the platform the project lives on, GitHub or
+  GitLab, and the tools of its language), then up to five items to fix that Found does not list already.
+- **Waiting for another check:** the habit, then "Do this first:" and a link to that check (`scanner.PREREQUISITE`).
+- **Met:** the habit, and "✓ Done" after it, in green.
+
+The habit is one plain sentence in each block, like "wash your hands": `**The habit.**` Tests keep it short.
+
 ## Acceptance criteria
 
 One block per capability. The heading repeats the capability word for word (a test keeps the two in step).
@@ -36,6 +50,8 @@ One block per capability. The heading repeats the capability word for word (a te
 ## sec.no_secrets: No secrets are committed.
 
 **Accepted when.** No passwords, tokens or API keys are written in the tracked files.
+
+**The habit.** Never put a secret in the code: read it from the environment or a secret store.
 
 **How we check.** What the scanner looks at, in plain words.
 

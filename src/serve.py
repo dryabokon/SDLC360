@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import os
@@ -12,11 +13,12 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from . import agent_usage, calibration, profiles
+from . import agent_usage, calibration, hosting, profiles
 from .acceptance import criteria, method_for, reference_cards
 from .dimensions import DIMENSIONS
+from .hosting import is_remote
 from .render import render_app
-from .repo import check_target
+from .repo import check_target, resolve_target
 from .runner import DEFAULT_CACHE, DEFAULT_RUNS, PROJECT_ROOT, RUN_ID_RE, list_projects, rerender, run_scan
 from .scanner import finalize
 
@@ -101,7 +103,7 @@ def browse(path: str | None, runs_dir: Path) -> dict:
         recent = []
         for proj in list_projects(runs_dir):
             src = Path(proj["source"])
-            if not proj["source"].startswith("github.com/") and src.parent.is_dir() and str(src.parent) not in recent:
+            if not is_remote(proj["source"]) and src.parent.is_dir() and str(src.parent) not in recent:
                 recent.append(str(src.parent))
         return {"path": None, "parent": None, "git": False, "dirs": roots, "recent": [entry(Path(r)) for r in recent[:6]]}
     p = Path(path).expanduser()
@@ -154,6 +156,19 @@ def local_request(host: str | None, origin: str | None) -> bool:
     return True
 
 
+# Hosted (hosting.cloud()): what reads or stops this machine is not served.
+LOCAL_ONLY = {"/api/fs", "/api/shutdown", "/v1/metrics", "/v1/logs", "/v1/traces"}
+MAX_BODY = 64 << 20  # the numbers of a few thousand sessions fit in a few MB
+IAP_USER = "X-Goog-Authenticated-User-Email"  # set by Identity-Aware Proxy on every request it lets through
+
+
+def hosted_request(host: str | None, origin: str | None, user: str | None) -> bool:
+    """Behind IAP: a signed-in user, and no cross-site requests (a foreign Origin) on top of IAP's own cookie check."""
+    if not user:
+        return False
+    return not origin or (urlparse(origin).netloc or "").lower() == (host or "").lower()
+
+
 def make_handler(runs_dir: Path, cache_dir: Path):
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, fmt, *args):  # route to logging, quieter
@@ -170,7 +185,22 @@ def make_handler(runs_dir: Path, cache_dir: Path):
         def _json(self, obj, code: int = 200) -> None:
             self._send(code, json.dumps(obj, ensure_ascii=False).encode("utf-8"), "application/json; charset=utf-8")
 
+        def _drain(self) -> None:
+            """Read a refused request's body (up to 1 MB): closing with unread data resets the connection on some systems."""
+            with contextlib.suppress(ValueError, OSError):
+                self.rfile.read(min(int(self.headers.get("Content-Length", 0) or 0), 1 << 20))
+
         def _guard(self) -> bool:
+            if hosting.cloud():
+                if urlparse(self.path).path.rstrip("/") in LOCAL_ONLY:
+                    self._drain()
+                    self._json({"error": "not found"}, 404)
+                    return False
+                if hosted_request(self.headers.get("Host"), self.headers.get("Origin"), self.headers.get(IAP_USER)):
+                    return True
+                self._drain()
+                self._json({"error": "forbidden: sign in through the Identity-Aware Proxy"}, 403)
+                return False
             if local_request(self.headers.get("Host"), self.headers.get("Origin")):
                 return True
             self._json({"error": "forbidden: local requests only"}, 403)
@@ -204,12 +234,19 @@ def make_handler(runs_dir: Path, cache_dir: Path):
                         ),
                     }
                 )
-            if path == "/api/agent":  # how a coding agent was used on the open local project
+            if path == "/api/agent":  # how a coding agent was used on the open project
                 run = parse_qs(urlparse(self.path).query).get("run", [""])[0]
                 f = runs_dir / run / "report.json"
                 if not RUN_ID_RE.match(run) or not f.is_file():
                     return self._json({"error": "run not found"}, 404)
-                return self._json(agent_usage.report(json.loads(f.read_text(encoding="utf-8"))["repo"]["source"]))
+                kept = agent_usage.stored(runs_dir / run)  # sessions sent by a browser or attached by the maintainers
+                if kept:
+                    return self._json(kept)
+                rep = json.loads(f.read_text(encoding="utf-8"))
+                source = rep["repo"]["source"]
+                if hosting.cloud() and not is_remote(source):  # never the logs of the server itself
+                    return self._json({"available": False, "reason": "Not available for this project."})
+                return self._json(agent_usage.report(source, skill_facts=rep.get("skill_facts")))
             parts = path.split("/")
             if len(parts) == 4 and parts[1:3] == ["api", "calibration"]:
                 try:
@@ -232,6 +269,32 @@ def make_handler(runs_dir: Path, cache_dir: Path):
                 return self._json(JOBS[parts[3]])
             self._json({"error": "not found"}, 404)
 
+        def _attach_sessions(self, run: Path, sessions: object) -> None:
+            """The numbers of the Claude Code sessions a browser read from its own disk, kept with the run (no text)."""
+            f = run / "report.json"
+            if not f.is_file():
+                return self._json({"error": "run not found"}, 404)
+            source = json.loads(f.read_text(encoding="utf-8"))["repo"]["source"]
+            if not is_remote(source):
+                return self._json({"error": "Sessions are added to a repository assessed by its URL."}, 400)
+            prev = run / agent_usage.SESSIONS_FILE
+            if prev.is_file() and json.loads(prev.read_text(encoding="utf-8")).get("origin") == "seed":
+                return self._json({"error": "This demo shows the sessions of its authors. Assess the repository again to add yours."}, 409)
+            clean = agent_usage.clean_sessions(sessions)  # ValueError: 400 by the caller
+            if not any(s["api_calls"] for s in clean):
+                return self._json({"error": "No Claude Code sessions in that folder: pick the folder of your project under .claude/projects."}, 400)
+            if not SCAN_LOCK.acquire(blocking=False):
+                return self._json({"error": "A scan is running - try again in a minute."}, 409)
+            try:
+                repo, _ = resolve_target(hosting.target_of(source), cache_dir)
+                agent_usage.attach(run, clean, repo, "upload")
+            except RuntimeError as e:
+                log.exception("attach sessions")
+                return self._json({"error": f"Could not read the repository history: {str(e)[:200]}"}, 502)
+            finally:
+                SCAN_LOCK.release()
+            return self._json(agent_usage.stored(run))
+
         def do_POST(self) -> None:
             if not self._guard():
                 return
@@ -247,7 +310,10 @@ def make_handler(runs_dir: Path, cache_dir: Path):
                     fh.write(raw.replace(b"\n", b" ") + b"\n")
                 return self._json({})
             try:
-                body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0) or 0)) or b"{}")
+                size = int(self.headers.get("Content-Length", 0) or 0)
+                if size > MAX_BODY:
+                    return self._json({"error": "request too large"}, 413)
+                body = json.loads(self.rfile.read(size) or b"{}")
             except ValueError:
                 return self._json({"error": "bad request"}, 400)
             if not isinstance(body, dict):
@@ -271,6 +337,8 @@ def make_handler(runs_dir: Path, cache_dir: Path):
                 if len(parts) == 5 and parts[1:3] == ["api", "profiles"] and parts[4] == "delete":
                     profiles.delete(parts[3])
                     return self._json({"deleted": parts[3]})
+                if len(parts) == 5 and parts[1:3] == ["api", "runs"] and parts[4] == "agent" and RUN_ID_RE.match(parts[3]):
+                    return self._attach_sessions(runs_dir / parts[3], body.get("sessions"))
                 if len(parts) == 5 and parts[1:3] == ["api", "runs"] and parts[4] == "apply" and RUN_ID_RE.match(parts[3]):
                     run = runs_dir / parts[3]
                     if not (run / "report.json").is_file():
@@ -303,8 +371,11 @@ def make_handler(runs_dir: Path, cache_dir: Path):
 
 def serve(port: int = 8360, runs_dir: Path = DEFAULT_RUNS, cache_dir: Path = DEFAULT_CACHE, open_browser: bool = False) -> None:
     runs_dir.mkdir(parents=True, exist_ok=True)
-    httpd = ThreadingHTTPServer(("127.0.0.1", port), make_handler(runs_dir, cache_dir))
-    url = f"http://127.0.0.1:{port}/"
+    host = "127.0.0.1"
+    if hosting.cloud():  # Cloud Run: all interfaces, on the port it gives; IAP in front does the sign-in
+        host, port = "0.0.0.0", int(os.environ.get("PORT", port))
+    httpd = ThreadingHTTPServer((host, port), make_handler(runs_dir, cache_dir))
+    url = f"http://{host}:{port}/"
     log.info("SDLC 360 at %s  (runs: %s)", url, runs_dir)
     if open_browser:
         import webbrowser

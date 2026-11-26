@@ -10,6 +10,8 @@ from datetime import UTC, datetime
 from functools import cached_property
 from pathlib import Path, PurePosixPath
 
+from . import hosting
+
 SKIP_DIRS = {
     ".git",
     "node_modules",
@@ -105,8 +107,24 @@ SOURCE_EXT = {
 GITHUB_RE = re.compile(r"^(?:https?://github\.com/|git@github\.com:)?([\w.-]+)/([\w.-]+?)(?:\.git)?/?$")
 
 
-def run_git(cwd: Path, *args: str, check: bool = True) -> str:
-    res = subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace")
+def hosted_match(target: str) -> tuple[str, str] | None:
+    """(host, group/.../repo) for https://<host>/<group>/.../<repo> on one of hosting.git_hosts(), else None."""
+    m = re.match(r"^(?:https?://)?([\w.-]+)/((?:[\w.-]+/)+[\w.-]+?)(?:\.git)?/?$", target)
+    if m and m.group(1).lower() in hosting.git_hosts() and ".." not in m.group(2):
+        return m.group(1).lower(), m.group(2)
+    return None
+
+
+def run_git(cwd: Path, *args: str, check: bool = True, env: dict[str, str] | None = None) -> str:
+    res = subprocess.run(
+        ["git", "-c", "core.longpaths=true", *args],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        env={**os.environ, **env} if env else None,
+    )
     if check and res.returncode != 0:
         raise RuntimeError(f"git {' '.join(args)} failed: {res.stderr.strip()}")
     return res.stdout
@@ -117,6 +135,14 @@ def check_target(target: str) -> dict:
     target = (target or "").strip().strip('"')
     if not target:
         raise ValueError("Enter a GitHub URL, owner/repo, or the path of a local git folder.")
+    hosted = hosted_match(target)
+    if hosted:
+        return {"kind": "hosted", "display": hosted[1]}
+    if hosting.cloud():  # one server for many people: its own disk is never a target
+        m = GITHUB_RE.match(target)
+        if m and not re.match(r"^[A-Za-z]:", target):
+            return {"kind": "github", "display": f"{m.group(1)}/{m.group(2)}"}
+        raise ValueError(f"Use a repository URL: https://github.com/owner/repo, owner/repo or https://{hosting.git_hosts()[0]}/group/repo.")
     p = Path(target).expanduser()
     if p.exists():
         if not p.is_dir():
@@ -133,9 +159,37 @@ def check_target(target: str) -> dict:
     raise ValueError("Not recognised. Use https://github.com/owner/repo, owner/repo, or an existing local git folder.")
 
 
+def refresh_clone(dest: Path, ref: str | None = None, env: dict | None = None) -> None:
+    """Move a cached clone to `ref`, or to the newest commit of the remote's default branch.
+
+    `git fetch origin` alone writes every branch to FETCH_HEAD; on a detached clone none is marked for merge and
+    `checkout FETCH_HEAD` took the first branch by name (an old release branch of rich from 2022).
+    """
+    if ref:
+        run_git(dest, "fetch", "--quiet", "origin", env=env)
+        run_git(dest, "checkout", "--quiet", ref)
+    else:
+        run_git(dest, "fetch", "--quiet", "origin", "HEAD", env=env)  # the default branch, whatever it is called
+        run_git(dest, "checkout", "--quiet", "--detach", "FETCH_HEAD")
+
+
 def resolve_target(target: str, cache_dir: Path, ref: str | None = None, refresh: bool = False) -> tuple[Path, str]:
     """Return (local_path, display_source). Clones GitHub repos into cache_dir (blobless, full history)."""
     target = target.strip().strip('"')
+    hosted = hosted_match(target)
+    if hosted:
+        host, path = hosted
+        env = hosting.git_auth_env(host)
+        dest = cache_dir / f"{host}__{path.replace('/', '__')}"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        if dest.exists() and (dest / ".git").exists():
+            if refresh or ref:
+                refresh_clone(dest, ref, env)
+        else:
+            run_git(cache_dir, "clone", "--quiet", "--filter=blob:none", f"https://{host}/{path}.git", dest.name, env=env)
+            if ref:
+                run_git(dest, "checkout", "--quiet", ref)
+        return dest, f"{host}/{path}"
     if check_target(target)["kind"] == "local":
         top = Path(run_git(Path(target).expanduser(), "rev-parse", "--show-toplevel").strip()).resolve()
         return top, str(top)
@@ -148,8 +202,7 @@ def resolve_target(target: str, cache_dir: Path, ref: str | None = None, refresh
     cache_dir.mkdir(parents=True, exist_ok=True)
     if dest.exists() and (dest / ".git").exists():
         if refresh or ref:
-            run_git(dest, "fetch", "--quiet", "origin")
-            run_git(dest, "checkout", "--quiet", ref or "FETCH_HEAD")
+            refresh_clone(dest, ref)
     else:
         run_git(cache_dir, "clone", "--quiet", "--filter=blob:none", url, dest.name)
         if ref:
@@ -340,7 +393,7 @@ class Repo:
     def ci_text(self) -> str:
         """Workflow YAML plus the task runners / scripts it delegates to (scripts/test, make test, nox, tox, npm run …),
         so `run: scripts/test` counts as running pytest."""
-        wf = self.workflow_text
+        wf = "\n".join(x for x in (self.workflow_text, self.read(".gitlab-ci.yml")) if x)
         if not wf:
             return ""
         extra = []

@@ -107,6 +107,22 @@ def test_personal_claude_local_md_is_not_project_instructions(make_repo):
     assert checks["ai.instructions"] == 0.0
 
 
+def test_path_scoped_claude_rules_are_scoped_context(make_repo):
+    """`.claude/rules/` with `paths:` is the way the acceptance text quotes: it must count, a rule without it must not."""
+    from src.dimensions.harness import assess
+
+    big = {f"pkg{i // 50}/m{i}.py": "x = 1\n" for i in range(310)} | {"CLAUDE.md": "# x"}
+    scoped = '---\npaths:\n  - "pkg0/**/*.py"\n---\nUse the pkg0 logger.\n'
+    always = "---\ndescription: style\n---\nNo prints.\n"
+
+    def score(files, name):
+        return {c.id: c.score for c in assess(Repo(make_repo(big | files, name=name)))}["ai.scoped_context"]
+
+    assert score({".claude/rules/pkg0.md": scoped}, "scoped") == 1.0
+    assert score({".claude/rules/style.md": always}, "always") == 0.3  # loads always: not scoped
+    assert score({}, "none") == 0.3
+
+
 def _commits(root, messages: list[tuple[str, int]]) -> None:
     """Add commits to a fixture repo: (message, number of files the commit touches)."""
     from tests.conftest import _git
@@ -159,3 +175,72 @@ def test_ai_policy_ignores_readmes_of_nested_folders(make_repo):
 
     root = make_repo({"README.md": "# Tool\n", "assessment/references/x/README.md": "# Effective context engineering for AI agents\n"})
     assert {c.id: c for c in assess(Repo(root))}["rev.ai_policy"].score == 0.0
+
+
+# ---- found by a blind review of a client data-migration repository (2026-11-11) ----
+
+
+def _ids(module, root):
+    return {c.id: c for c in module.assess(Repo(root))}
+
+
+def test_a_path_into_a_dot_folder_is_not_broken(make_repo):
+    root = make_repo({".claude/CLAUDE.md": "See `.cursor/mcp.json` and [rules](.github/x.md).\n", ".cursor/mcp.json": "{}", ".github/x.md": ""})
+    assert broken_refs(Repo(root), ".claude/CLAUDE.md") == (2, [])
+
+
+def test_a_generated_design_md_deep_in_the_tree_is_not_the_architecture_doc(make_repo):
+    from src.dimensions import architecture
+
+    deep = make_repo({"work/products/a/spec/design.md": "# design", "app.py": ""}, name="deep")
+    assert _ids(architecture, deep)["arch.doc"].score == 0.0
+    top = make_repo({"docs/architecture.md": "# arch", "app.py": ""}, name="top")
+    assert _ids(architecture, top)["arch.doc"].score == 1.0
+
+
+def test_build_commands_must_be_written_as_commands(make_repo):
+    from src.dimensions import harness
+
+    prose = "# Guide\n\nThe build phase produces artifacts. Always test the output; never skip a rule.\n" + "More text.\n" * 30
+    c = _ids(harness, make_repo({"CLAUDE.md": prose}, name="prose"))["ai.instructions_quality"]
+    assert "commands" not in c.evidence[1]
+    c = _ids(harness, make_repo({"CLAUDE.md": prose + "\nRun `make test` before a commit.\n"}, name="cmd"))["ai.instructions_quality"]
+    assert "commands" in c.evidence[1]
+
+
+def test_hooks_that_only_track_are_not_guardrails(make_repo):
+    import json
+
+    from src.dimensions import harness
+
+    def settings(cmd):
+        return json.dumps({"hooks": {"Stop": [{"hooks": [{"type": "command", "command": cmd}]}]}})
+
+    track = make_repo({".claude/settings.json": settings("python3 scripts/tokenization/tracker.py")}, name="track")
+    assert _ids(harness, track)["ai.guardrails"].status == "fail"
+    fmt = make_repo({".claude/settings.json": settings("bash .claude/hooks/format.sh")}, name="fmt")
+    assert _ids(harness, fmt)["ai.guardrails"].status == "pass"
+
+
+def test_a_vendored_linter_config_is_not_the_projects(make_repo):
+    from src.dimensions import hygiene
+
+    vend = make_repo({".claude/skills/linter/scripts/configs/ruff.toml": "", ".tool/configs/ruff.toml": "", "app.py": ""}, name="vend")
+    assert _ids(hygiene, vend)["hyg.lint"].score == 0.0
+    own = make_repo({"ruff.toml": "", "app.py": ""}, name="own")
+    assert _ids(hygiene, own)["hyg.lint"].score == 1.0
+
+
+def test_tests_named_by_what_they_check_count_as_a_layer(make_repo):
+    from src.dimensions import tests
+
+    root = make_repo({"app.py": "", "tests/test_app.py": "", "tests/post_build/t01_structure.py": "", "tests/reconcile.py": ""})
+    assert _ids(tests, root)["test.layers"].status == "partial"
+
+
+def test_a_docs_folder_of_a_package_counts(make_repo):
+    from src.dimensions import documentation
+
+    pages = {f"app/docs/p{i}.md": "# p" for i in range(6)} | {".claude/skills/x/docs/a.md": "", "README.md": "# x"}
+    c = _ids(documentation, make_repo(pages))["doc.docs_dir"]
+    assert c.evidence[0].startswith("6 doc pages") and c.score >= 0.85

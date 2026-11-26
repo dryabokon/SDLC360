@@ -1,4 +1,4 @@
-"""Command line interface: `python sdlc.py scan|render|list|calibrate|serve`."""
+"""Command line interface: `python sdlc.py scan|render|list|calibrate|attach-sessions|serve`."""
 
 from __future__ import annotations
 
@@ -70,6 +70,29 @@ def cmd_calibrate(a: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_attach(a: argparse.Namespace) -> int:
+    """Keep the numbers of a local folder's Claude Code sessions in a run of the same repository (assessed by URL)."""
+    import json
+
+    from . import agent_usage
+    from .hosting import is_remote, target_of
+    from .repo import resolve_target
+
+    run = Path(a.run_dir)
+    source = json.loads((run / "report.json").read_text(encoding="utf-8"))["repo"]["source"]
+    if not is_remote(source):
+        print(f"{run.name} is a local folder's run: its sessions are read in place.", file=sys.stderr)
+        return 2
+    logs = agent_usage.log_dir(str(Path(a.folder).resolve()))
+    if logs is None:
+        print(f"No Claude Code sessions for {Path(a.folder).resolve()}", file=sys.stderr)
+        return 1
+    repo, _ = resolve_target(target_of(source), Path(a.cache_dir))
+    data = agent_usage.attach(run, [agent_usage.parse_session(f) for f in logs.glob("*.jsonl")], repo, a.origin)
+    print(f"{len(data['sessions'])} sessions, {len(data['commits'])} commits -> {run / agent_usage.SESSIONS_FILE}")
+    return 0
+
+
 def cmd_serve(a: argparse.Namespace) -> int:
     from .serve import serve
 
@@ -117,6 +140,12 @@ def main(argv: list[str] | None = None) -> int:
     cb = sub.add_parser("calibrate", parents=[common], help="assess the reference set with the Standard criteria and record every verdict")
     cb.add_argument("--latest", action="store_true", help="assess the latest commits and pin the set there (default: the pinned commits)")
     cb.set_defaults(func=cmd_calibrate)
+
+    at = sub.add_parser("attach-sessions", parents=[common], help="keep the numbers of a folder's Claude Code sessions in a run (no text)")
+    at.add_argument("run_dir", help="a run of the repository, assessed by its URL")
+    at.add_argument("--folder", required=True, help="the local working copy the sessions were made in")
+    at.add_argument("--origin", default="seed", choices=["seed", "upload"], help="seed: a demo, not replaced from the app")
+    at.set_defaults(func=cmd_attach)
 
     sv = sub.add_parser("serve", parents=[common], help="local web app: choose projects, scan, browse")
     sv.add_argument("--port", type=int, default=8360)

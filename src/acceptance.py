@@ -7,6 +7,8 @@ next to the evidence, and the published basis (assessment/references/) that just
 
     **Accepted when.** one plain sentence; thresholds as {key} (shown first, edited in the app)
 
+    **The habit.** the practice in plain words, like "wash your hands": opens What to do, also when it is met
+
     **How we check.** what the scanner looks at
 
     - **Met:** ...
@@ -40,6 +42,7 @@ REFERENCES = ROOT / "assessment" / "references"
 
 PARAGRAPHS = {
     "accepted when": "accepted",
+    "the habit": "habit",
     "how we check": "looks_at",
     "what the check cannot see": "limits",
     "known flaw": "known_gap",

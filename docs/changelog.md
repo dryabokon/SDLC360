@@ -2,6 +2,47 @@
 
 ## Unreleased
 
+- **Claude Code efficiency in five areas**: Gather context, Take action, Verify work, Commit and Capture, each with the
+  practice from Anthropic's Claude Code best practices and what is in place. The checks and the score are unchanged;
+  related checks of other aspects are linked for reference and scored where they are.
+- **Fixed: a refreshed repository was assessed at an old branch.** `git fetch origin` + `checkout FETCH_HEAD` on a
+  detached cached clone took the first branch by name, not the default one (rich was assessed at a 2022 release
+  branch, httpx and smolagents at 2025 ones). A refresh now fetches the remote's default branch (`refresh_clone`).
+- **Seven wrong verdicts fixed**, found by a blind review of a client data-migration repository against its code:
+  a link into a dot folder (`.cursor/mcp.json`) counted as broken (`doc.links`, `sk.links`, `ai.instructions_fresh`);
+  a generated `design.md` deep in the tree counted as the architecture document (`arch.doc`, `arch.fresh`); the word
+  "build" in a sentence counted as a build command (`ai.instructions_quality`); agent hooks that only count tokens
+  counted as guardrails (`ai.guardrails`); a linter skill's own `ruff.toml` counted as the project's linter
+  (`hyg.lint`, `hyg.format`); integration tests named by what they check (`post_build/`, `reconcile.py`) were not
+  seen (`test.layers`); a package's `docs/` folder was not counted (`doc.docs_dir`). Regression tests in
+  `tests/unit/test_heuristics.py`; on the reference set only pydantic-ai changed (two link checks now Met).
+- **Fixed** `ai.instructions`: `.claude/CLAUDE.md` is a root instruction file (Claude Code reads it as the project file);
+  it was Partially met and its quality and freshness were not judged.
+- **What to do, the same for every check.** Every check names its habit in plain words (`**The habit.**` in the
+  acceptance criteria, `HABITS` for Claude Code efficiency); What to do starts with it, in plain text, and a met check ends
+  with a green "✓ Done". An open one gives the step for this project with how many are left and of what (the missing
+  sections, files and links named) and up to five items. A check that needs another first says so and links it (CI before its stages, the
+  instruction file before its quality). Nine checks that had no step now have one.
+- **GitLab projects** get GitLab steps (merge requests, `.gitlab-ci.yml`, Renovate, `.gitlab/` templates, CODEOWNERS
+  approval), from the repository URL or the remotes of a working copy. `.gitlab-ci.yml` is read for test and security
+  steps and GitLab's SAST / Secret Detection templates count. The GitHub Actions checks are Not applicable when another
+  CI runs instead of failing (they cannot read it yet), and GitLab merge request and issue templates count.
+- **Fixed** `ai.scoped_context`: Claude Code rules in `.claude/rules/` with a `paths:` filter, the way its acceptance
+  text quotes, now count as scoped context; a rule without `paths:` loads always and does not.
+- **Where the money went**, as three checks first in the Claude Code efficiency aspect (`agent.cost_in_work`,
+  `agent.cost_reread`, `agent.cost_no_commit`): the cost at API prices split three ways, each dollar once (work in
+  commits, re-reading long conversations, sessions without a commit), each with Expected, Found and What to do; the
+  biggest loss is also in the aspect's head line. Timeline totals. Computed in `agent_usage.money`.
+
+- **GitLab CI** with the gates of `ci.yml`.
+- **Hosted** on Cloud Run behind Google sign-in (`deploy/gcp/site.sh`, `docs/deploy-gcp.md`): repository URLs
+  only, GitHub and the hosts in `SDLC360_GIT_HOSTS`; assessments shared in a Cloud Storage bucket. `site.sh seed` fills
+  the project list with the reference set and `SDLC360_SEED`.
+- The header reads just "SDLC 360°: AI-readiness of a project repo".
+- **Claude Code efficiency for any repository assessed by URL**, hosted too: pick the project's folder under
+  `.claude/projects` in the browser; it sends only numbers (no prompts, no code). Seeded examples show it with
+  their authors' sessions (`site.sh sessions`, `python sdlc.py attach-sessions`).
+
 - **Agent use** tab (prototype) for local projects, laid out like an aspect: seven rules about how the coding agent
   works (attributed, sessions end in a commit, small commits, tests, little friction, lean context, skills used),
   judged from Claude Code session logs and git history; Found names the real sessions and commits.

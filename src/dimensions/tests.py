@@ -6,9 +6,18 @@ import re
 
 from ..model import Checks, Dimension, ratio, short
 from ..repo import Repo
-from ._util import reach
+from ._util import for_language, reach
 
 TEST_CMD = r"pytest|python -m unittest|tox|nox|npm (run )?test|pnpm (run )?test|yarn test|jest|vitest|mocha|go test|cargo test|cargo nextest|mvn (-\S+ )*(test|verify)|gradlew? (test|check)|dotnet test|rspec|phpunit|make test|just test|uv run pytest|bun test|ctest"
+
+
+def untested(repo: Repo, tests: list[str], src: list[str], n: int = 5) -> list[str]:
+    """The biggest source modules no test file is named after: where a new test pays off first."""
+    named = " ".join(re.sub(r"[^a-z0-9]", " ", t.rsplit("/", 1)[-1].lower()) for t in tests)
+    product = [f for f in src[:3000] if not any(part.startswith(".") for part in f.split("/")[:-1])]  # not agent tooling (.claude/, .cursor/)
+    lonely = [f for f in product if f.rsplit("/", 1)[-1].rsplit(".", 1)[0].lower() not in named.split()]
+    size = {f: (repo.root / f).stat().st_size if (repo.root / f).exists() else 0 for f in lonely}
+    return sorted(lonely, key=lambda f: -size[f])[:n]
 
 
 def assess(repo: Repo):
@@ -30,7 +39,9 @@ def assess(repo: Repo):
         2,
         reach(r, min_ratio) if src else None,
         f"{len(tests)} test / {len(src)} source files (ratio {r:.2f}; accepted from {min_ratio:g})",
-        "Grow tests alongside features; aim for at least one test module per core module.",
+        f"About {max(0, -(-int(min_ratio * len(src) * 100) // 100) - len(tests))} more test files would reach the accepted ratio. "
+        "Start with the biggest modules that have no test of their own:",
+        todo=untested(repo, tests, src),
     )
 
     cfg = repo.find(
@@ -61,7 +72,14 @@ def assess(repo: Repo):
         1,
         bool(cfg) if tests else 0.0,
         short(cfg),
-        "Configure the runner explicitly (pyproject [tool.pytest.ini_options], vitest.config, …).",
+        for_language(
+            repo,
+            {
+                "py": "Add a `[tool.pytest.ini_options]` section to pyproject.toml with `testpaths`, so `pytest` alone runs them all.",
+                "js": "Add vitest.config.ts (or jest.config.js) and a `test` script in package.json.",
+                "": "Configure the test runner in a file in the repository, so one command runs all the tests.",
+            },
+        ),
     )
 
     cov_files = repo.find(".coveragerc", "codecov.yml", ".codecov.yml", "coverage.config.*", ".nycrc*", "jacoco*", "tarpaulin.toml")
@@ -81,7 +99,15 @@ def assess(repo: Repo):
         2,
         (0.6 if (cov_files or cov_txt) else 0.0) + (0.4 if threshold else 0.0),
         [f"coverage config: {short(cov_files) if cov_files else ('inline' if cov_txt else 'none')}", f"threshold enforced: {bool(threshold)}"],
-        "Measure coverage in CI and enforce a floor (e.g. `--cov-fail-under=80`).",
+        for_language(
+            repo,
+            {
+                "py": "Run `pytest --cov --cov-fail-under=N` in CI: set N to today's coverage, then raise it.",
+                "js": "Run the tests with `--coverage` in CI and set `coverage.thresholds` at today's level, then raise it.",
+                "go": "Run `go test -cover ./...` in CI and fail when the total drops below today's level.",
+                "": "Measure coverage in CI and fail the build below a floor: start at today's level, then raise it.",
+            },
+        ),
     )
 
     in_ci = [m.group(0) for m in re.finditer(TEST_CMD, repo.ci_text, re.I)]
@@ -92,7 +118,8 @@ def assess(repo: Repo):
         3,
         1.0 if in_ci else (0.5 if other_ci else 0.0),
         f"test commands in workflows: {', '.join(sorted(set(x.strip() for x in in_ci))) or 'none'}",
-        "Run the full test suite on every push and pull request.",
+        "Add a CI step that runs the whole test suite (`pytest`, `npm test`, …) on every push and "
+        + ("merge request." if repo.exists(".gitlab-ci.yml") else "pull request."),
     )
 
     kinds = {
@@ -102,13 +129,17 @@ def assess(repo: Repo):
     }
     blob = " ".join(tests).lower() + " " + pp.lower() + pkg.lower()
     have = [k for k, p in kinds.items() if re.search(p, blob)]
+    # tests named by what they check, in their path only (a pyproject classifier is not a test)
+    by_name = r"(^|/|_)(post.?build|smoke|acceptance|functional|reconcil\w*|contracts?)(/|_|\.)"
+    if "integration" not in have and any(re.search(by_name, f.lower()) for f in tests):
+        have.insert(0, "integration")
     c.add(
         "test.layers",
         "Multiple test layers (integration / e2e / property)",
         1,
         len(have) / 2 if tests else 0.0,
         f"layers detected: {', '.join(have) or 'unit only'}",
-        "Add integration or e2e tests for critical user paths.",
+        "Add a few tests that run a main user path end to end (one per path is a good start), next to the unit tests.",
     )
     return c.items
 

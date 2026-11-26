@@ -16,6 +16,7 @@ class Check:
     score: float | None  # 0..1, None = not applicable
     evidence: list[str] = field(default_factory=list)
     recommendation: str = ""
+    todo: list[str] = field(default_factory=list)  # the concrete items still to do here (named files, links, sections)
 
     @property
     def status(self) -> str:
@@ -65,13 +66,24 @@ class Checks:
     def __init__(self) -> None:
         self.items: list[Check] = []
 
-    def add(self, id: str, title: str, weight: float, score: float | bool | None, evidence: list[str] | str | None = None, rec: str = "") -> Check:
+    def add(
+        self,
+        id: str,
+        title: str,
+        weight: float,
+        score: float | bool | None,
+        evidence: list[str] | str | None = None,
+        rec: str = "",
+        *,
+        todo: list[str] | None = None,
+    ) -> Check:
         if isinstance(score, bool):
             score = 1.0 if score else 0.0
         if score is not None:
             score = max(0.0, min(1.0, float(score)))
         ev = [evidence] if isinstance(evidence, str) else list(evidence or [])
-        c = Check(id, title, weight, score, ev, rec if (score is None or score < 0.85) else "")
+        open_ = score is None or score < 0.85
+        c = Check(id, title, weight, score, ev, rec if open_ else "", list(todo or [])[:5] if open_ else [])
         self.items.append(c)
         return c
 

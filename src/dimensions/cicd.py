@@ -6,6 +6,7 @@ import re
 
 from ..model import Checks, Dimension, short
 from ..repo import Repo
+from ._util import on
 from .tests import TEST_CMD
 
 LINT = r"ruff|flake8|pylint|black --check|mypy|pyright|eslint|prettier --check|biome|golangci|clippy|cargo fmt|rustfmt|ktlint|spotless|checkstyle|dotnet format|rubocop|pre-commit run|super-linter|megalinter|actionlint|shellcheck|hadolint"
@@ -22,9 +23,13 @@ def assess(repo: Repo):
         "ci.present",
         "GitHub Actions workflows present",
         3,
-        1.0 if wf else (0.4 if other else 0.0),
+        1.0 if wf else (None if other else 0.0),  # another CI: not read yet, so not judged
         short(wf) if wf else (f"non-GitHub CI: {short(other)}" if other else "no CI configuration"),
-        "Add .github/workflows/ci.yml running lint + tests on push and pull_request.",
+        on(
+            repo,
+            "Add .github/workflows/ci.yml that runs the linter and the tests on every push and pull request.",
+            "Add a .gitlab-ci.yml that runs the linter and the tests on every push and merge request.",
+        ),
     )
     if not wf:
         for cid, t, w in (
@@ -35,7 +40,7 @@ def assess(repo: Repo):
             ("ci.pinning", "Actions pinned to commit SHA", 1),
             ("ci.speed", "Caching & concurrency", 1),
         ):
-            c.add(cid, t, w, 0.0, "no workflows")
+            c.add(cid, t, w, None if other else 0.0, f"not read: {short(other)}" if other else "no workflows")
         return c.items
 
     pr = re.search(r"^\s*(-\s*)?(pull_request|pull_request_target|merge_group)\b\s*(:|$)", txt, re.M) or re.search(

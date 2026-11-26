@@ -12,18 +12,7 @@
 
 Rules are taken from industry guides, tested on top open-source projects, and then run on your repository.
 
-```mermaid
-flowchart LR
-    T["<b>Theory</b><br/>industry guides"]
-    P["<b>Practice</b><br/>top open-source projects"]
-    R["<b>Rules</b>"]
-    Y["<b>Your project</b>"]
-    V["<b>Recommendations</b>"]
-
-    T --> R
-    P -- "tested on" --> R
-    R -- "check" --> Y --> V
-```
+![Rules come from industry guides and are tested on top open-source projects; the rules of nine aspects check your repository; for every gap: expected, found, what to do](docs/images/how-it-works.svg)
 
 ### Theory
 
@@ -48,6 +37,28 @@ secrets, LLM usage and cost.
 
 ## Your AI agent over time
 
+Where the money goes: into the changes, into re-reading long conversations, into sessions that end without a commit.
+On one of our own projects, more than half of the cost went on re-reading: every step of a long session sends the whole
+conversation again. One task per session fixes it.
+
+![Claude Code efficiency: 51 of 87 dollars went on re-reading long conversations, with the sessions and what to do](docs/images/agent-cost.png)
+
 Cost and time of a typical change, commit by commit. 100 is where you started; above 100, changes cost more.
 
 ![Timeline: the cost and time of a typical change, commit by commit](docs/images/timeline.png)
+
+## Check your own project
+
+Run it locally (Python 3.12+ and git, nothing to install). It is read-only and sends nothing.
+
+```
+git clone https://github.com/dryabokon/SDLC360.git sdlc360
+cd sdlc360
+python sdlc.py serve --open
+```
+
+Then **Open a project → Browse…** → your working copy → **Assess** → tab **Claude Code efficiency**. It counts your
+commits only (`SDLC360_AUTHOR=all` counts everyone's) and the sessions Claude Code still keeps, about 30 days
+(`"cleanupPeriodDays": 90` in `~/.claude/settings.json` keeps more).
+
+

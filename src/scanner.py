@@ -9,7 +9,7 @@ import time
 from datetime import UTC, datetime
 from functools import lru_cache
 
-from . import __version__
+from . import __version__, skill_review
 from .acceptance import method_for, reference_cards
 from .checklist import CATALOG, CRITICAL_CAP, PRIORITY_WEIGHT, parse, priority_from_weight
 from .dimensions import DIMENSIONS, LEGACY, RULES
@@ -184,6 +184,7 @@ def finalize(report: dict, review: dict | None = None) -> dict:
         d["capped_by"] = gated_by if (cap is not None and raw_score is not None and raw_score > cap) else []
         d["score"] = None if raw_score is None else round(min(raw_score, cap) if cap is not None else raw_score, 1)
         d["grade"], d["band"] = grade(d["score"]), band(d["score"])
+    blocked_by(report["dimensions"])
     scored = [d["score"] for d in report["dimensions"] if d["score"] is not None]
     overall = round(sum(scored) / len(scored), 1) if scored else None
     # cited references travel with the report: the app links a quote to this card, not to a page that may move
@@ -194,7 +195,39 @@ def finalize(report: dict, review: dict | None = None) -> dict:
     if review:
         report["review"] = review
     report["top_actions"] = top_actions(report)
+    report["skill_verdicts"] = skill_review.verdicts(report.get("skill_facts"))  # from the code and git; sessions refine them in the agent tab
     return report
+
+
+# A check that cannot be met before another one: its What to do says "First: <that one>".
+PREREQUISITE = {
+    "ci.pr": "ci.present",
+    "ci.stages": "ci.present",
+    "ci.cd": "ci.present",
+    "ci.hygiene": "ci.present",
+    "ci.pinning": "ci.present",
+    "ci.speed": "ci.present",
+    "test.ci": "ci.present",
+    "sec.ci_scanning": "ci.present",
+    "ai.ci_agents": "ci.present",
+    "ai.instructions_quality": "ai.instructions",
+    "ai.instructions_fresh": "ai.instructions",
+    "arch.fresh": "arch.doc",
+    "arch.diagrams": "arch.doc",
+    "test.coverage": "test.present",
+    "test.framework": "test.present",
+    "test.layers": "test.present",
+    "sec.precommit_secrets": "hyg.precommit",
+}
+
+
+def blocked_by(dims: list[dict]) -> None:
+    """Mark the open checks whose prerequisite is not met yet (idempotent: recomputed on every finalize)."""
+    status = {c["id"]: c["status"] for d in dims for c in d["checks"]}
+    for d in dims:
+        for c in d["checks"]:
+            pre = PREREQUISITE.get(c["id"])
+            c["blocked_by"] = pre if pre and c["status"] in ("fail", "partial") and status.get(pre) in ("fail", "partial") else ""
 
 
 def regroup_items(items: dict[str, list[dict]]) -> dict[str, list[dict]]:

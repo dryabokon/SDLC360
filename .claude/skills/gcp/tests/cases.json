@@ -1,0 +1,34 @@
+[
+  {
+    "id": "unit",
+    "title": "Offline logic: deploy and rollback plans from recorded gcloud answers, compact errors",
+    "steps": ["python -m unittest discover -s tests -v"]
+  },
+  {
+    "id": "project-tour",
+    "title": "Your project: whoami, Cloud Run services, buckets, secrets (names only), Cloud SQL",
+    "needs": ["network", "gcloud", "GOOGLE_CLOUD_PROJECT"],
+    "steps": [
+      "python scripts/gcp.py whoami",
+      "python scripts/gcp.py services",
+      "python scripts/gcp.py buckets",
+      "python scripts/gcp.py secrets",
+      "python scripts/gcp.py sql"
+    ],
+    "expect": {"not_contains": ["SERVICE_DISABLED", "Traceback"]}
+  },
+  {
+    "id": "service-detail-and-errors",
+    "title": "One service in detail and its errors of the last 7 days",
+    "needs": ["network", "gcloud", "GOOGLE_CLOUD_PROJECT", "bash"],
+    "steps": ["bash examples/status-tour.sh"],
+    "expect": {"contains": ["traffic", "Recent revisions"]}
+  },
+  {
+    "id": "plans-change-nothing",
+    "title": "Deploy, rollback and upload print gcloud plans and change nothing",
+    "needs": ["network", "gcloud", "GOOGLE_CLOUD_PROJECT", "bash"],
+    "steps": ["bash examples/deploy-plan.sh"],
+    "expect": {"contains": ["Plan (nothing was changed", "gcloud run deploy demo-app", "--iap"], "not_contains": ["Done:"]}
+  }
+]

@@ -3,7 +3,7 @@
 [tool.ruff]
 line-length = 150
 target-version = "py312"
-extend-exclude = ["runs", ".cache"]
+extend-exclude = ["runs", ".cache", ".claude/skills/git-hosting", ".claude/skills/gcp"]   # copied from skills-for-agents: kept as they are
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM"]

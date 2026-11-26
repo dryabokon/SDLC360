@@ -6,7 +6,16 @@ import re
 
 from ..model import Checks, Dimension, short
 from ..repo import Repo
-from ._util import broken_refs, freshness_score, headings, reach
+from ._util import broken_refs, freshness_score, headings, in_tooling, on, reach
+
+SECTION_WORDS = {
+    "install/setup": "how to install it",
+    "usage": "how to use it, with an example",
+    "testing": "how to run the tests",
+    "configuration": "how to configure it",
+    "architecture/overview": "an overview of how it is built",
+    "contributing": "how to contribute",
+}
 
 
 def assess(repo: Repo):
@@ -40,10 +49,18 @@ def assess(repo: Repo):
         2,
         len(hit) / len(sections) if readme else 0.0,
         [f"covers: {', '.join(hit) or 'none'}", f"missing: {', '.join(k for k in sections if k not in hit) or '-'}"],
-        "Add the missing README sections (or link to docs/ pages for each).",
+        f"Add the {len(sections) - len(hit)} missing {'topic' if len(sections) - len(hit) == 1 else 'topics'} to the README: "
+        + "; ".join(SECTION_WORDS[k] for k in sections if k not in hit)
+        + ". A short section or a link to a docs/ page is enough."
+        if readme
+        else "Write a README first.",
     )
 
-    docs = [f for f in repo.find("docs/*", "doc/*", "documentation/*", "website/docs/*") if f.lower().endswith((".md", ".mdx", ".rst", ".adoc"))]
+    docs = [
+        f
+        for f in repo.find("docs/*", "doc/*", "documentation/*", "website/docs/*", "*/docs/*")
+        if f.lower().endswith((".md", ".mdx", ".rst", ".adoc")) and not in_tooling(f)
+    ]
     c.add(
         "doc.docs_dir",
         "Dedicated docs folder",
@@ -65,7 +82,8 @@ def assess(repo: Repo):
         1,
         len(have) / len(std),
         f"present: {', '.join(have) or 'none'}",
-        "Add the missing standard community files.",
+        f"Add {', '.join(k for k in std if k not in have)}. LICENSE says who may use the code, CONTRIBUTING how to help, "
+        "CHANGELOG what changed in each release.",
     )
 
     md = [f for f in repo.files if f.lower().endswith(".md") and not f.lower().startswith(("node_modules/", "vendor/"))][:300]
@@ -80,7 +98,9 @@ def assess(repo: Repo):
         2,
         1.0 if not n_refs else 1 - min(1.0, 3 * len(broken) / n_refs),
         [f"{n_refs - len(broken)}/{n_refs} intra-repo references resolve"] + broken[:6],
-        "Fix or remove references to renamed/deleted files; add a link checker (lychee / markdown-link-check) to CI.",
+        f"Fix or remove the {len(broken)} links to files that are gone, starting with the ones listed; then add a link checker "
+        "(lychee or markdown-link-check) to CI, so new ones fail the build.",
+        todo=broken[:5],
     )
 
     doc_files = ([readme] if readme else []) + docs
@@ -95,7 +115,13 @@ def assess(repo: Repo):
         2,
         fs if doc_files else 0.0,
         msg,
-        "Update docs in the same PR as behaviour changes; add a PR-template checkbox for docs.",
+        on(
+            repo,
+            "Bring the docs up to date with the code now, then update them in the same pull request as each change: "
+            "add a 'docs updated' box to the pull request template.",
+            "Bring the docs up to date with the code now, then update them in the same merge request as each change: "
+            "add a 'docs updated' box to the merge request template.",
+        ),
     )
 
     src = repo.source_files
@@ -113,7 +139,7 @@ def assess(repo: Repo):
             1,
             reach(100 * n_doc / n_def, repo.param("doc.inline", "min_share")) if n_def else None,
             f"{n_doc}/{n_def} Python defs have docstrings",
-            "Document public modules, classes and functions.",
+            f"Add a one-line docstring to the {n_def - n_doc} functions and classes that have none, starting with the modules others import most.",
         )
     else:
         js = [f for f in src if f.endswith((".ts", ".tsx", ".js", ".go", ".rs", ".java", ".cs", ".kt"))][:400]

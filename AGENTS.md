@@ -6,13 +6,17 @@ in `.claude/skills/<name>/SKILL.md`.
 
 ## What this is
 
-SDLC360 scans a git repository (GitHub or local) and assesses nine aspects of its engineering maturity against a
+SDLC360 scans a git repository (GitHub, another git host or local) and assesses nine aspects of its engineering maturity against a
 markdown checklist of capabilities. Output: a run folder in `runs/` with `report.html`. Stdlib-only Python 3.12.
 Read `README.md` first, then `docs/architecture.md`.
 
 ## Commands
 
 - run the app: `./start.sh` / `./stop.sh` (http://127.0.0.1:8360/)
+- hosted: `bash deploy/gcp/site.sh [deploy|remove]` (Cloud Run + IAP, `docs/deploy-gcp.md`)
+- git: `github` (github.com/dryabokon/SDLC360) is the public home, PRs go there; `origin` is a private GitLab. Push and PRs
+  through the git-hosting skill: `python .claude/skills/git-hosting/scripts/githost.py git push origin <branch>`
+  (tokens in `.env`, see `.env.example`). The `gcp` skill shows and checks the hosted service.
 - scan: `python sdlc.py scan <url|owner/repo|path> [--no-history]`
 - calibrate: `python sdlc.py calibrate [--latest]` (the app's refresh button is `--latest`: moves the pins; writes `runs/calibrations/<id>.json`)
 - tests: `.venv/Scripts/python -m pytest --cov` (Linux/macOS: `.venv/bin/...`)
@@ -37,8 +41,14 @@ Read `README.md` first, then `docs/architecture.md`.
   `finalize()` must stay idempotent: re-rendering a run never re-scans.
 - `src/agent_usage.py`: the Claude Code efficiency and Timeline tabs (prototype): Claude Code session logs (`~/.claude/projects/`, read only)
   joined with `git log`, judged by rules shaped like scanner checks. `serve.py` also keeps Claude Code
-  telemetry posted to `/v1/*` in `.cache/telemetry/`.
+  telemetry posted to `/v1/*` in `.cache/telemetry/`. Hosted, the numbers of sessions come from the browser
+  (`parseSession` in the template must stay equal to `parse_session`: `tests/unit/test_agent_upload.py`) or from
+  `sdlc.py attach-sessions`, and are kept in the run (`agent_sessions.json`). Never keep text from a log.
+- `src/skill_review.py`: one verdict per project skill (broken, behind, idle, up to date, procedure) from the files it names and
+  their git history, refined by session numbers (`skills`, `skill_errors` of `parse_session`). Verdicts, not scores.
 - `src/runner.py`: one scan = one run folder; `src/serve.py`: local web app; `src/template.html`: the whole UI.
+- `src/hosting.py`: hosted mode (`SDLC360_CLOUD=1`) and git hosts besides GitHub. Anything that reads the server's own
+  disk or logs must stay off when hosted (`serve.LOCAL_ONLY`, `check_target`).
 - `tests/unit`, `tests/integration`: the integration fixtures are real throw-away git repos (`tests/conftest.py`).
 
 ## Conventions

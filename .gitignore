@@ -28,3 +28,6 @@ htmlcov/
 
 # downloaded sources that are not committed (licence / size): python assessment/references/fetch.py
 assessment/references/*/local/
+
+# gcloud login of the GCP harness (tokens)
+_ai_utils/

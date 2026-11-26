@@ -10,7 +10,7 @@ from statistics import median
 
 from ..model import Checks, Dimension, short
 from ..repo import Repo, run_git
-from ._util import headings, instruction_files
+from ._util import headings, instruction_files, on
 
 RECENT = 100  # commits of the main line that are judged
 MIN_COMMITS = 10  # below this the history says too little: not applicable
@@ -50,7 +50,12 @@ def assess(repo: Repo):
         f"{len(via_pr)} of the last {len(line)} commits on the main line came through a pull request ({share:.0f}%)"
         if enough
         else f"only {len(line)} commits: too little history to judge",
-        "Protect the main branch: changes, including an agent's, land only through a pull request that a person reviews.",
+        on(
+            repo,
+            "Protect the main branch (Settings → Branches): changes, an agent's too, land only through a pull request a person reviews.",
+            "Protect the main branch (Settings → Repository → Protected branches, allowed to push: no one): changes, an agent's too, "
+            "land only through a merge request a person approves.",
+        ),
     )
 
     max_files = repo.param("rev.small_changes", "max_files")

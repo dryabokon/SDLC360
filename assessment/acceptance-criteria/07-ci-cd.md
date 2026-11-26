@@ -7,15 +7,18 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** At least one GitHub Actions workflow exists.
 
+**The habit.** Let a machine check every change before it reaches the main branch.
+
 **How we check.** `.yml`/`.yaml` files under `.github/workflows/`, subfolders included. With none, it looks for `.gitlab-ci.yml`, `Jenkinsfile`, `azure-pipelines.yml`, `.circleci/config.yml`, `bitbucket-pipelines.yml` or `.travis.yml`.
 
 - **Met:** At least one workflow file.
-- **Partially met:** No workflows, but another CI config exists (0.4).
+- **Partially met:** never.
 - **Not met:** No CI configuration.
+- **Not applicable:** No GitHub workflows, but another CI runs here (GitLab CI, Jenkins, …): SDLC360 reads only GitHub Actions so far, so the CI/CD checks are left out of the score instead of being failed.
 
 **What the check cannot see.** Workflow content, triggers and validity are not read. Files in subfolders of `.github/workflows/` count although GitHub does not run them.
 
-**Known flaw.** With no GitHub workflows, all other ci.* checks are forced to Not met, even if GitLab or another CI runs everything.
+**Known flaw.** GitLab CI and the other CI systems are not read yet: their pipelines are not judged at all.
 
 **Why we expect it.**
 
@@ -31,11 +34,14 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** CI runs on pull requests.
 
+**The habit.** Make CI a required gate on every pull request.
+
 **How we check.** All workflow text, searched for the triggers `pull_request`, `pull_request_target` or `merge_group` in any YAML form: a key (`pull_request:`), a list item (`- pull_request`), a scalar (`on: pull_request`) or a flow list (`on: [push, pull_request]`).
 
 - **Met:** One of those triggers is found.
 - **Partially met:** Never.
 - **Not met:** None is found, or there are no workflows.
+- **Not applicable:** Another CI runs here instead of GitHub Actions (GitLab CI, Jenkins, …): it is not read yet.
 
 **What the check cannot see.** A PR trigger on any workflow (for example a labeler) counts. It does not check that the workflow runs real checks or that branch protection marks them required, which "gates before merge" implies.
 
@@ -57,11 +63,14 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** CI lints, tests and builds.
 
+**The habit.** In CI, lint, test and build every change.
+
 **How we check.** It searches `ci_text` (workflows plus the scripts they delegate to) for three stages. Lint/typecheck: `ruff`, `eslint`, `mypy`, `pre-commit run` and others. Test: the test.ci command list. Build: `\bbuild\b`, `docker build`, `cargo build`, `tsc` and others.
 
 - **Met:** All 3 stages are found.
 - **Partially met:** 2 of the 3.
 - **Not met:** 0 or 1, or no workflows.
+- **Not applicable:** Another CI runs here instead of GitHub Actions (GitLab CI, Jenkins, …): it is not read yet.
 
 **What the check cannot see.** These are substring matches anywhere. A tool named in an install line or a delegated `pyproject.toml` dependency list counts as a stage.
 
@@ -72,6 +81,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## rep.entrypoints: One command sets up, builds and tests the project.
 
 **Accepted when.** One command sets up, builds or tests the project (a Makefile, scripts, `start.sh`, package.json scripts).
+
+**The habit.** One command each to set up, build and test the project.
 
 **How we check.** Any of these, matched by name anywhere: `Makefile`, `justfile`, `Taskfile.y*ml`, `noxfile.py`, `tox.ini`, `start*.sh`, `run*.sh`, `start*.bat`. Also any file under the root `scripts/`, a `"scripts":` key in the root `package.json`, or `[project.scripts]`, `[tool.poe` or `[tool.hatch.envs` in the root `pyproject.toml`.
 
@@ -92,6 +103,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## rep.environment: Runtime and toolchain versions are pinned (version files / container).
 
 **Accepted when.** At least 2 files pin the runtime and tool versions (`.python-version`, `.nvmrc`, a Dockerfile and the like).
+
+**The habit.** Pin the language and tool versions, so it works the same on every machine.
 
 **How we check.** Counts files, matched by name anywhere: `.python-version`, `.nvmrc`, `.node-version`, `.tool-versions`, `mise.toml`, `.mise.toml`, `rust-toolchain*`, `global.json`, `.sdkmanrc`, `.java-version`, `.ruby-version`, `.go-version`, `Dockerfile`, `*.dockerfile`, `docker-compose*.yml`, `compose.y*ml`, `flake.nix`, `shell.nix`, `devbox.json`. It also counts any file under the root `.devcontainer/`.
 
@@ -121,6 +134,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** The docs explain how to set up and get the same results from a clean checkout.
 
+**The habit.** Write down how to get the same result from a clean checkout.
+
 **How we check.** Joins the text of the first 40 files matching `README*`, `CONTRIBUTING*`, `AGENTS.md` or `CLAUDE.md` anywhere, or any `docs/**.md`. It looks for (a) a markdown heading line (`#…`) containing install, setup, getting started, quick start/quickstart or development, and (b) reproduction wording: `reproduc*`, `rerun`/`re-run*`, `deterministic*`, or "same result(s)".
 
 - **Met:** Both a setup heading and reproduction wording are found.
@@ -147,11 +162,14 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** Releases or deployments are automated, for example on a version tag.
 
+**The habit.** Release and deploy by pipeline, not by hand.
+
 **How we check.** Workflow text only (not delegated scripts). It looks for deploy keywords (`deploy`, `release`, `publish`, `docker push`, `helm`, `kubectl`, `aws-actions`, `goreleaser` and others). It also looks for a tag trigger (`tags:` followed by a list item) or `release:` followed by `types`. Score: 0.5 for any keyword, 0.5 for a tag/release trigger, 0.5 for 3 or more distinct keywords, capped at 1.
 
 - **Met:** A keyword plus a tag/release trigger, or 3 or more distinct keywords.
 - **Partially met:** 1 or 2 distinct keywords without a tag trigger, or a tag trigger alone.
 - **Not met:** No keyword and no tag trigger, or no workflows.
+- **Not applicable:** Another CI runs here instead of GitHub Actions (GitLab CI, Jenkins, …): it is not read yet.
 
 **What the check cannot see.** The keywords are case-insensitive substrings. "release" in a branch filter, "publish" in a step name, `aws-actions` for test credentials, or a docs `deploy-pages` all count. Three such words give Met without any real release. `on: release` as a scalar is missed.
 
@@ -173,11 +191,14 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** CI jobs have timeouts, a version matrix, and protected environments or manual approval.
 
+**The habit.** Give every CI job a timeout, test on the versions you support and protect the deploys.
+
 **How we check.** Workflow text only. It counts occurrences of `timeout-minutes` (job or step level) against detected jobs: 2-space keys whose next line is a 4-space `runs-on:` or `uses:`, minimum 1. It also looks for any `matrix:`, and for an `environment:` line or `workflow_dispatch`. Score = 0.4×min(1, timeouts/jobs) + 0.3×matrix + 0.3×(environment or dispatch).
 
 - **Met:** A matrix, an environment or manual dispatch, and timeouts on at least about 63% of detected jobs.
 - **Partially met:** A score of 0.35 to 0.84. Examples: timeouts on all jobs alone (0.4), matrix plus environment/dispatch (0.6), or one of those plus timeouts on at least 1 in 8 jobs.
 - **Not met:** Below 0.35, for example only a matrix or only `workflow_dispatch`. Also when there are no workflows.
+- **Not applicable:** Another CI runs here instead of GitHub Actions (GitLab CI, Jenkins, …): it is not read yet.
 
 **What the check cannot see.** Jobs whose first key is `name:`, `needs:` or `if:` are not counted as jobs. Step-level timeouts inflate the ratio, so full timeout credit is easy to reach falsely.
 
@@ -193,11 +214,14 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** Nearly all third-party actions (85%) are pinned to a commit SHA.
 
+**The habit.** Pin third-party CI actions to an exact commit.
+
 **How we check.** It finds `uses: owner/repo@ref` entries in workflow text, excluding `actions/*` and `github/*`. It counts every occurrence whose ref is exactly 40 lowercase hex characters as pinned.
 
 - **Met:** At least 85% of third-party `uses:` occurrences are SHA-pinned, or there are no third-party actions.
 - **Partially met:** 35% to 84% are pinned.
 - **Not met:** Under 35% are pinned, or there are no workflows.
+- **Not applicable:** Another CI runs here instead of GitHub Actions (GitLab CI, Jenkins, …): it is not read yet.
 
 **What the check cannot see.** Occurrences are counted, not unique actions. Uppercase SHAs count as unpinned. Whether a SHA belongs to the claimed tag is not checked. Docker `uses:` and composite actions' internal `uses:` are not seen.
 
@@ -219,11 +243,14 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** CI caches dependencies, cancels outdated runs and skips unrelated changes.
 
+**The habit.** Keep CI fast: cache dependencies and cancel the runs a newer push replaced.
+
 **How we check.** Workflow text only. Cache: `actions/cache`, `cache: pip|npm|yarn|pnpm|gradle|maven|go|poetry|uv`, `enable-cache`, `setup-uv`, `Swatinem/rust-cache` or `cache-from`. Concurrency: a `concurrency:` line. Paths: a `paths:` or `paths-ignore:` line. Score = 0.45 cache + 0.35 concurrency + 0.2 paths.
 
 - **Met:** All three are found (cache plus concurrency alone is only 0.8).
 - **Partially met:** Any combination scoring 0.35 to 0.8: cache alone, concurrency alone, or two of the three.
 - **Not met:** Nothing found, or only path filters (0.2), or no workflows.
+- **Not applicable:** Another CI runs here instead of GitHub Actions (GitLab CI, Jenkins, …): it is not read yet.
 
 **What the check cannot see.** Using `setup-uv` counts as caching even without `enable-cache`. Default caching in `setup-go` is not seen. Whether caches actually hit is not checked.
 

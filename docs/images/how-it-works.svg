@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 360" width="1060" height="360" font-family="Segoe UI, -apple-system, Helvetica, Arial, sans-serif" role="img" aria-label="How SDLC360 works: rules are taken from industry guides (theory) and tested on top open-source projects (practice); the rules of nine aspects check your project; for every gap you get what was expected, what was found and what to do">
+  <defs>
+    <marker id="a-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M2 1 L9 5 L2 9" fill="none" stroke="#141414" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <style>
+      .t  { fill: #141414; font-size: 14px; font-weight: 600; }
+      .s  { fill: #6b6b6b; font-size: 12px; }
+      .x  { fill: #141414; font-size: 12px; }
+      .lane { fill: #6b6b6b; font-size: 11px; letter-spacing: 0.08em; }
+      .acc { fill: #141414; font-size: 12px; }
+      .box { fill: #ffffff; stroke: #d2d2ce; stroke-width: 1; }
+      .keep { fill: #ffffff; stroke: #141414; stroke-width: 1.2; stroke-dasharray: 4 3; }
+      .soft { fill: #f4f4f2; }
+      .line-ink { stroke: #141414; stroke-width: 1.4; fill: none; }
+    </style>
+  </defs>
+
+  <rect width="1060" height="360" rx="14" fill="#ffffff"/>
+
+  <!-- ============ BASIS: theory and practice ============ -->
+  <rect x="14" y="14" width="330" height="332" rx="10" class="soft"/>
+  <text x="30" y="36" class="lane">WHERE THE RULES COME FROM</text>
+
+  <rect x="30" y="48" width="298" height="136" rx="8" class="box"/>
+  <text x="44" y="72" class="t">Theory</text>
+  <text x="104" y="72" class="s">industry guides</text>
+  <text x="44" y="98" class="x">→ Anthropic: Claude Code, context engineering</text>
+  <text x="44" y="118" class="x">→ OpenAI: harness engineering, AGENTS.md</text>
+  <text x="44" y="138" class="x">→ Google / DORA: AI-assisted delivery</text>
+  <text x="44" y="158" class="x">→ NIST SSDF, OWASP agentic, OpenSSF</text>
+
+  <rect x="30" y="196" width="298" height="136" rx="8" class="box"/>
+  <text x="44" y="220" class="t">Practice</text>
+  <text x="112" y="220" class="s">top open-source projects</text>
+  <text x="44" y="246" class="x">→ agent SDKs: Pydantic AI, OpenAI Agents,</text>
+  <text x="58" y="264" class="x">MCP, Claude Agent SDK, smolagents</text>
+  <text x="44" y="284" class="x">→ mature libraries: httpx, Rich, Typer</text>
+  <text x="44" y="310" class="s">a strong project fails a rule: we fix the rule</text>
+
+  <!-- ============ SDLC360: the rules ============ -->
+  <rect x="384" y="14" width="300" height="332" rx="12" fill="#cdf0f5"/>
+  <!-- the radar of the brand bar, small -->
+  <g transform="translate(400 22) scale(1.1)" stroke-linejoin="round">
+    <path d="M12 4.2 20.4 9.8 15.9 18.6 7.6 19.4 5.7 11z" fill="#39c2d7" fill-opacity=".35" stroke="#0e7f91" stroke-width="1.4"/>
+    <path d="M12 12.6V4.2M12 12.6l8.4-2.8M12 12.6l3.9 6M12 12.6l-4.4 6.8M12 12.6 5.7 11" stroke="#0e7f91" stroke-width=".9" opacity=".7"/>
+    <g fill="#39c2d7" stroke="#0e7f91" stroke-width="1"><circle cx="12" cy="4.2" r="1.9"/><circle cx="20.4" cy="9.8" r="1.9"/><circle cx="15.9" cy="18.6" r="1.9"/><circle cx="7.6" cy="19.4" r="1.9"/><circle cx="5.7" cy="11" r="1.9"/></g>
+  </g>
+  <text x="434" y="42" class="t" style="font-size:15px">SDLC360 rules</text>
+  <text x="434" y="60" class="s" style="fill:#1d5f6b">nine aspects, verdicts with evidence</text>
+
+  <rect x="400" y="76" width="268" height="254" rx="8" fill="#ecfafc"/>
+  <text x="414" y="102" class="x">→ docs and architecture</text>
+  <text x="414" y="127" class="x">→ AI harness</text>
+  <text x="414" y="152" class="x">→ skills</text>
+  <text x="414" y="177" class="x">→ code review</text>
+  <text x="414" y="202" class="x">→ tests</text>
+  <text x="414" y="227" class="x">→ code quality</text>
+  <text x="414" y="252" class="x">→ CI/CD</text>
+  <text x="414" y="277" class="x">→ security and secrets</text>
+  <text x="414" y="302" class="x">→ LLM usage and cost</text>
+
+  <path d="M328 116 H382" class="line-ink" marker-end="url(#a-ink)"/>
+  <text x="340" y="108" class="s">basis</text>
+  <path d="M328 264 H382" class="line-ink" marker-end="url(#a-ink)"/>
+  <text x="334" y="256" class="s">tested on</text>
+
+  <!-- ============ Your project ============ -->
+  <rect x="724" y="14" width="322" height="332" rx="10" class="soft"/>
+  <text x="740" y="36" class="lane">YOUR PROJECT</text>
+
+  <rect x="740" y="48" width="290" height="96" rx="8" class="keep"/>
+  <text x="754" y="72" class="t">Your repository</text>
+  <text x="754" y="96" class="x">GitHub or GitLab URL,</text>
+  <text x="754" y="114" class="x">or a local folder</text>
+  <text x="754" y="132" class="s">read in place, never modified</text>
+
+  <rect x="740" y="182" width="290" height="150" rx="8" class="box"/>
+  <text x="754" y="206" class="t">Recommendations</text>
+  <text x="882" y="206" class="s">for every gap</text>
+  <text x="754" y="232" class="x">→ Expected: the practice and its basis</text>
+  <text x="754" y="252" class="x">→ Found: the files and commits</text>
+  <text x="754" y="272" class="x">→ What to do: the next step</text>
+  <text x="754" y="298" class="x">→ the agent over time: cost and time</text>
+  <text x="768" y="316" class="x">of a typical change, commit by commit</text>
+
+  <path d="M684 96 H738" class="line-ink" marker-end="url(#a-ink)"/>
+  <text x="696" y="88" class="acc">check</text>
+  <path d="M885 144 V180" class="line-ink" marker-end="url(#a-ink)"/>
+</svg>

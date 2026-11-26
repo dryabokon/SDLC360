@@ -38,6 +38,13 @@ CODE_PATH_RE = re.compile(r"`((?:\.{0,2}/)?[\w.-]+(?:/[\w.-]+)+/?)`")
 
 def broken_refs(repo: Repo, md_file: str) -> tuple[int, list[str]]:
     """Return (#refs checked, broken refs) for relative links and backticked paths in a markdown file."""
+    found, broken = resolve_refs(repo, md_file)
+    return len(found) + len(broken), broken
+
+
+def resolve_refs(repo: Repo, md_file: str) -> tuple[list[str], list[str]]:
+    """(the repository path each resolving link or backticked path of a markdown file points at, one per ref, the refs
+    that resolve to nothing). A path is a file or a folder, relative to the repository root."""
     text = repo.read(md_file)
     base = PurePosixPath(md_file).parent
     refs = set()
@@ -52,28 +59,33 @@ def broken_refs(repo: Repo, md_file: str) -> tuple[int, list[str]]:
             "://" not in cand and (re.search(r"\.\w{1,6}$", cand) or cand.endswith("/")) and not cand.startswith(("@", "/", "~"))
         ):  # absolute paths point at the runtime host, not the repo
             refs.add(cand)
+    found: list[str] = []
     broken = []
     all_files = set(repo.files) | set(repo.on_disk) if repo.is_git else set(repo.files)
     all_dirs = repo.dirs
     for r in refs:
         r_clean = r.rstrip("/")
-        candidates = [str(PurePosixPath(base, r_clean)), r_clean.lstrip("./")]
-        ok = False
+        candidates = [str(PurePosixPath(base, r_clean)), re.sub(r"^(\./)+", "", r_clean)]
+        hit = None
         for c in candidates:
-            c = _normalize(c)
-            if c in all_files or c.lower() in all_dirs or (repo.root / c).exists():
-                ok = True
+            c = normalize_path(c)
+            if c and (c in all_files or c.lower() in all_dirs or (repo.root / c).exists()):
+                hit = c
                 break
-        if not ok and "/" in r_clean and not r_clean.startswith("."):
+        if hit is None and "/" in r_clean and not r_clean.startswith("."):
             # paths written relative to a package root ("transport/x.py" for src/pkg/transport/x.py)
-            suffix = "/" + _normalize(r_clean).lower()
-            ok = any(f.lower().endswith(suffix) for f in all_files) or any(d.endswith(suffix) for d in all_dirs)
-        if not ok:
+            suffix = "/" + normalize_path(r_clean).lower()
+            hit = next((f for f in sorted(all_files) if f.lower().endswith(suffix)), None) or next(
+                (d for d in sorted(all_dirs) if d.endswith(suffix)), None
+            )
+        if hit is None:
             broken.append(r)
-    return len(refs), sorted(broken)
+        else:
+            found.append(hit)
+    return sorted(found), sorted(broken)
 
 
-def _normalize(p: str) -> str:
+def normalize_path(p: str) -> str:
     parts: list[str] = []
     for seg in p.split("/"):
         if seg in ("", "."):
@@ -117,5 +129,50 @@ def instruction_files(repo: Repo) -> list[str]:
     return sorted(set(out))
 
 
+def in_tooling(f: str) -> bool:
+    """A file of the agent tooling or a vendored package (a folder starting with a dot, or skills/), not the project's own."""
+    dirs = f.lower().split("/")[:-1]
+    return any(d.startswith(".") for d in dirs if d != ".github") or "skills" in dirs or f.lower().startswith(".github/skills/")
+
+
 def headings(text: str) -> list[str]:
     return [m.group(2).strip().lower() for m in re.finditer(r"^(#{1,4})\s+(.+)$", text, re.M)]
+
+
+def forge(repo: Repo) -> str:
+    """Where the project lives, so a step names that platform's files: "gitlab" or "github" (the default)."""
+    from .. import hosting
+
+    def host_of(s: str) -> str:
+        m = re.match(r"^(?:\w+://)?(?:[^@/]+@)?([\w.-]+)[:/]", s.strip())
+        return m.group(1).lower() if m else ""
+
+    hosts = [host_of(repo.source)]
+    try:  # a local working copy: its remotes, read in place
+        cfg = (repo.root / ".git" / "config").read_text(encoding="utf-8", errors="replace")
+        hosts += [host_of(u) for u in re.findall(r"^\s*url\s*=\s*(\S+)", cfg, re.M)]
+    except OSError:
+        pass
+    if "github.com" in hosts or repo.workflows:
+        return "github"
+    if any(h and (h in hosting.git_hosts() or "gitlab" in h) for h in hosts) or ".gitlab-ci.yml" in repo.files:
+        return "gitlab"
+    return "github"
+
+
+LANGS = {".py": "py", ".ts": "js", ".tsx": "js", ".js": "js", ".jsx": "js", ".go": "go", ".rs": "rust", ".java": "java", ".kt": "java"}
+
+
+def main_language(repo: Repo) -> str:
+    """The language most source files are in: "py", "js", "go", "rust", "java", or "" for another."""
+    return next((LANGS[e] for e in repo.languages if e in LANGS), "")
+
+
+def for_language(repo: Repo, steps: dict[str, str]) -> str:
+    """The step for the project's main language; "" is the step for any other."""
+    return steps.get(main_language(repo)) or steps[""]
+
+
+def on(repo: Repo, github: str, gitlab: str) -> str:
+    """The step for the platform the project lives on."""
+    return gitlab if forge(repo) == "gitlab" else github

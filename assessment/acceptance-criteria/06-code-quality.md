@@ -7,7 +7,9 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** A linter is configured (ruff, ESLint, golangci-lint and the like).
 
-**How we check.** Matched by name anywhere: `ruff.toml`, `.ruff.toml`, `.flake8`, `.pylintrc`, `pylintrc`, `.eslintrc*`, `eslint.config.*`, `biome.json*`, `.golangci.y*ml`, `clippy.toml`, `.rubocop.yml`, `detekt.yml`, `.editorconfig`, `stylecop.json`, `.swiftlint.yml`, `deno.json`. Also `[tool.ruff`/`[tool.pylint`/`[tool.flake8` in the root `pyproject.toml`, or `"eslint…`/`"@biomejs…` in the root `package.json`.
+**The habit.** Let a linter catch mistakes before a reviewer has to.
+
+**How we check.** Matched by name anywhere: `ruff.toml`, `.ruff.toml`, `.flake8`, `.pylintrc`, `pylintrc`, `.eslintrc*`, `eslint.config.*`, `biome.json*`, `.golangci.y*ml`, `clippy.toml`, `.rubocop.yml`, `detekt.yml`, `.editorconfig`, `stylecop.json`, `.swiftlint.yml`, `deno.json`. Files inside agent tooling or a vendored package (a folder starting with a dot, other than `.github`, or a `skills/` folder) are not the project's own and do not count. Also `[tool.ruff`/`[tool.pylint`/`[tool.flake8` in the root `pyproject.toml`, or `"eslint…`/`"@biomejs…` in the root `package.json`.
 
 - **Met:** Any one of these is found.
 - **Partially met:** never
@@ -31,7 +33,9 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** An auto-formatter is configured (ruff format, Black, Prettier and the like).
 
-**How we check.** Matched by name anywhere: `.prettierrc*`, `prettier.config.*`, `rustfmt.toml`, `.rustfmt.toml`, `.clang-format`, `dprint.json`. Also `[tool.black`/`[tool.ruff.format`/`[tool.isort` in the root `pyproject.toml`, any `go.mod` (gofmt), `"prettier…`/`"@biomejs…` in the root `package.json`, a biome config found by `hyg.lint`, or any `[tool.ruff` section in `pyproject.toml`.
+**The habit.** Let a formatter decide the style, so nobody argues about it in review.
+
+**How we check.** Matched by name anywhere: `.prettierrc*`, `prettier.config.*`, `rustfmt.toml`, `.rustfmt.toml`, `.clang-format`, `dprint.json`. Files inside agent tooling or a vendored package (a folder starting with a dot, other than `.github`, or a `skills/` folder) are not the project's own and do not count. Also `[tool.black`/`[tool.ruff.format`/`[tool.isort` in the root `pyproject.toml`, any `go.mod` (gofmt), `"prettier…`/`"@biomejs…` in the root `package.json`, a biome config found by `hyg.lint`, or any `[tool.ruff` section in `pyproject.toml`.
 
 - **Met:** Any one is found.
 - **Partially met:** never
@@ -48,6 +52,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## hyg.types: Static typing is enforced.
 
 **Accepted when.** Types are checked: a type checker is configured and about half of the Python files are annotated, or TypeScript runs in strict mode.
+
+**The habit.** Let a type checker catch type errors before the code runs.
 
 **How we check.** If any `.py` source file exists (the Python branch wins over TS): type-checker config (`[tool.mypy`/`[tool.pyright`/`[tool.basedpyright` in root `pyproject.toml`, or `mypy.ini`, `.mypy.ini`, `pyrightconfig.json` anywhere). It also counts the share of the first 300 Python source files with at least one annotated parameter or `->` return. Score = 0.5 x config + 0.5 x min(1, share / 0.7). Otherwise, if any JS/TS source file exists: score = 0.6 x any `tsconfig*.json` + 0.4 x any of them containing `"strict": true`.
 
@@ -70,6 +76,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** Pre-commit hooks (pre-commit, husky, lefthook) run checks before every commit.
 
+**The habit.** Run the formatter and the linter on your machine before every commit.
+
 **How we check.** Matched by name anywhere: `.pre-commit-config.yaml`, `lefthook.yml`, `.lefthook.yml`, `lint-staged.config.*`, `.lintstagedrc*`, plus any file under root `.husky/`.
 
 - **Met:** Any one is found.
@@ -89,6 +97,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## arch.structure: Source code is organised into modules, not a flat root.
 
 **Accepted when.** Code lives in folders, and at most {max_root_files} source files sit in the project root.
+
+**The habit.** Group the code into modules by purpose, not one flat folder.
 
 **How we check.** Source files (by extension, excluding tests, `vendor/`, `third_party/`, `docs/`, `examples/`, `.github/`). It counts how many sit in the repo root and whether any sit in a subfolder.
 
@@ -113,6 +123,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** No source file is larger than {max_kb} KB (large projects may have a few).
 
+**The habit.** Split a file once it is too big to read in one go.
+
 **How we check.** On-disk size of the first 3000 source files (tests, vendor/, third_party/, docs/, examples/ and .github/ excluded). Files over {max_kb} KB ({max_kb*1000} bytes) are oversized. Score = 1 − min(1, oversized / D), where D = max(5, 5% of all source files).
 
 - **Met:** Up to 100 source files: none oversized. Over 100: oversized files are at most 0.75% of source files.
@@ -126,6 +138,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## hyg.editor: .editorconfig / .gitattributes keep formatting consistent.
 
 **Accepted when.** At least 2 settings files keep formatting consistent across editors (`.editorconfig`, `.gitattributes` and the like).
+
+**The habit.** Fix line endings and indentation for everyone in .editorconfig and .gitattributes.
 
 **How we check.** Files named `.editorconfig` or `.gitattributes` anywhere. Score = number of such files / 2, with no cap.
 
@@ -142,6 +156,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## arch.boundaries: Module boundaries are explicit and enforced by tooling.
 
 **Accepted when.** A tool enforces module boundaries (import-linter, dependency-cruiser, ArchUnit or a workspace tool). Checked only for projects with more than {min_source_files} source files.
+
+**The habit.** Let a tool enforce which module may import which.
 
 **How we check.** Files anywhere named `.importlinter`, `importlinter.ini`, `.dependency-cruiser.*`, `nx.json`, `turbo.json`, `pnpm-workspace.yaml`, `go.work`, `lerna.json` or `*.sln`. Also a root `pyproject.toml` containing the text "importlinter" or "tach", and `ArchUnit`/`ArchRule`/`NetArchTest`/`deptry` text in up to 500 test files. Score: 0.5 per file found, plus 0.5 for a test hit.
 

@@ -7,6 +7,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** No passwords, tokens or API keys are written in the tracked files.
 
+**The habit.** Never put a secret in the code: read it from the environment or a secret store.
+
 **How we check.** Every tracked, non-binary text file up to 500 KB at HEAD, line by line (lines over 2000 chars skipped). Skips lock files, `*.min.js`, `*.map`, `*.svg` and `fixture(s)/`, `testdata/`, `__snapshots__/` folders. Looks for AWS, GitHub, Anthropic, OpenAI, Slack, Google, Stripe-live tokens, private-key blocks, and "generic" quoted values of 16+ chars assigned to names like `api_key`, `password`, `client_secret`.
 
 - **Met:** No finding at all. Values that look like placeholders (contain `example`, `test`, `dummy`, `xxxx`, `${`, `process.env`, …) are ignored; generic values must mix letters and digits, have 6+ distinct characters, and are ignored entirely in test files.
@@ -33,6 +35,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** No credential files (`.env`, private keys, Terraform state) are committed.
 
+**The habit.** Never commit .env files, private keys or state files.
+
 **How we check.** Tracked files whose name (anywhere in the tree) matches `*.pem`, `*.key`, `*.p12`, `*.pfx`, `*.jks`, `*.keystore`, `id_rsa`, `id_ed25519`, `credentials.json`, `service-account*.json`, `*.tfstate`, `*.tfvars`, `.npmrc`, `.pypirc`, `.netrc`, `.env`, `.env.*`, `*.env`. Excludes paths containing `example`, ending in `.example/.sample/.template/.dist/.default(s)` or `.env.test`, and anything under `test(s)/`, `fixture(s)/`, `testdata/`, `example(s)/`, `sample(s)/`, `doc(s)/`.
 
 - **Met:** None of those files is committed.
@@ -54,6 +58,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## rep.lockfile: Dependencies are locked to exact versions.
 
 **Accepted when.** Dependencies are locked to exact versions: a lockfile, or requirements files pinned with `==` throughout.
+
+**The habit.** Lock the dependencies to exact versions and commit the lockfile.
 
 **How we check.** Lockfiles anywhere in the tree by file name: `uv.lock`, `poetry.lock`, `Pipfile.lock`, `pdm.lock`, `pixi.lock`, `conda-lock.yml`, `requirements*.lock`, `package-lock.json`, `npm-shrinkwrap.json`, `pnpm-lock.yaml`, `yarn.lock`, `bun.lock(b)`, `Cargo.lock`, `go.sum`, `Gemfile.lock`, `composer.lock`, `packages.lock.json`, `gradle.lockfile`, `flake.lock`. It also reads every `requirements*.txt` and `constraints*.txt`.
 
@@ -84,7 +90,9 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** CI runs at least two different security scanners (code, dependencies, secrets).
 
-**How we check.** The CI text: `.github/workflows/*.yml|yaml` plus scripts, `Makefile`, `noxfile.py`, `tox.ini`, `package.json`, `pyproject.toml` they call. Counts distinct tool names found anywhere in it: codeql, gitleaks, trufflehog, detect-secrets, trivy, snyk, semgrep, bandit, pip-audit, npm audit, osv-scanner, dependency-review, grype, zizmor, checkov, tfsec, safety check, govulncheck, cargo audit, scorecard.
+**The habit.** Let CI scan the code, the dependencies and the secrets on every change.
+
+**How we check.** The CI text: `.github/workflows/*.yml|yaml` and `.gitlab-ci.yml`, plus scripts, `Makefile`, `noxfile.py`, `tox.ini`, `package.json`, `pyproject.toml` they call. Counts distinct tool names found anywhere in it: GitLab's SAST, Secret-Detection and Dependency-Scanning templates, codeql, gitleaks, trufflehog, detect-secrets, trivy, snyk, semgrep, bandit, pip-audit, npm audit, osv-scanner, dependency-review, grype, zizmor, checkov, tfsec, safety check, govulncheck, cargo audit, scorecard.
 
 - **Met:** Two or more different tool names appear.
 - **Partially met:** Exactly one tool name appears.
@@ -112,6 +120,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** Dependency updates are automated with Dependabot or Renovate.
 
+**The habit.** Let a bot propose dependency updates, so they come small and often.
+
 **How we check.** Looks for `.github/dependabot.yml` / `.yaml`, any file named `renovate.json` or `.renovaterc*` anywhere, or `.github/renovate.json*`.
 
 - **Met:** Any of those files exists.
@@ -138,6 +148,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** `.gitignore` keeps env files and keys out of git.
 
+**The habit.** List env files and keys in .gitignore before you create them.
+
 **How we check.** Concatenates every tracked `.gitignore` in the repo (root and subfolders) and looks for an env rule (a line starting with `.env`, `*.env`, or `/.env` after a slash) and a key rule (`*.pem`, `*.key`, `*.p12`, or the text `.pem` / `.key` anywhere).
 
 - **Met:** Both an env rule and a key rule are present (0.7 + 0.3).
@@ -151,6 +163,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## sec.workflow_permissions: CI workflows run with least-privilege tokens.
 
 **Accepted when.** Nearly every CI workflow (85%) limits its token permissions, and none uses `pull_request_target`.
+
+**The habit.** Give CI jobs only the permissions they need.
 
 **How we check.** Each `.github/workflows/*.yml|yaml` file: does it contain a `permissions:` line at any indentation (top-level or per job)? Also whether the word `pull_request_target` appears in any workflow.
 
@@ -181,6 +195,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** Settings the code reads from the environment are listed in a template such as `.env.example`.
 
+**The habit.** List every setting the project needs in .env.example, with no real values.
+
 **How we check.** Whether non-test source code (first 3000 source files, excluding `vendor/`, `third_party/`, `docs/`, `examples/`, `.github/`) reads env vars (`os.environ`, `getenv(`, `process.env.`, `dotenv`, `env::var`, `System.getenv`, `Environment.GetEnvironmentVariable`, case-insensitive), then looks anywhere for `.env.example`, `.env.sample`, `.env.template`, `*.env.example`, `.env.dist`.
 
 - **Met:** Code reads env vars and one of those template files exists.
@@ -208,6 +224,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** A pre-commit hook blocks secrets before they are committed (gitleaks, detect-secrets and the like).
 
+**The habit.** Let a pre-commit hook stop a secret before it is committed.
+
 **How we check.** Text of any `.pre-commit-config.yaml`, `lefthook.yml` or `.lefthook.yml` anywhere, plus files under root `.husky/`. Looks for gitleaks, detect-secrets, trufflehog, detect-private-key or ggshield.
 
 - **Met:** Any of those names appears.
@@ -229,6 +247,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## sec.policy: A SECURITY.md explains how to report vulnerabilities.
 
 **Accepted when.** A `SECURITY.md` says how to report a vulnerability.
+
+**The habit.** Tell people in SECURITY.md how to report a vulnerability.
 
 **How we check.** Any file named `SECURITY.md` (case-insensitive, anywhere in the tree), plus `.github/SECURITY.md` and `docs/SECURITY.md`.
 

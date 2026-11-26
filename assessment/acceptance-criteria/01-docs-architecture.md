@@ -7,7 +7,9 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** There is an architecture document, for example `ARCHITECTURE.md` or `docs/architecture.md`.
 
-**How we check.** Files matching `ARCHITECTURE*` or `DESIGN.md` anywhere in the tree, or `docs/*architecture*`, `docs/*design*`, `docs/*overview*`, `doc/*architecture*` or `docs/arc42/*` at any depth. The extension must be `.md`, `.mdx`, `.rst`, `.adoc` or `.txt`.
+**The habit.** Keep one page that shows the parts of the system, how data moves between them and where the borders are.
+
+**How we check.** Files matching `ARCHITECTURE*` or `DESIGN.md` at the root or one folder down (a generated `design.md` deep in the tree is not the project's architecture), or `docs/*architecture*`, `docs/*design*`, `docs/*overview*`, `doc/*architecture*` or `docs/arc42/*` at any depth. The extension must be `.md`, `.mdx`, `.rst`, `.adoc` or `.txt`. Files inside agent tooling or a vendored package (a folder starting with a dot, other than `.github`, or a `skills/` folder) are not the project's own and do not count.
 
 - **Met:** At least one such file exists.
 - **Partially met:** Never.
@@ -31,6 +33,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** The README has at least {min_words} words.
 
+**The habit.** Let a newcomer learn from the README what this is and how to run it, in five minutes.
+
 **How we check.** Root-level files matching `README*` (any case or extension). If there are several, it takes the first in sorted order. It counts word tokens (`\w+` runs, so code and URLs count too).
 
 - **Met:** A root README with at least {min_words} words.
@@ -51,6 +55,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** The docs hold at least {min_diagrams} diagrams kept as code (Mermaid, PlantUML, C4, draw.io).
 
+**The habit.** Draw the architecture as code next to it, so a diagram changes in the same commit as the system.
+
 **How we check.** The first 400 tracked `.md`/`.mdx` files are searched for a code fence opening with `mermaid`, `plantuml`, `d2`, `dot` or `graphviz`. It also counts `*.puml`, `*.plantuml`, `*.drawio`, `*.excalidraw`, `*.d2`, `*.mmd`, `*.dsl` and `*.c4` files anywhere. The total is the number of markdown files with a fence plus the number of diagram files.
 
 - **Met:** A total of {min_diagrams} or more.
@@ -70,6 +76,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## arch.adr: Significant design decisions are recorded, one file per decision.
 
 **Accepted when.** At least {min_records} design decisions are written down, one file each, in a decisions folder.
+
+**The habit.** When you make a big design choice, write down why: one short file per decision.
 
 **How we check.** Folders whose path or name matches `*adr`, `*adrs`, `*decisions`, `*decision-records` or `docs/architecture/decisions`. It counts the tracked `.md` files beneath them at any depth.
 
@@ -97,6 +105,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** The architecture document was updated no more than {max_lag_days} days before the latest code change.
 
+**The habit.** Change the architecture page in the same change that changes the architecture.
+
 **How we check.** The newest commit touching any arch.doc file is compared with the newest commit touching the first 2,000 source files.
 
 - **Met:** The architecture doc lags the code by no more than about {max_lag_days} days (full score up to {grace_days} days, then a linear fade to 0 at {zero_days} days).
@@ -110,6 +120,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## doc.readme_sections: The README covers setup, usage, testing, configuration and overview.
 
 **Accepted when.** The README covers installation, usage, testing, configuration, an overview and contributing.
+
+**The habit.** Let the README answer: how to install, use, test and configure it, and how it is built.
 
 **How we check.** It searches the README's headings plus the first 30,000 characters of its text, lowercased, for six topics: install/setup, usage, testing (`\btest`), configuration, architecture/overview, and contributing/development.
 
@@ -127,6 +139,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** Links to files in the docs work: at most 1 in 20 points to a file that does not exist.
 
+**The habit.** When you move or delete a file, fix the links to it in the same change.
+
 **How we check.** Up to 300 tracked `.md` files, excluding those under root `node_modules/` or `vendor/`. It takes relative markdown links and images (no scheme, no leading `/`, `<` or `~`, anchors dropped) and backticked paths that contain `/` and end in an extension or `/`. Each one is resolved from the file's folder or from the repo root.
 
 - **Met:** At most 5% of references are broken (1 - 3*broken/total >= 0.85). Also Met when there are no references at all.
@@ -140,6 +154,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## doc.freshness: Docs are updated together with the code.
 
 **Accepted when.** The docs were updated no more than {max_lag_days} days before the latest code change.
+
+**The habit.** Update the docs in the same change as the behaviour they describe.
 
 **How we check.** The newest commit touching the root README or any docs page (as found by doc.docs_dir) is compared with the newest commit touching the first 2,000 source files.
 
@@ -163,7 +179,9 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** A docs folder holds at least {min_pages} pages.
 
-**How we check.** It counts `.md`, `.mdx`, `.rst` and `.adoc` files at any depth under the root `docs/`, `doc/`, `documentation/` or `website/docs/`.
+**The habit.** Put what does not fit in the README into a docs/ folder.
+
+**How we check.** It counts `.md`, `.mdx`, `.rst` and `.adoc` files at any depth under the root `docs/`, `doc/`, `documentation/` or `website/docs/`, and under the `docs/` folder of any package (`app/docs/`). Files inside agent tooling or a vendored package (a folder starting with a dot, other than `.github`, or a `skills/` folder) are not the project's own and do not count.
 
 - **Met:** {min_pages} or more pages.
 - **Partially met:** {min_pages:partial} or more pages.
@@ -176,6 +194,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## doc.standard_files: LICENSE, CONTRIBUTING and CHANGELOG are present.
 
 **Accepted when.** LICENSE, CONTRIBUTING and CHANGELOG files are present.
+
+**The habit.** Say who may use the code (LICENSE), how to help (CONTRIBUTING) and what changed (CHANGELOG).
 
 **How we check.** Basename matches anywhere in the tree for LICENSE (`LICENSE*`, `COPYING*`), CONTRIBUTING (`CONTRIBUTING*`) and CHANGELOG (`CHANGELOG*`, `CHANGES*`, `HISTORY*`, `RELEASES*`).
 
@@ -196,6 +216,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## doc.inline: Public code is documented inline (docstrings / doc comments).
 
 **Accepted when.** At least {min_share}% of Python functions and classes have a docstring (other languages: doc comments in at least 43% of files).
+
+**The habit.** Write a line on what each public function or class is for.
 
 **How we check.** If there is any Python source, it takes up to 400 `.py` source files. It counts `def` and `class` headers with a non-underscore name whose `:` ends the line, then checks whether the next line opens a `"""` or `'''` docstring. Without Python, it takes up to 400 `.ts`, `.tsx`, `.js`, `.go`, `.rs`, `.java`, `.cs` or `.kt` files. A file counts if it contains `/**`, a `///` line or `// Capitalword `.
 

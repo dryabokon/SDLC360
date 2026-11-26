@@ -1,0 +1,6 @@
+*
+!sdlc.py
+!src/
+!assessment/
+**/__pycache__
+assessment/references/*/local/

@@ -7,6 +7,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** At least {min_share}% of the recent commits on the main branch came through a pull request.
 
+**The habit.** Nothing reaches the main branch without a reviewed pull request, an agent's changes included.
+
 **How we check.** The last 100 commits of the main line (HEAD, first parent only) are read from git. A commit came through a pull request when its subject carries a mark that GitHub or GitLab leaves: `Merge pull request #12`, a squash subject ending in `(#12)`, `Merge branch 'x' into main` or `See merge request !12`.
 
 - **Met:** At least {min_share}% of them.
@@ -29,6 +31,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## rev.small_changes: Changes are small enough to review.
 
 **Accepted when.** A typical change touches at most {max_files} files.
+
+**The habit.** Keep each change small enough to review in one sitting.
 
 **How we check.** The median number of files changed by the last 100 commits of the main line (a merge counts against its first parent, so one merged pull request is one change).
 
@@ -53,6 +57,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** An AI usage policy exists, as its own file or as a section of CONTRIBUTING, the README or the agent instructions.
 
+**The habit.** Write down which AI tools are allowed, what data they must not see and how their changes are reviewed.
+
 **How we check.** A file named like `AI_POLICY.md`, `AI_USAGE.md` or `docs/ai-policy.md`, or a heading in CONTRIBUTING, the README or an agent instruction file that names AI, LLMs, Copilot, coding agents or generated code.
 
 - **Met:** Such a file or section exists.
@@ -73,6 +79,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## sec.codeowners: CODEOWNERS assigns reviewers for sensitive paths.
 
 **Accepted when.** A `CODEOWNERS` file assigns reviewers.
+
+**The habit.** Name an owner for every sensitive path, so it always gets the right reviewer.
 
 **How we check.** Any file named `CODEOWNERS` anywhere in the tree (case-insensitive), plus `.github/CODEOWNERS`, `docs/CODEOWNERS`.
 
@@ -98,7 +106,9 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** Pull request and issue templates exist.
 
-**How we check.** Files at `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE*` (including that folder), `.github/ISSUE_TEMPLATE/*` (including `config.yml`) and `docs/pull_request_template.md`. Score = min(1, count / 2).
+**The habit.** Give pull requests and issues a template with a short checklist.
+
+**How we check.** Files at `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE*` (including that folder), `.github/ISSUE_TEMPLATE/*` (including `config.yml`), `docs/pull_request_template.md`, and GitLab's `.gitlab/merge_request_templates/*` and `.gitlab/issue_templates/*`. Score = min(1, count / 2).
 
 - **Met:** 2 or more matching files.
 - **Partially met:** Exactly 1.
@@ -113,6 +123,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## rev.ai_attribution: Commits made with AI agents say so.
 
 **Accepted when.** Recent commits name the AI agent that helped write them.
+
+**The habit.** Mark the commits made with an AI agent, so anyone can see it.
 
 **How we check.** The messages of the last 200 commits are searched for a `Co-authored-by:` trailer or a "Generated with / by" line that names an agent (Claude, Copilot, Codex, Cursor, Gemini, Aider, Devin, Jules and the like).
 

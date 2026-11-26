@@ -4,6 +4,9 @@ Prototype. It reads, never writes: the agent's own session logs (~/.claude/proje
 format Claude Code does not document, so every field is read defensively) and `git log` of the project. It reports
 numbers and plain findings (what is good, what to improve, how), never the text of prompts or answers.
 
+The numbers of a session (parse_session) carry no text, so they can travel: the hosted app keeps them in a run folder
+(SESSIONS_FILE) with the commits they are joined with, sent by the browser (it parses the logs itself, the same way, see
+parseSession in template.html) or put there by `python sdlc.py attach-sessions`.
 A session is linked to the commits made while it was active (from its first to its last entry, plus 30 minutes).
 The cost is what Claude Code itself records for a finished session (`cost-state`): tokens priced at the API list
 price. On a subscription this is not what was paid; it is the value of the work at API prices.
@@ -13,6 +16,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import random
 import re
 import statistics
@@ -20,6 +24,8 @@ import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from . import skill_review
+from .hosting import is_remote
 from .model import band, grade
 
 LOGS_ROOT = Path.home() / ".claude" / "projects"
@@ -27,17 +33,29 @@ IDLE = timedelta(minutes=5)  # a gap longer than this between two entries is not
 LINK_AFTER = timedelta(minutes=30)
 BIG_COMMIT_FILES = 15
 LONG_SESSION_HOURS = 3.0
+# the usual ratio of Claude prices to an input token: an answer token 5, writing to the cache 1.25, reading from it 0.1
+# (the same 5 for answers on every current model; cached reads are 0.025-0.1, so the split is an estimate)
+WEIGHT = {"input": 1.0, "output": 5.0, "cache_write": 1.25, "cache_read": 0.1}
+COST_IN_WORK = (0.7, 0.4)  # pass at 70% or more of the cost in the work, partial at 40%
+COST_REREAD = (0.2, 0.4)  # pass at 20% or less on re-reading long conversations, partial at 40%
+COST_NO_COMMIT = (0.1, 0.25)  # pass at 10% or less on sessions without a commit, partial at 25%
+FRESH_CONTEXT = 100_000  # tokens a step reads in a fresh session, when the project has no short sessions to tell
 TEST_PATH = re.compile(r"(^|/)(tests?|spec|__tests__)/|(^|/)test_[^/]+\.py$|_test\.(py|go)$|\.(test|spec)\.[jt]sx?$")
 AGENT_TRAILER = re.compile(r"^(Co-Authored-By|Agent-Session):.*\b(claude|anthropic|copilot|codex|cursor|gemini|aider|devin)\b", re.I | re.M)
 GENERATED = re.compile(r"(\.lock|lock\.json|\.min\.js|\.svg|\.csv|\.parquet|\.ipynb)$|(^|/)(dist|build|vendor|node_modules)/")
 # lines of source and docs: what it takes to change them is the measure; data files (gt.txt, .onnx, .json) are not
 CODE = re.compile(r"\.(py|pyi|js|jsx|ts|tsx|html|css|sh|bat|ps1|go|rs|cs|cpp|cc|c|h|hpp|java|kt|sql|toml|ya?ml|md)$", re.I)
 _CACHE: dict[tuple[str, float, int], dict] = {}
+SESSIONS_FILE = "agent_sessions.json"  # in a run folder: {origin, attached, sessions, commits, skills}
+MAX_SESSIONS = 2000
+# a skill is also used when the agent runs its script or reads its files: .claude/skills/<name>/...
+SKILL_PATH = re.compile(r"[\\/]skills[\\/]([A-Za-z0-9_.-]+)[\\/]")
+AFTER_SKILL = 10  # the tool calls after a use of a skill whose failures are counted against it
 
 
 def log_dir(source: str, root: Path | None = None) -> Path | None:
     """Claude Code keeps a project's sessions in a folder named after its path: D:\\a\\b -> D--a-b."""
-    if source.startswith("github.com/"):
+    if is_remote(source):
         return None
     d = (root or LOGS_ROOT) / re.sub(r"[^A-Za-z0-9]", "-", str(Path(source)))
     return d if d.is_dir() else None
@@ -61,6 +79,8 @@ def parse_session(f: Path) -> dict:
     tok = {"input": 0, "output": 0, "cache_read": 0, "cache_write": 0}
     n = {"prompts": 0, "api_calls": 0, "tool_calls": 0, "tool_errors": 0, "denied": 0, "subagents": 0}
     skills: dict[str, int] = {}
+    skill_errors: dict[str, int] = {}
+    watch: dict[str, int] = {}  # skill -> tool results still counted against it
     reads: list[tuple[float, int]] = []  # (time, tokens the request read: input + cache), for each commit's effort
     at: dict[str, list[float]] = {"prompts": [], "calls": [], "errors": []}  # when each happened, for each commit's share
     cost = None
@@ -115,15 +135,30 @@ def parse_session(f: Path) -> dict:
                         at["calls"].append(t.timestamp())
                     if b.get("name") == "Agent":
                         n["subagents"] += 1
+                    raw_in = b.get("input")
+                    inp: dict = raw_in if isinstance(raw_in, dict) else {}
                     if b.get("name") == "Skill":
-                        name = str((b.get("input") or {}).get("skill") or "?")
+                        name = str(inp.get("skill") or "?")
                         skills[name] = skills.get(name, 0) + 1
+                        watch[name] = AFTER_SKILL
+                    else:
+                        hit = SKILL_PATH.search(str(inp.get("command") or inp.get("file_path") or inp.get("path") or ""))
+                        if hit and hit.group(1) not in watch and hit.group(1).rsplit(":", 1)[-1] not in {k.rsplit(":", 1)[-1] for k in watch}:
+                            skills[hit.group(1)] = skills.get(hit.group(1), 0) + 1
+                            watch[hit.group(1)] = AFTER_SKILL
         elif e.get("type") == "user" and not e.get("isMeta"):
             if isinstance(content, str) and not content.startswith("<"):
                 n["prompts"] += 1
                 if t:
                     at["prompts"].append(t.timestamp())
             for b in content if isinstance(content, list) else []:
+                if isinstance(b, dict) and b.get("type") == "tool_result":
+                    for k in list(watch):
+                        if b.get("is_error"):
+                            skill_errors[k] = skill_errors.get(k, 0) + 1
+                        watch[k] -= 1
+                        if watch[k] <= 0:
+                            del watch[k]
                 if isinstance(b, dict) and b.get("type") == "tool_result" and b.get("is_error"):
                     n["tool_errors"] += 1
                     day(t, "tool_errors")
@@ -149,6 +184,7 @@ def parse_session(f: Path) -> dict:
         "context_per_call": round(context),
         "cost": round(cost, 2) if cost is not None else None,
         "skills": skills,
+        "skill_errors": skill_errors,
         "reads": sorted(reads),
         "at": {k: sorted(v) for k, v in at.items()},
         **n,
@@ -162,9 +198,20 @@ def _git(repo: Path, *args: str) -> str:
     return r.stdout if r.returncode == 0 else ""
 
 
-def git_commits(repo: Path) -> list[dict]:
-    """Commits of the current branch, newest first, with files and whether an agent co-authored them."""
-    raw = _git(repo, "log", "--format=%x1e%H%x1f%cI%x1f%P%x1f%s%x1f%B%x1f", "--numstat")
+def git_author(repo: Path) -> str:
+    """Whose commits are joined with the sessions on this machine: SDLC360_AUTHOR ("all": everyone's), else the
+    e-mail this working copy commits with (a client project often has its own). Empty: everyone's."""
+    a = os.environ.get("SDLC360_AUTHOR", "").strip()
+    if a:
+        return "" if a.lower() == "all" else a
+    return _git(repo, "config", "user.email").strip()
+
+
+def git_commits(repo: Path, author: str = "") -> list[dict]:
+    """Commits of the current branch, newest first, with files and whether an agent co-authored them. With an author,
+    only theirs: the sessions on one machine are one person's, and a colleague's commit made meanwhile is not theirs."""
+    who = ["-F", f"--author=<{author}>"] if author else []  # -F: the e-mail as it is, not a pattern
+    raw = _git(repo, "log", "--format=%x1e%H%x1f%cI%x1f%P%x1f%s%x1f%B%x1f", "--numstat", *who)
     out = []
     for rec in raw.split("\x1e")[1:]:
         head, _, stat = rec.rpartition("\x1f")
@@ -228,7 +275,31 @@ def _day(iso: str | None) -> str:
     return t.strftime("%d %b %Y") if t else "?"
 
 
-def _check(cid: str, title: str, status: str, evidence: list[str], fix: str, accepted: str, looks_at: str, why: str, limits: str = "") -> dict:
+HABITS = {  # the practice in plain words: opens What to do, also when the check is met
+    "agent.attributed": "Keep the Co-Authored-By line in the commits the agent made.",
+    "agent.lands": "End a working session with a commit.",
+    "agent.small_commits": "Commit the agent's work in small steps you can review.",
+    "agent.tests": "Ask the agent for tests with every change.",
+    "agent.friction": "Allow the agent the commands it needs, so it neither fails nor waits for you.",
+    "agent.lean_context": "One task, one session: start fresh with /clear when the task changes.",
+    "agent.skills_used": "Use the project's skills, and delete the ones nobody uses.",
+    "agent.cost_in_work": "Spend the agent's money on changes that get committed.",
+    "agent.cost_reread": "One task, one session: in a long conversation every step pays for re-reading all of it.",
+    "agent.cost_no_commit": "Finish what you start with the agent, or stop early.",
+}
+
+
+def _check(
+    cid: str,
+    title: str,
+    status: str,
+    evidence: list[str],
+    fix: str,
+    accepted: str,
+    looks_at: str,
+    why: str,
+    limits: str = "",
+) -> dict:
     """A check shaped like the scanner's, so the app shows it the same way: Expected, Found, What to do."""
     return {
         "id": cid,
@@ -240,7 +311,7 @@ def _check(cid: str, title: str, status: str, evidence: list[str], fix: str, acc
         "source": "auto",
         "evidence": evidence,
         "recommendation": fix if status in ("fail", "partial") else "",
-        "method": {"accepted": accepted, "looks_at": looks_at, "limits": limits, "basis": [], "convention": why},
+        "method": {"accepted": accepted, "habit": HABITS.get(cid, ""), "looks_at": looks_at, "limits": limits, "basis": [], "convention": why},
     }
 
 
@@ -275,7 +346,8 @@ def checks(sessions: list[dict], commits: list[dict], skills_available: list[str
                 _level(len(tagged) / len(linked), 0.9, 0.5),
                 [f"{len(tagged)}/{len(linked)} commits made during agent sessions carry the trailer"]
                 + ([f"{_subj(miss)} has no agent trailer"] if miss else []),
-                "Keep the agent's Co-Authored-By trailer in every commit message (AGENTS.md says so for this project).",
+                f"Add the Co-Authored-By trailer of the agent to commit messages: {len(linked) - len(tagged)} of {len(linked)} "
+                "commits made during sessions lack it. Say so in CLAUDE.md / AGENTS.md, so the agent keeps it.",
                 acc,
                 how,
                 why,
@@ -304,7 +376,8 @@ def checks(sessions: list[dict], commits: list[dict], skills_available: list[str
                 *t,
                 _level((len(work) - len(empty)) / len(work), 0.8, 0.5),
                 ev,
-                "End each task with a commit, even a small one. Keep exploration in a short session of its own and say so in the first prompt.",
+                f"End each task with a commit, even a small one: {len(empty)} of {len(work)} working sessions made none. "
+                "Keep exploration in a short session of its own and say so in the first prompt.",
                 acc,
                 how,
                 why,
@@ -351,7 +424,8 @@ def checks(sessions: list[dict], commits: list[dict], skills_available: list[str
                 *t,
                 _level(len(with_t) / len(agent), 0.5, 0.25),
                 [f"{len(with_t)}/{len(agent)} agent commits change a test"] + [f"{_subj(c)} changes {c['code_files']} files and no test" for c in ex],
-                "Ask for the test in the same prompt as the change, and keep the test command in CLAUDE.md / AGENTS.md so the agent runs it.",
+                f"Ask for the test in the same prompt as the change: {len(agent) - len(with_t)} of {len(agent)} agent commits change no test. "
+                "Keep the test command in CLAUDE.md / AGENTS.md, so the agent runs it.",
                 acc,
                 how,
                 why,
@@ -421,7 +495,10 @@ def checks(sessions: list[dict], commits: list[dict], skills_available: list[str
     # 7. skills
     t = ("agent.skills_used", "The project's skills are used.")
     acc = "At least half of the skills defined in the project were invoked in a recorded session."
-    how = "Skills in .claude/skills/ and .agents/skills/ against Skill calls in the session logs."
+    how = (
+        "Skills in .claude/skills/ and .agents/skills/ against their uses in the session logs: "
+        "a Skill call, or a command or read of a file in the skill's folder."
+    )
     why = "A skill is the team's tested recipe; when it is not used, the agent improvises the same work each time."
     if skills_available:
         used = {k for s in sessions for k in s["skills"]}
@@ -581,27 +658,100 @@ def timeline(sessions: list[dict], commits: list[dict], repo: Path | None = None
     return {"commits": rows[:300], "series": series, "indices": indices, "window": window, "measured": len(measured)}
 
 
-def report(source: str, root: Path | None = None) -> dict:
+def repo_skills(repo: Path) -> list[str]:
+    return sorted({p.parent.name for base in (".claude/skills", ".agents/skills") for p in (repo / base).glob("*/SKILL.md")})
+
+
+def report(source: str, root: Path | None = None, skill_facts: dict | None = None) -> dict:
     """The agent-use tab of one local project: one aspect, laid out like the others."""
     d = log_dir(source, root)
     repo = Path(source)
     if d is None or not repo.is_dir():
-        reason = (
-            "GitHub projects have no local agent logs." if source.startswith("github.com/") else "No Claude Code sessions were found for this folder."
+        if is_remote(source):
+            return {"available": False, "upload": True, "reason": "Add the Claude Code sessions of this project to see how the agent works on it."}
+        return {"available": False, "reason": "No Claude Code sessions were found for this folder."}
+    author = git_author(repo)
+    r = report_from([parse_session(f) for f in d.glob("*.jsonl")], git_commits(repo, author), repo_skills(repo), logs=str(d), skill_facts=skill_facts)
+    r["summary"]["author"] = author
+    return r
+
+
+AREAS: tuple[dict, ...] = (  # the cycle of one task, with the practice from Anthropic's Claude Code best practices
+    {
+        "id": "gather",
+        "name": "Gather context",
+        "practice": "Tell Claude what it can't see",
+        "checks": ("agent.friction",),
+        "related": ("ai.instructions_quality",),
+    },
+    {
+        "id": "action",
+        "name": "Take action",
+        "practice": "Keep each session focused",
+        "checks": ("agent.cost_in_work", "agent.cost_reread", "agent.lean_context", "agent.cost_no_commit"),
+        "related": (),
+    },
+    {
+        "id": "verify",
+        "name": "Verify work",
+        "practice": "Give Claude a check to run",
+        "checks": ("agent.tests",),
+        "related": ("test.ci",),
+    },
+    {
+        "id": "commit",
+        "name": "Commit",
+        "practice": "Enforce what can't have exceptions",
+        "checks": ("agent.small_commits", "agent.lands", "agent.attributed"),
+        "related": ("rev.via_pr", "ai.guardrails"),
+    },
+    {
+        "id": "capture",
+        "name": "Capture",
+        "practice": "Put team procedures in skills",
+        "checks": ("agent.skills_used",),
+        "related": ("sk.descriptions",),
+    },
+)
+
+
+def by_area(checks_: list[dict]) -> tuple[list[dict], list[dict]]:
+    """The checks in the order of the cycle, each naming its area, and what each area has in place. Scores do not change."""
+    by_id = {c["id"]: c for c in checks_}
+    grouped, areas = [], []
+    for a in AREAS:
+        mine = [{**by_id[i], "area": a["id"]} for i in a["checks"] if i in by_id]
+        grouped += mine
+        assessed = [c for c in mine if c["status"] in ("pass", "partial", "fail")]
+        areas.append(
+            {
+                "id": a["id"],
+                "name": a["name"],
+                "practice": a["practice"],
+                "related": list(a["related"]),
+                "in_place": len([c for c in assessed if c["status"] == "pass"]),
+                "assessed": len(assessed),
+            }
         )
-        return {"available": False, "reason": reason}
-    sessions = sorted((parse_session(f) for f in d.glob("*.jsonl")), key=lambda s: s["start"] or "")
-    sessions = [s for s in sessions if s["api_calls"]]
-    commits = git_commits(repo)
+    return grouped, areas
+
+
+def report_from(sessions: list[dict], commits: list[dict], skills: list[str], logs: str = "", skill_facts: dict | None = None) -> dict:
+    """The tab from the numbers of the sessions and the commits of the repository (git_commits); with the facts of the
+    run's skills (skill_review.facts), the verdict of each skill, refined by the sessions."""
+    sessions = sorted((s for s in sessions if s["api_calls"]), key=lambda s: s["start"] or "")
     _link(sessions, commits)
-    skills = sorted({p.parent.name for base in (".claude/skills", ".agents/skills") for p in (repo / base).glob("*/SKILL.md")})
     own = [c for c in commits if not c["merge"]]
     costed = {s["id"] for s in sessions if s["cost"] is not None}
     total = sum(s["cost"] or 0 for s in sessions)
     paid = [c for c in own if c.get("session") in costed]
-    cs = checks(sessions, commits, skills)
+    tl = timeline(sessions, commits)
+    split = money(sessions, commits, tl)
+    cs = money_checks(split) + checks(sessions, commits, skills)
     scored = [c["score"] for c in cs if c["score"] is not None]
     score = round(100 * sum(scored) / len(scored), 1) if scored else None
+    start = next((c["id"] for c in cs if c["status"] in ("fail", "partial")), None)  # the biggest loss comes first here
+    grouped, areas = by_area(cs)
     summary = {
         "first": sessions[0]["start"] if sessions else None,
         "last": sessions[-1]["end"] if sessions else None,
@@ -615,12 +765,12 @@ def report(source: str, root: Path | None = None) -> dict:
     }
     return {
         "available": True,
-        "logs": str(d),
+        "logs": logs,
         "summary": summary,
         "aspect": {
             "id": "agent",
             "name": "Claude Code efficiency",
-            "description": "How Claude Code works on this project: its session logs on this machine (read only) "
+            "description": "How Claude Code works on this project: the numbers of its sessions (no prompts, no code) "
             "and the git history. Other agents are not read.",
             "score": score,
             "uncapped_score": score,
@@ -629,9 +779,328 @@ def report(source: str, root: Path | None = None) -> dict:
             "capped_by": [],
             "adjust": 0,
             "review_notes": [],
-            "checks": cs,
+            "checks": grouped,
+            "areas": areas,
+            "start": start,
         },
-        "timeline": timeline(sessions, commits, repo),
+        "timeline": tl,
+        "money": split,
         "sessions": sessions[::-1],
         "commits": commits[:200],
+        "skill_verdicts": skill_review.verdicts(skill_facts, sessions),
     }
+
+
+# ---------- sessions kept in a run folder: sent by the browser, or by `sdlc.py attach-sessions` ----------
+_TOK = ("input", "output", "cache_read", "cache_write")
+_COUNTS = ("prompts", "api_calls", "tool_calls", "tool_errors", "denied", "subagents")
+_DAY = ("hours", "tool_calls", "tool_errors", "denied", "output_tokens", "read_tokens")
+_ID = re.compile(r"^[A-Za-z0-9_.-]{1,100}$")
+_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def _num(v: object, cap: float = 1e15) -> float:
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v < 0 or v > cap:
+        raise ValueError("sessions: a number is out of range")
+    return v
+
+
+def _iso(v: object) -> str | None:
+    if v is None:
+        return None
+    t = _ts(v) if isinstance(v, str) else None
+    if t is None or t.tzinfo is None:
+        raise ValueError("sessions: a time is not ISO 8601 with a zone")
+    return t.isoformat()
+
+
+def clean_sessions(raw: object) -> list[dict]:
+    """The numbers of sessions as parse_session makes them, checked field by field: anything else is refused, so
+    nothing but numbers, times and skill names is ever kept (raises ValueError)."""
+    if not isinstance(raw, list) or len(raw) > MAX_SESSIONS:
+        raise ValueError(f"sessions: a list of at most {MAX_SESSIONS}")
+    out = []
+    for s in raw:
+        if not isinstance(s, dict) or not isinstance(s.get("id"), str) or not _ID.match(s["id"]):
+            raise ValueError("sessions: a session without a proper id")
+        by_day, skills, at = s.get("by_day") or {}, s.get("skills") or {}, s.get("at") or {}
+        skill_errors = s.get("skill_errors") or {}
+        if (
+            not isinstance(by_day, dict)
+            or len(by_day) > 400
+            or not isinstance(skills, dict)
+            or len(skills) > 200
+            or not isinstance(skill_errors, dict)
+            or len(skill_errors) > 200
+            or not isinstance(at, dict)
+        ):
+            raise ValueError("sessions: unexpected shape")
+        reads = s.get("reads") or []
+        if not isinstance(reads, list) or len(reads) > 200_000 or any(not isinstance(r, (list, tuple)) or len(r) != 2 for r in reads):
+            raise ValueError("sessions: unexpected reads")
+        lists = {k: at.get(k) or [] for k in ("prompts", "calls", "errors")}
+        if any(not isinstance(v, list) or len(v) > 200_000 for v in lists.values()):
+            raise ValueError("sessions: unexpected times")
+        cost = s.get("cost")
+        out.append(
+            {
+                "id": s["id"],
+                "start": _iso(s.get("start")),
+                "end": _iso(s.get("end")),
+                "active_hours": _num(s.get("active_hours", 0), 1e5),
+                "by_day": {
+                    d: {k: _num(v.get(k, 0)) for k in _DAY}
+                    for d, v in by_day.items()
+                    if isinstance(d, str) and _DATE.match(d) and isinstance(v, dict)
+                },
+                "span_hours": _num(s.get("span_hours", 0), 1e6),
+                "tokens": {k: int(_num((s.get("tokens") or {}).get(k, 0))) for k in _TOK},
+                "context_per_call": _num(s.get("context_per_call", 0)),
+                "cost": None if cost is None else _num(cost, 1e7),
+                "skills": {str(k)[:80]: int(_num(v, 1e7)) for k, v in skills.items()},
+                "skill_errors": {str(k)[:80]: int(_num(v, 1e7)) for k, v in skill_errors.items()},
+                "reads": sorted([_num(a, 1e11), int(_num(b))] for a, b in reads),
+                "at": {k: sorted(_num(x, 1e11) for x in v) for k, v in lists.items()},
+                **{k: int(_num(s.get(k, 0), 1e9)) for k in _COUNTS},
+            }
+        )
+    return out
+
+
+def attach(run_dir: Path, sessions: list[dict], repo: Path, origin: str) -> dict:
+    """Keep the numbers of the sessions in the run, with the commits and skills of the repository they are joined with
+    (so showing them later needs no clone). origin: "upload" (from a browser) or "seed" (by the maintainers)."""
+    data = {
+        "origin": origin,
+        "attached": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "sessions": clean_sessions(sessions),
+        "commits": git_commits(repo),
+        "skills": repo_skills(repo),
+    }
+    (run_dir / SESSIONS_FILE).write_text(json.dumps(data), encoding="utf-8")
+    return data
+
+
+def stored(run_dir: Path) -> dict | None:
+    """The tab from the sessions kept in the run, or None when there are none."""
+    f = run_dir / SESSIONS_FILE
+    if not f.is_file():
+        return None
+    data = json.loads(f.read_text(encoding="utf-8"))
+    rep = run_dir / "report.json"
+    facts = json.loads(rep.read_text(encoding="utf-8")).get("skill_facts") if rep.is_file() else None
+    r = report_from(data["sessions"], data["commits"], data.get("skills", []), skill_facts=facts)
+    return {**r, "origin": data.get("origin"), "attached": data.get("attached")}
+
+
+# ---------- where the money went: every dollar in one place, each place explained ----------
+def _k(tokens: float) -> str:
+    return f"{tokens / 1000:,.0f}k"
+
+
+def _date(iso: str | None) -> str:
+    t = _ts(iso)
+    return t.astimezone().strftime("%d %b") if t else "?"
+
+
+def money(sessions: list[dict], commits: list[dict], tl: dict) -> dict | None:
+    """The recorded cost split three ways, each dollar counted once:
+    - sessions that ended without a commit: all of their cost;
+    - re-reading a long conversation: in the other sessions, what each step read beyond what a step reads in a short
+      session of this project, priced as reads from the cache, as a share of the session's cost (WEIGHT: an estimate);
+    - the rest went into the commits.
+    Every part says what is wrong, where (the sessions), and what to do. The template only draws it."""
+    costed = [s for s in sessions if s["cost"] is not None and s["api_calls"]]
+    total = sum(s["cost"] for s in costed)
+    if not costed or total <= 0:
+        return None
+    short = [s["context_per_call"] for s in costed if s["active_hours"] < 1 and s["api_calls"] >= 5]
+    base = round(statistics.median(short)) if short else FRESH_CONTEXT
+
+    idle = sorted((s for s in costed if not s.get("commits")), key=lambda s: -s["cost"])
+    idle_cost = sum(s["cost"] for s in idle)
+
+    long_items = []
+    for s in costed:
+        reads = [r for _, r in s.get("reads", [])]
+        if not s.get("commits") or not sum(reads):
+            continue
+        units = sum(WEIGHT[k] * s["tokens"].get(k, 0) for k in WEIGHT)
+        extra = s["cost"] * WEIGHT["cache_read"] * sum(max(0, r - base) for r in reads) / units if units else 0.0
+        if extra >= 0.02 * total:  # a few cents are not worth a line
+            long_items.append({**s, "extra": extra})
+    long_items.sort(key=lambda s: -s["extra"])
+    long_cost = sum(s["extra"] for s in long_items)
+    useful = total - idle_cost - long_cost
+
+    def pct(v: float) -> int:
+        return round(100 * v / total)
+
+    parts = [
+        {
+            "id": "work",
+            "title": "Work that went into commits",
+            "amount": round(useful, 2),
+            "share": pct(useful),
+        }
+    ]
+    if long_items:
+        top = long_items[0]
+        parts.append(
+            {
+                "id": "context",
+                "title": "Re-reading long conversations",
+                "amount": round(long_cost, 2),
+                "share": pct(long_cost),
+                "what": "Each step of a session sends the whole conversation so far to the model again. The longer a session runs, "
+                f"the more every step costs. On this project a step in a short session reads about {_k(base)} tokens; in the "
+                f"longest one it read {_k(top['context_per_call'])} on average, so most of its cost went on reading the same "
+                "conversation again and again rather than on the changes.",
+                "where": [
+                    f"{_date(s['start'])}: {s['active_hours']:.1f} active hours, {s['commits']} commit{'s' if s['commits'] != 1 else ''}, "
+                    f"{s['api_calls']} steps of {_k(s['context_per_call'])} tokens; "
+                    f"cost ${s['cost']:.2f}, of which about ${s['extra']:.2f} on re-reading"
+                    for s in long_items[:3]
+                ],
+                "fix": "One task, one session. After a commit, start a new session (or /clear) for the next task instead of going on "
+                "in the same one. If a task has to go on, /compact first. Keep long logs and files out of the conversation: "
+                "ask for the lines that matter.",
+                "rule": "agent.lean_context",
+            }
+        )
+    if idle:
+        parts.append(
+            {
+                "id": "idle",
+                "title": "Sessions without a commit",
+                "amount": round(idle_cost, 2),
+                "share": pct(idle_cost),
+                "what": f"{len(idle)} of {len(costed)} sessions left nothing in the repository: questions, exploration, or work that "
+                "was dropped. A question is fine; work that is not committed is paid for and lost.",
+                "where": [f"{_date(s['start'])}: {s['active_hours']:.1f} active hours, {s['api_calls']} steps, ${s['cost']:.2f}" for s in idle[:3]],
+                "fix": "End a piece of work with a commit, even a small one. If a session is only for questions or exploration, "
+                "say so in the first prompt and keep it short.",
+                "rule": "agent.lands",
+            }
+        )
+
+    # the dearest changes, with how they compare to a change of their size, and the session they were made in
+    by_sha = {c["sha"]: c.get("session") for c in commits}
+    long_ids = {s["id"] for s in long_items}
+    dear = sorted((c for c in tl.get("commits", []) if c.get("cost") is not None), key=lambda c: -c["cost"])[:3]
+    changes = [
+        {
+            "subject": c["subject"],
+            "sha": c["sha"],
+            "cost": c["cost"],
+            "times": c.get("cost_x"),
+            "why": (f"{c['cost_x']:.1f}× a usual change of its size" if c.get("cost_x") else "no usual change to compare with")
+            + ("; made in a long session" if by_sha.get(c["sha"]) in long_ids else ""),
+        }
+        for c in dear
+    ]
+    waste = long_cost + idle_cost
+    headline = (
+        f"Of ${total:.2f} at API prices, about ${useful:.2f} ({pct(useful)}%) went into the changes themselves"
+        + (f", about ${long_cost:.2f} ({pct(long_cost)}%) on re-reading long conversations" if long_items else "")
+        + (f", ${idle_cost:.2f} ({pct(idle_cost)}%) on sessions without a commit" if idle else "")
+        + "."
+    )
+    lever = (
+        "The biggest lever here: shorter sessions, one task each."
+        if long_items and long_cost >= idle_cost
+        else "The biggest lever here: finish work with a commit."
+        if idle
+        else "No big loss: the money went into the work."
+    )
+    losses = [p for p in parts if p["id"] != "work" and p["share"] >= 5]
+    big = max(losses, key=lambda p: p["amount"]) if losses else None
+    return {
+        "total": round(total, 2),
+        "lead": f"about {big['share']}% of it went on {big['title'][0].lower() + big['title'][1:]}" if big else "",
+        "base_context": base,
+        "headline": headline,
+        "lever": lever if waste >= 0.05 * total else "No big loss: the money went into the work.",
+        "parts": parts,
+        "changes": changes,
+        "note": "Cost at API prices as Claude Code records it. The split is an estimate: what a step read beyond a step of a short "
+        f"session (about {_k(base)} tokens here) is priced as reading from the cache, at the usual ratio of Claude prices.",
+    }
+
+
+def money_checks(m: dict | None) -> list[dict]:
+    """Where the money went, as three checks of the aspect: Expected, Found, What to do, like the others."""
+    ids = (
+        ("agent.cost_in_work", "Most of the money goes into the changes."),
+        ("agent.cost_reread", "Little money goes on re-reading long conversations."),
+        ("agent.cost_no_commit", "Little money goes on sessions without a commit."),
+    )
+    how = "The cost Claude Code records for each session (at API prices), the tokens each step read, and the commits."
+    if m is None:
+        accepted = (
+            f"At least {COST_IN_WORK[0]:.0%} of the cost at API prices goes into the work that ends in commits.",
+            f"No more than {COST_REREAD[0]:.0%} of the cost goes on what steps read beyond a step of a short session.",
+            f"No more than {COST_NO_COMMIT[0]:.0%} of the cost goes on sessions that leave no commit.",
+        )
+        return [
+            _check(cid, title, "na", ["no session with a recorded cost"], "", acc, how, "Where the money of AI-assisted work goes.")
+            for (cid, title), acc in zip(ids, accepted, strict=True)
+        ]
+    total, by = m["total"], {p["id"]: p for p in m["parts"]}
+    work, reread, idle = by.get("work"), by.get("context"), by.get("idle")
+
+    def dollars(part: dict | None, words: str) -> str:
+        return f"{round(part['amount'] if part else 0)}/{round(total)} dollars {words}"
+
+    def share(part: dict | None) -> float:
+        return part["amount"] / total if part else 0.0
+
+    split = ", ".join(f"{p['title'].lower()} ${p['amount']:.2f} ({p['share']}%)" for p in m["parts"])
+    dear = [f"dearest change: {c['subject']} · ${c['cost']:.2f} · {c['why']}" for c in m["changes"][:2]]
+    estimate = m["note"]
+    out = [
+        _check(
+            *ids[0],
+            _level(share(work), *COST_IN_WORK),
+            [dollars(work, "of the cost went into the work that ended in commits"), f"split: {split}", *dear],
+            "Start with the biggest loss: "
+            + (max((p for p in (reread, idle) if p), key=lambda p: p["amount"])["title"].lower() if reread or idle else "none")
+            + ". The two checks below say where it is and what to do.",
+            f"At least {COST_IN_WORK[0]:.0%} of the cost at API prices goes into the work that ends in commits.",
+            how,
+            "The cost of a change is the price of AI-assisted work; what does not reach a commit is paid for and lost.",
+            estimate,
+        )
+    ]
+    reread_ev = [dollars(reread, "of the cost went on re-reading long conversations")]
+    if reread:
+        reread_ev.append(f"tokens read per step: about {_k(m['base_context'])} in a short session of this project")
+        reread_ev += [f"session of {w.split(':', 1)[0]}: {w.split(':', 1)[1].strip().replace('; ', ', ')}" for w in reread["where"]]
+    out.append(
+        _check(
+            *ids[1],
+            _level(share(reread), *COST_REREAD, higher_is_better=False),
+            reread_ev,
+            reread["fix"] if reread else "",
+            f"No more than {COST_REREAD[0]:.0%} of the cost goes on what steps read beyond a step of a short session of this project.",
+            how,
+            "Each step sends the whole conversation so far to the model again: the longer a session runs, the more every step "
+            "costs, and most of it pays for reading the same conversation again rather than for the changes.",
+            estimate,
+        )
+    )
+    idle_ev = [dollars(idle, "of the cost went on sessions without a commit")]
+    if idle:
+        idle_ev += [f"session of {w.split(':', 1)[0]}: {w.split(':', 1)[1].strip()}" for w in idle["where"]]
+    out.append(
+        _check(
+            *ids[2],
+            _level(share(idle), *COST_NO_COMMIT, higher_is_better=False),
+            idle_ev,
+            idle["fix"] if idle else "",
+            f"No more than {COST_NO_COMMIT[0]:.0%} of the cost goes on sessions that leave no commit.",
+            how,
+            "A question is fine; work that is not committed is paid for and lost.",
+        )
+    )
+    return out

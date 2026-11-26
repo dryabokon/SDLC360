@@ -11,8 +11,9 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
-from . import __version__
+from . import __version__, skill_review
 from .history import score_history, velocity
+from .hosting import is_remote, short_name
 from .profiles import STANDARD, defaults
 from .profiles import checklist as profile_checklist
 from .profiles import resolve as resolve_checklist
@@ -28,7 +29,7 @@ log = logging.getLogger("sdlc360")
 
 
 def slug(s: str) -> str:
-    return re.sub(r"[^A-Za-z0-9._-]+", "-", s.replace("github.com/", "")).strip("-")[:60] or "repo"
+    return re.sub(r"[^A-Za-z0-9._-]+", "-", short_name(s)).strip("-")[:60] or "repo"
 
 
 def self_version() -> dict:
@@ -66,7 +67,7 @@ def run_scan(
     started = datetime.now(UTC)
     say(f"resolving {target}")
     root, source = resolve_target(target, Path(cache_dir), ref, refresh)
-    nm = name or slug(source.split("/", 1)[-1] if source.startswith("github.com/") else Path(source).name)
+    nm = name or slug(source.rsplit("/", 1)[-1] if is_remote(source) else Path(source).name)
     run_dir = Path(runs_dir) / f"{started.strftime('%Y%m%d-%H%M%S')}_{nm}"
     run_dir.mkdir(parents=True, exist_ok=True)
     fh = logging.FileHandler(run_dir / "scan.log", encoding="utf-8")
@@ -79,6 +80,8 @@ def run_scan(
         cl = resolve_checklist(root, checklist, profile)
         log.info("capabilities: %s (%s)", cl["path"], (cl.get("profile") or {}).get("name", cl["origin"]))
         report = scan(repo, only=only, checklist=cl)
+        say("judging skills")
+        report["skill_facts"] = skill_review.facts(repo)  # HEAD only: what the code and git say about each skill
         for d in report["dimensions"]:
             log.info("  %-24s %6s  %s", d["name"], d["score"], d["grade"])
         say("computing velocity")
@@ -196,9 +199,7 @@ def list_projects(runs_dir: Path = DEFAULT_RUNS) -> list[dict]:
             {
                 "source": src,
                 "target": man.get("target", src),
-                "name": src.replace("github.com/", "").replace("\\", "/").rstrip("/").split("/")[-1]
-                if not src.startswith("github.com/")
-                else src.replace("github.com/", ""),
+                "name": short_name(src) if is_remote(src) else src.replace("\\", "/").rstrip("/").split("/")[-1],
                 "runs": [],
             },
         )

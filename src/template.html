@@ -12,11 +12,11 @@
 <style>
 :root{color-scheme:light;
   --bg:#f6f6f5;--surface:#fff;--fill:#efefed;--text:#141414;--ink-2:#52514e;--muted:#6b6b6b;--faint:#a1a1a1;--line:#e6e6e4;
-  --grid:#ebeae6;--axis:#c3c2b7;--series-1:#2a78d6;--series-2:#eb6834;
+  --grid:#ebeae6;--axis:#c3c2b7;--series-1:#0b7f91;--series-2:#eb6834;
   --good:#0ca30c;--warning:#fab219;--serious:#ec835a;--critical:#d03b3b;--good-text:#006300;--bad-text:#b42a2a}
 :root[data-theme=dark]{color-scheme:dark;
   --bg:#0e0e0e;--surface:#161616;--fill:#1f1f1f;--text:#ececec;--ink-2:#c3c2b7;--muted:#9b9b9b;--faint:#666;--line:#262626;
-  --grid:#242422;--axis:#383835;--series-1:#3987e5;--series-2:#d95926;--good-text:#30d158;--bad-text:#ff6961}
+  --grid:#242422;--axis:#383835;--series-1:#39c2d7;--series-2:#d95926;--good-text:#30d158;--bad-text:#ff6961}
 *{box-sizing:border-box}html,body{margin:0;height:100%}
 body{background:var(--bg);color:var(--text);font:13px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
   -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;display:grid;grid-template-rows:44px 44px minmax(0,1fr)}
@@ -26,10 +26,10 @@ code{font:11.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background
 button,input{font:inherit;color:inherit}.muted{color:var(--muted)}.spacer{flex:1}
 /* header: a black brand bar in both themes (as in our other tools), then the context of what is open */
 .brand{background:#030303;color:#ececec;padding:0 16px;display:flex;align-items:center;gap:12px;white-space:nowrap;--bb:rgba(255,255,255,.16)}
-.brand .logo{display:flex;align-items:center;gap:9px;color:inherit;text-decoration:none}
-.brand .logo svg{width:24px;height:24px;color:#64d2ff}
+.brand .logo{display:flex;align-items:baseline;gap:6px;color:inherit;text-decoration:none}
 .brand .logo b{font-size:14.5px;letter-spacing:-.01em}
 .brand .what{font-size:12px;color:#9b9b9b;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:640px){.brand .what{display:none}}
 .bbtn{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 11px;border:1px solid var(--bb);border-radius:6px;background:none;color:#ececec;cursor:pointer;font-size:12.5px;font-weight:500}
 .bbtn:hover:not(:disabled){background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.3)}
 .bbtn.on,.bbtn.on:hover:not(:disabled){background:#ececec;color:#111;border-color:#ececec}
@@ -125,6 +125,10 @@ button,input{font:inherit;color:inherit}.muted{color:var(--muted)}.spacer{flex:1
 .cktab .cid{font:11px ui-monospace,Consolas,monospace;color:var(--muted);word-break:break-all}
 .cktab .st{white-space:nowrap;color:var(--muted);font-size:12px}
 .cktab .st .rag{margin-right:6px}
+.cktab tbody tr.grp,.cktab tbody tr.rel{cursor:default}
+.cktab tbody tr.grp:hover td,.cktab tbody tr.rel:hover td{background:none}
+.cktab tr.grp td{padding:10px 10px 5px;font-size:12.5px}.cktab tr.grp b{margin-right:8px}.cktab tr.grp span{color:var(--muted);font-size:11.5px}
+.cktab tr.rel td{color:var(--muted);font-size:11.5px}.cktab tr.rel a{font-family:ui-monospace,Consolas,monospace;font-size:11px}
 .detail{position:sticky;top:52px;max-height:calc(100vh - 46px - 41px - 24px);overflow:auto;padding:12px 14px}
 .detail h2{font-size:15px;margin:6px 0 10px;line-height:1.35}
 .kv{width:100%;border-collapse:collapse}
@@ -195,7 +199,8 @@ svg text{fill:var(--ink-2);font-size:12px}svg .tick{fill:var(--faint);font-size:
 .tlcurv{font-size:11px;font-weight:650;fill:var(--text)}.tlhi{color:var(--bad-text);font-weight:650}.tllo{color:var(--good-text)}.tltab tr[data-sha]{cursor:default}
 @media (max-width:1000px){.tlsplit{grid-template-columns:1fr}.tlleft{position:static;max-height:none}}.tlverdict{padding:12px 14px}.tlverdict .chead{gap:8px}.tlst{font-size:12px;display:inline-flex;align-items:center;gap:5px;color:var(--ink-2)}
 .tlsw{display:inline-block;width:16px;border-top:2px solid;vertical-align:middle;margin-right:5px}.tlsw.dash{border-top-style:dashed}
-.tltab tr.sel td{background:var(--fill)}.tlhit{cursor:pointer}
+.tltab tr.sel td{background:var(--fill)}
+.tltab tfoot td{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--line);font-weight:650;padding-top:6px}.tlhit{cursor:pointer}
 @media (max-width:1200px){.tlgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:760px){.tlgrid{grid-template-columns:1fr}}
 .tlhint{font-size:11.5px;margin-top:2px;min-height:30px}.tlv{margin:6px 0 4px}.tlv b{font-size:20px;font-weight:650}.tlv span{font-size:12px}
 .tlplot{min-width:0;overflow:hidden}.tlplot svg{display:block}.tlcol{cursor:pointer}.tlcol:hover rect:first-child{fill:var(--fill)}
@@ -239,6 +244,9 @@ svg text{fill:var(--ink-2);font-size:12px}svg .tick{fill:var(--faint);font-size:
 .dhead{display:flex;gap:8px;align-items:center}.dhead .cid{font:11.5px ui-monospace,Consolas,monospace;color:var(--muted)}
 .vbox{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:8px;background:var(--fill);margin:0 0 12px;color:var(--ink-2)}
 .vbox b{color:var(--text)}.vbox .rag{margin-top:2px}
+.todo-do{color:var(--text)}.todo-do+.todo-step{margin-top:4px}.todo-step{color:var(--ink-2)}
+.met-mark{color:var(--good-text);white-space:nowrap;margin-left:4px}
+.evl.todo{margin-top:4px}.evl.todo>li{font:12px ui-monospace,Consolas,monospace;padding:3px 0}
 .kv.main{margin:4px 0 12px}.kv.main th{width:110px}.xnote{margin-top:6px;font-size:12.5px}
 .acc{margin:0 0 12px;color:var(--text)}
 .acc>.lbl{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600;margin-bottom:3px}
@@ -292,8 +300,7 @@ select:focus,.txt:focus,.inl:focus{outline:2px solid var(--series-1);outline-off
 </head>
 <body>
 <header class="brand">
-  <a class="logo" href="#assessment/overview" id="home" title="SDLC 360°: overview of the open project"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5 20.2 7.25v9.5L12 21.5 3.8 16.75v-9.5z"/><path d="M12 2.5v19M3.8 7.25l16.4 9.5M20.2 7.25 3.8 16.75" stroke-width="1" opacity=".55"/><path d="M12 6.2 17.2 9.6 15.6 15 12 17.4 7.6 14.5 8.2 9.8z" stroke-width="1.6"/><g fill="currentColor" stroke="none"><circle cx="12" cy="6.2" r="1.5"/><circle cx="17.2" cy="9.6" r="1.5"/><circle cx="15.6" cy="15" r="1.5"/><circle cx="12" cy="17.4" r="1.5"/><circle cx="7.6" cy="14.5" r="1.5"/><circle cx="8.2" cy="9.8" r="1.5"/></g></svg><b>SDLC 360°</b></a>
-  <span class="what">AI-maturity assessment</span>
+  <a class="logo" href="#assessment/overview" id="home" title="SDLC 360°: overview of the open project"><b>SDLC 360°:</b><span class="what">AI-readiness of a project repo</span></a>
   <span class="spacer"></span>
   <button type="button" class="bbtn" id="crit-btn" title="Assessment criteria: which capabilities count, how critical they are, and the numbers they are accepted at"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg><span>Criteria</span></button>
   <button class="bbtn ico" id="theme" type="button" aria-label="Toggle theme"></button>
@@ -346,6 +353,8 @@ select:focus,.txt:focus,.inl:focus{outline:2px solid var(--series-1);outline-off
 
 <script>
 const MODE = /*__MODE__*/"static";
+const GIT_HOSTS = /*__GIT_HOSTS__*/[];   // hosted: git hosts besides GitHub the server clones from
+const HOSTED = /*__HOSTED__*/false;   // on Cloud Run for many people: repository URLs only, nothing of the server's disk
 let REPORT = /*__REPORT__*/null;
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -408,7 +417,7 @@ function context() {  // the second header row: the open project (a selector), o
   if (!REPORT) { $("#proj-name").textContent = MODE === "app" ? "Open a project" : "No project open"; $("#proj-meta").textContent = ""; return; }
   const r = REPORT.repo, h = r.head || {};
   $("#proj-name").textContent = r.source.replace(/^github\.com\//, "").replace(/^.*[\\/](?=[^\\/]+$)/, "");
-  $("#proj-meta").textContent = [r.source.startsWith("github.com/") ? "GitHub" : "Local folder", h.sha ? "commit " + h.sha.slice(0, 8) : "",
+  $("#proj-meta").textContent = [srcKind(r.source), h.sha ? "commit " + h.sha.slice(0, 8) : "",
     "assessed " + fdate(REPORT.generated_at), "criteria: " + profileName(REPORT)].filter(Boolean).join(" · ");
 }
 
@@ -533,19 +542,107 @@ function subnavHtml(view, ids, names, sel, right = "") {
   return `<button data-s="overview" class="${sel === "overview" ? "on" : ""}">Overview</button>` +
     ids.map((id) => `<button data-s="${id}" class="${sel === id ? "on" : ""}">${esc(names[id] || id)}</button>`).join("") + right;
 }
-const agentTab = () => MODE === "app" && REPORT && !REPORT.repo.source.startsWith("github.com/");
+const agentTab = () => MODE === "app" && REPORT && !(HOSTED && isLocal(REPORT.repo.source));   // repositories by URL: sessions are added in the browser
 function renderAssessment() {
-  const dims = REPORT.dimensions, agent = agentTab();
-  if (state.sub !== "overview" && !(agent && (state.sub === "agent" || state.sub === "timeline")) && !dims.some((d) => d.id === state.sub)) state.sub = "overview";
+  const dims = REPORT.dimensions, agent = agentTab(), sv = !!REPORT.skill_verdicts;
+  if (state.sub !== "overview" && !(agent && (state.sub === "agent" || state.sub === "timeline")) && !(sv && state.sub === "skill-verdicts")
+    && !dims.some((d) => d.id === state.sub)) state.sub = "overview";
   $("#subnav").innerHTML = subnavHtml("assessment", dims.map((d) => d.id), Object.fromEntries(dims.map((d) => [d.id, d.name])), state.sub,
-    agent ? `<span class="spacer"></span><button data-s="agent" class="${state.sub === "agent" ? "on" : ""}" title="How Claude Code works on this project: from its session logs on this machine and git history. Other agents are not read.">Claude Code efficiency</button>`
-      + `<button data-s="timeline" class="${state.sub === "timeline" ? "on" : ""}" title="Is a change getting dearer or slower? Cost and time of a typical change, commit by commit">Timeline</button>` : "");
+    `<span class="spacer"></span>`
+    + (sv ? `<button data-s="skill-verdicts" class="${state.sub === "skill-verdicts" ? "on" : ""}" title="One verdict per skill of the project: broken, behind, idle, up to date, with the evidence">Skills, one by one</button>` : "")
+    + (agent ? `<button data-s="agent" class="${state.sub === "agent" ? "on" : ""}" title="How Claude Code works on this project: from its session logs on this machine and git history. Other agents are not read.">Claude Code efficiency</button>`
+      + `<button data-s="timeline" class="${state.sub === "timeline" ? "on" : ""}" title="Is a change getting dearer or slower? Cost and time of a typical change, commit by commit">Timeline</button>` : ""));
   $("#subnav").querySelectorAll("button[data-s]").forEach((b) => b.onclick = () => go("assessment", b.dataset.s));
-  if (state.sub === "overview") overview(); else if (state.sub === "agent" || state.sub === "timeline") agentView(); else dimension(dims.find((d) => d.id === state.sub));
+  if (state.sub === "overview") overview(); else if (state.sub === "agent" || state.sub === "timeline") agentView();
+  else if (state.sub === "skill-verdicts") skillVerdicts(); else dimension(dims.find((d) => d.id === state.sub));
 }
 
 /* =================== AGENT USE (prototype): rules about how the agent works, laid out like an aspect =================== */
 const AG = { run: null, data: null };
+/* parse_session:start  The numbers of one Claude Code session log, read in the browser: the same as
+   agent_usage.parse_session in Python (tests/unit/test_agent_upload.py runs both on one log). Only numbers, times and
+   skill names come out: the text of prompts, answers and code stays on this machine. */
+async function* logLines(file) {
+  const r = file.stream().pipeThrough(new TextDecoderStream()).getReader(); let buf = "";
+  for (;;) { const { value, done } = await r.read(); if (done) break; buf += value;
+    let i; while ((i = buf.indexOf("\n")) >= 0) { yield buf.slice(0, i); buf = buf.slice(i + 1); } }
+  if (buf) yield buf;
+}
+async function parseSession(file) {
+  const IDLE = 5 * 60 * 1000, AFTER_SKILL = 10, SKILL_PATH = /[\\/]skills[\\/]([A-Za-z0-9_.-]+)[\\/]/, times = [], requests = new Set(), skills = {}, reads = [], days = {};
+  const skill_errors = {}, watch = {}, bare = (k) => k.split(":").pop();
+  const tok = { input: 0, output: 0, cache_read: 0, cache_write: 0 }, at = { prompts: [], calls: [], errors: [] };
+  const n = { prompts: 0, api_calls: 0, tool_calls: 0, tool_errors: 0, denied: 0, subagents: 0 }; let cost = null;
+  const pad = (v) => String(v).padStart(2, "0");
+  const day = (t, k, v = 1) => { if (t == null) return; const d = new Date(t), key = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    (days[key] ??= { hours: 0, tool_calls: 0, tool_errors: 0, denied: 0, output_tokens: 0, read_tokens: 0 })[k] += v; };
+  for await (const line of logLines(file)) {
+    let e; try { e = JSON.parse(line); } catch { continue; }
+    if (!e || typeof e !== "object" || Array.isArray(e)) continue;
+    const ms = typeof e.timestamp === "string" && e.timestamp ? Date.parse(e.timestamp) : NaN, t = Number.isNaN(ms) ? null : ms;
+    if (t != null && (e.type === "user" || e.type === "assistant")) times.push(t);
+    if (e.type === "cost-state" && typeof e.totalCostUSD === "number") cost = e.totalCostUSD;
+    if (e.toolDenialKind) { n.denied++; day(t, "denied"); }
+    const m = e.message; if (!m || typeof m !== "object" || Array.isArray(m)) continue;
+    const content = m.content, blocks = Array.isArray(content) ? content : [];
+    if (e.type === "assistant") {
+      const rid = e.requestId || m.id || "", u = m.usage;
+      if (u && typeof u === "object" && !requests.has(rid)) {
+        requests.add(rid); n.api_calls++;
+        const i = u.input_tokens || 0, o = u.output_tokens || 0, cr = u.cache_read_input_tokens || 0, cw = u.cache_creation_input_tokens || 0, read = i + cr + cw;
+        tok.input += i; tok.output += o; tok.cache_read += cr; tok.cache_write += cw;
+        day(t, "output_tokens", o); day(t, "read_tokens", read); if (t != null) reads.push([t / 1000, read]);
+      }
+      for (const b of blocks) if (b && typeof b === "object" && b.type === "tool_use") {
+        n.tool_calls++; day(t, "tool_calls"); if (t != null) at.calls.push(t / 1000);
+        if (b.name === "Agent") n.subagents++;
+        const inp = b.input && typeof b.input === "object" && !Array.isArray(b.input) ? b.input : {};
+        if (b.name === "Skill") { const s = String(inp.skill || "?"); skills[s] = (skills[s] || 0) + 1; watch[s] = AFTER_SKILL; }
+        else { const hit = SKILL_PATH.exec(String(inp.command || inp.file_path || inp.path || ""));
+          if (hit && !(hit[1] in watch) && !Object.keys(watch).some((k) => bare(k) === bare(hit[1]))) { skills[hit[1]] = (skills[hit[1]] || 0) + 1; watch[hit[1]] = AFTER_SKILL; } }
+      }
+    } else if (e.type === "user" && !e.isMeta) {
+      if (typeof content === "string" && !content.startsWith("<")) { n.prompts++; if (t != null) at.prompts.push(t / 1000); }
+      for (const b of blocks) {
+        if (b && typeof b === "object" && b.type === "tool_result")
+          for (const k of Object.keys(watch)) { if (b.is_error) skill_errors[k] = (skill_errors[k] || 0) + 1; if (--watch[k] <= 0) delete watch[k]; }
+        if (b && typeof b === "object" && b.type === "tool_result" && b.is_error) { n.tool_errors++; day(t, "tool_errors"); if (t != null) at.errors.push(t / 1000); }
+        else if (b && typeof b === "object" && b.type === "text" && !String(b.text ?? "").startsWith("<")) { n.prompts++; if (t != null) at.prompts.push(t / 1000); }
+      }
+    }
+  }
+  times.sort((a, b) => a - b); let active = 0;
+  for (let i = 1; i < times.length; i++) { const g = Math.min(times[i] - times[i - 1], IDLE); active += g; day(times[i], "hours", g / 3600000); }
+  const r = (v, k) => Math.round(v * 10 ** k) / 10 ** k, calls = n.api_calls;
+  const by_day = Object.fromEntries(Object.keys(days).sort().map((d) => [d, Object.fromEntries(Object.entries(days[d]).map(([k, v]) => [k, r(v, 3)]))]));
+  return { id: file.name.replace(/\.jsonl$/, ""), start: times.length ? new Date(times[0]).toISOString() : null,
+    end: times.length ? new Date(times[times.length - 1]).toISOString() : null, active_hours: r(active / 3600000, 2), by_day,
+    span_hours: times.length ? r((times[times.length - 1] - times[0]) / 3600000, 1) : 0, tokens: tok,
+    context_per_call: calls ? Math.round((tok.input + tok.cache_read + tok.cache_write) / calls) : 0, cost: cost == null ? null : r(cost, 2),
+    skills, skill_errors, reads: reads.sort((a, b) => a[0] - b[0] || a[1] - b[1]),
+    at: Object.fromEntries(Object.entries(at).map(([k, v]) => [k, v.sort((a, b) => a - b)])), ...n };
+}
+/* parse_session:end */
+function agentUpload() {
+  return `<div class="card"><h3>Claude Code efficiency</h3>
+    <p style="margin:8px 0 0">Do you work on this repository with Claude Code? See how it works on it: the cost and time of a typical change, commit by commit, and seven rules of good agent use.</p>
+    <ol style="margin:10px 0 0;padding-left:20px;line-height:1.6">
+      <li>Press <b>Choose folder</b> and open <code>%USERPROFILE%\\.claude\\projects</code> (macOS, Linux: <code>~/.claude/projects</code>): paste it into the address bar of the dialog.</li>
+      <li>Pick the folder named after where this project is on your machine, such as <code>C--work-my-repo</code>.</li>
+    </ol>
+    <p class="muted" style="margin:10px 0 0;font-size:12.5px">Your browser reads the logs itself and sends only numbers: times, tokens, cost, counts of tool calls and the names of skills. No prompt, answer or line of code leaves your machine. Everyone who can open this page sees the result.</p>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:12px"><label class="icon-btn pri" style="cursor:pointer">Choose folder…<input type="file" id="ag-folder" webkitdirectory multiple hidden></label><span id="ag-prog" class="muted" style="font-size:12.5px"></span></div></div>`;
+}
+async function agentSend(files) {
+  const prog = $("#ag-prog"), run = CURRENT_RUN;
+  const logs = [...files].filter((f) => f.name.endsWith(".jsonl") && (f.webkitRelativePath || f.name).split("/").length <= 2);
+  if (!logs.length) { prog.textContent = "No session logs (.jsonl) in that folder: pick the folder of your project under .claude/projects."; return; }
+  const sessions = [];
+  for (const [i, f] of logs.entries()) { prog.textContent = `Reading session ${i + 1} of ${logs.length}…`; sessions.push(await parseSession(f)); }
+  prog.textContent = "Joining with the git history…";
+  try { const d = await api(`/api/runs/${encodeURIComponent(run)}/agent`, { sessions }); if (AG.run === run) { AG.data = d; agentView(); } }
+  catch (e) { prog.textContent = e.message; }
+}
 function agentView() {
   if (AG.run !== CURRENT_RUN) { AG.run = CURRENT_RUN; AG.data = null;
     $("#assess-pane").innerHTML = `<div class="card muted">Reading the agent's session logs and the git history…</div>`;
@@ -553,14 +650,19 @@ function agentView() {
     api(`/api/agent?run=${encodeURIComponent(run)}`).then((d) => { if (AG.run !== run) return; AG.data = d; if (state.sub === "agent" || state.sub === "timeline") agentView(); })
       .catch((e) => { $("#assess-pane").innerHTML = `<div class="card err">${esc(e.message)}</div>`; });
     return; }
-  const d = AG.data; if (!d) return;
+  const d = AG.data; if (!d) { $("#assess-pane").innerHTML = `<div class="card muted">Reading the agent's session logs and the git history…</div>`; return; }
+  if (!d.available && d.upload) { $("#assess-pane").innerHTML = agentUpload(); $("#ag-folder").onchange = (e) => agentSend(e.target.files); return; }
   if (!d.available) { $("#assess-pane").innerHTML = `<div class="card"><h3>Claude Code efficiency</h3><p style="margin:8px 0 0">${esc(d.reason)}</p></div>`; return; }
   if (state.sub === "timeline") return timelineView(d.timeline);
   const s = d.summary, money = (v) => v == null ? "–" : "$" + (v >= 10 ? Math.round(v).toLocaleString() : v.toFixed(2));
   const line = `${s.first ? fdate(s.first) : "?"} – ${s.last ? fdate(s.last) : "?"}: ${s.active_hours} active hours in ${s.sessions} sessions, `
-    + `${s.agent_commits} of ${s.commits} commits by the agent, ${money(s.cost)} at API prices`
-    + (s.cost_per_commit != null ? ` (about ${money(s.cost_per_commit)} per commit)` : "")
-    + `. On a subscription that is not what was paid. Read from the agent's session logs on this machine and git history.`;
+    + `${s.agent_commits} of ${s.commits} ${s.author ? `commits of ${s.author}` : "commits"} by the agent, ${money(s.cost)} at API prices`
+    + (s.cost_per_commit != null ? `, about ${money(s.cost_per_commit)} per commit` : "")
+    + ` (what this work would cost through the API; a subscription is not billed per token, so it is not what was paid)`
+    + (d.money && d.money.lead ? `. ${d.money.lead[0].toUpperCase() + d.money.lead.slice(1)}. ` : ". ")
+    + (d.origin === "seed" ? "From the Claude Code sessions of the people who built it (numbers only) and the git history."
+      : d.origin === "upload" ? `From Claude Code sessions added in a browser on ${fdate(d.attached)} (numbers only) and the git history.`
+      : "Read from the agent's session logs on this machine and git history.");
   dimension(Object.assign({}, d.aspect, { description: line }));
 }
 
@@ -613,15 +715,22 @@ function tlMarkRow(scroll) {
   document.querySelectorAll("#tl-commits tr[data-sha]").forEach((r) => r.classList.toggle("sel", r.dataset.sha === TL.sel));
   const row = document.querySelector(`#tl-commits tr[data-sha="${TL.sel}"]`); if (row && scroll) row.scrollIntoView({ block: "center", behavior: "smooth" });
 }
+function tlTotal(cs) {   // the sums of the columns that add up; the ratios do not
+  const sum = (k) => cs.reduce((a, c) => a + (c[k] || 0), 0), costed = cs.filter((c) => c.cost != null).length, mins = sum("minutes");
+  return `<tr><td colspan="2" title="${costed} of ${cs.length} commits have a cost: those made in a session Claude Code recorded the cost of">Total, ${cs.length} commits</td>
+    <td class="num">${sum("lines").toLocaleString()}</td><td class="num">${tlTok(sum("read"))}</td><td class="num">${tlMoney(sum("cost"))}</td>
+    <td class="num" title="${(mins / 60).toFixed(1)} hours">${Math.round(mins)}</td><td></td><td></td></tr>`;
+}
 function tlCommits(t) {
   const day = (s) => new Date(s).toLocaleDateString(undefined, { day: "numeric", month: "short" });
   const x = (v) => v == null ? "–" : `<span class="${v >= 2 ? "tlhi" : v <= 0.5 ? "tllo" : ""}">${v.toFixed(1)}×</span>`;
   $("#tl-commits").innerHTML = `<table class="cktab tltab"><colgroup><col style="width:48px"><col><col style="width:42px"><col style="width:46px"><col style="width:46px"><col style="width:36px"><col style="width:44px"><col style="width:44px"></colgroup>
-      <thead><tr><th>Date</th><th>Commit</th><th class="num">Lines</th><th class="num" title="Tokens the agent read for this commit">Tok.</th><th class="num">Cost</th><th class="num" title="Active minutes of the agent">Min</th>
+      <thead><tr><th>Date</th><th>Commit</th><th class="num">Lines</th><th class="num" title="Tokens the agent read for this commit">Tok.</th><th class="num" title="At API prices: what this would cost through the API, not a subscription bill">Cost</th><th class="num" title="Active minutes of the agent">Min</th>
         <th class="num" title="Cost against a usual change of this size on this project">Cost×</th><th class="num" title="Time against a usual change of this size on this project">Time×</th></tr></thead>
       <tbody>${t.commits.map((c) => `<tr data-sha="${c.sha}" class="${c.sha === TL.sel ? "sel" : ""}"><td class="muted">${esc(day(c.date))}</td><td class="tlsubj" title="${esc(c.sha + " · " + c.full)}">${esc(c.subject)}</td>
         <td class="num">${c.lines.toLocaleString()}</td><td class="num">${c.read ? tlTok(c.read) : "–"}</td><td class="num">${c.cost == null ? "–" : tlMoney(c.cost)}</td>
-        <td class="num">${c.minutes == null ? "–" : Math.round(c.minutes)}</td><td class="num">${x(c.cost_x)}</td><td class="num">${x(c.time_x)}</td></tr>`).join("")}</tbody></table>`;
+        <td class="num">${c.minutes == null ? "–" : Math.round(c.minutes)}</td><td class="num">${x(c.cost_x)}</td><td class="num">${x(c.time_x)}</td></tr>`).join("")}</tbody>
+      <tfoot>${tlTotal(t.commits)}</tfoot></table>`;
   document.querySelectorAll("#tl-commits tr[data-sha]").forEach((r) => {
     r.onmouseenter = () => tlCursor(r.dataset.sha);
     r.onclick = () => { TL.sel = r.dataset.sha; tlMarkRow(false); tlCursor(TL.sel); };
@@ -652,35 +761,92 @@ function capTable(id, rows, last, ref = "") {
     <thead><tr><th>ID</th><th>Criticality</th><th>Description</th>${ref ? `<th title="${esc(ref)}">Ref. set</th>` : ""}<th>${last}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 function bindRows(tab, n, get, set, draw) {
-  const rows = document.querySelectorAll(`#${tab} tbody tr`);
+  const rows = document.querySelectorAll(`#${tab} tbody tr[data-i]`);
   const select = (i) => { set(i); rows.forEach((r) => r.classList.toggle("sel", +r.dataset.i === i)); draw(i); };
   rows.forEach((r) => r.onclick = (e) => { if (e.target.closest("input,select,button")) return; select(+r.dataset.i); $("#" + tab).focus({ preventScroll: true }); });
   $("#" + tab).onkeydown = (e) => { if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return; e.preventDefault();
     select((get() + (e.key === "ArrowDown" ? 1 : n - 1)) % n); document.querySelector(`#${tab} tr.sel`).scrollIntoView({ block: "nearest" }); };
   if (n) select(Math.min(get(), n - 1));
 }
+function relatedChecks(ids) {  // checks of other aspects that belong to this area: shown for reference, scored where they are
+  return ids.map((id) => { const d = (REPORT.dimensions || []).find((x) => x.checks.some((k) => k.id === id)), k = d && d.checks.find((x) => x.id === id);
+    return k ? `<a class="lnk" href="#" data-goto="${esc(id)}" title="${esc(k.title)}">${esc(id)}</a> ${k.score == null ? "–" : Math.round(k.score * 100) + "%"}` : ""; }).filter(Boolean).join(" · ");
+}
 function dimension(d) {
   const cnt = (s) => d.checks.filter((c) => c.status === s).length, assessed = cnt("pass") + cnt("partial") + cnt("fail");
-  const first = d.checks.findIndex((c) => c.status === "fail" || c.status === "partial");
+  const first = d.start ? d.checks.findIndex((c) => c.id === d.start) : d.checks.findIndex((c) => c.status === "fail" || c.status === "partial");
   if (SEL[d.id] == null || SEL[d.id] < 0) SEL[d.id] = first < 0 ? 0 : first;
   const open = d.checks.filter((c) => c.status === "fail" || c.status === "partial").sort((a, b) => (PRIO_RANK[a.priority] ?? 1) - (PRIO_RANK[b.priority] ?? 1));
+  const lead = d.start ? d.checks.find((c) => c.id === d.start) : open[0];
   const mood = !assessed ? `<span class="muted">Nothing to assess here.</span>`
     : !open.length ? `<span class="cheer">All ${assessed} capabilities are in place. Great work.</span>`
-    : `<span>${cnt("pass")} of ${assessed} in place. Start with <a class="lnk" href="#" data-start="${esc(open[0].id)}">${esc(open[0].title)}</a></span>`;
+    : `<span>${cnt("pass")} of ${assessed} in place. Start with <a class="lnk" href="#" data-start="${esc(lead.id)}">${esc(lead.title)}</a></span>`;
+  const row = (c, i) => `<tr data-i="${i}">
+        <td class="cid">${esc(c.id)}</td><td>${prio(c.priority)}</td>
+        <td>${esc(c.title)}</td>
+        <td class="st">${rag(c.status)}${c.score == null ? "–" : Math.round(c.score * 100) + "%"}</td></tr>`;
+  const rows = !d.areas ? d.checks.map(row).join("") : d.areas.map((a) => { const also = relatedChecks(a.related);
+    return `<tr class="grp"><td colspan="3"><b>${esc(a.name)}</b><span>${esc(a.practice)}</span></td><td class="st">${a.in_place} of ${a.assessed}</td></tr>`
+      + d.checks.map((c, i) => c.area === a.id ? row(c, i) : "").join("")
+      + (also ? `<tr class="rel"><td colspan="4">Also in the repository: ${also}</td></tr>` : ""); }).join("");
   $("#assess-pane").innerHTML = aspectHead(d.name, d.description, `
       <div style="text-align:right;max-width:420px;font-size:12.5px">${mood}
         ${cnt("review") ? `<div class="muted" style="font-size:11.5px">${cnt("review")} awaiting review</div>` : ""}</div>
       <div class="num" style="font-size:30px">${fmt(d.score)}<small> /100</small></div><span class="grade" style="border-color:${bandColor(d.band)};width:36px;height:36px;font-size:18px">${d.grade}</span>`) + `
     ${d.capped_by && d.capped_by.length ? `<div class="gate"><b>Critical gate:</b> ${d.capped_by.length === 1 ? "a critical capability is" : d.capped_by.length + " critical capabilities are"} not fully met, so this aspect is capped at ${fmt(d.score)} (would be ${fmt(d.uncapped_score)}).</div>` : ""}
     ${d.review_notes && d.review_notes.length ? `<div class="note" style="margin-top:12px">${d.adjust ? `<b>${d.adjust > 0 ? "+" : ""}${d.adjust}</b> reviewer adjustment · ` : ""}${d.review_notes.map(esc).join(" ")}</div>` : ""}
-    <div class="dimgrid">${capTable("cktab", d.checks.map((c, i) => `<tr data-i="${i}">
-        <td class="cid">${esc(c.id)}</td><td>${prio(c.priority)}</td>
-        <td>${esc(c.title)}</td>
-        <td class="st">${rag(c.status)}${c.score == null ? "–" : Math.round(c.score * 100) + "%"}</td></tr>`).join(""), "Status")}
+    <div class="dimgrid">${capTable("cktab", rows, "Status")}
       <div class="card detail" id="ckdetail"></div></div>`;
   const start = $("#assess-pane [data-start]");
   if (start) start.onclick = (e) => { e.preventDefault(); SEL[d.id] = d.checks.findIndex((c) => c.id === start.dataset.start); dimension(d); };
   bindRows("cktab", d.checks.length, () => SEL[d.id], (i) => SEL[d.id] = i, (i) => $("#ckdetail").innerHTML = checkDetail(d.checks[i]));
+  const goto = (e) => { const a = e.target.closest("[data-goto]"); if (a) { e.preventDefault(); gotoCheck(a.dataset.goto); } };
+  $("#ckdetail").onclick = goto; $("#cktab").addEventListener("click", goto);
+}
+
+/* ---------- Skill verdicts (prototype): one verdict per skill, from the code and git; the sessions refine them. Python judges ---------- */
+const SV_DOT = { broken: "fail", behind: "partial", idle: "partial", current: "pass", unknown: "na" };
+const SV_SEL = {};   // the selected skill per run
+const SV_TABLE = ["files", "gone", "changes", "removed", "uses"];   // the numbers shown in the list; the detail shows them all
+function skillVerdicts() {
+  const run = CURRENT_RUN, fromAgent = AG.run === run && AG.data && AG.data.skill_verdicts;
+  const v = fromAgent || REPORT.skill_verdicts;
+  const order = v.order, n = v.skills.length, cols = v.columns || [];
+  const shown = cols.filter((c) => SV_TABLE.includes(c[0]));
+  const val = (s, k) => { const x = s.metrics ? s.metrics[k] : null; return x === null || x === undefined ? "–" : x; };
+  const bad = (k, x) => (k === "gone" || k === "errors") && x > 0;   // the numbers that make a verdict bad on their own
+  const counts = order.filter((k) => v.counts[k]).map((k) => `<span class="chip">${rag(SV_DOT[k])} ${esc(v.titles[k])}: ${v.counts[k]}</span>`).join("");
+  const rows = v.skills.map((s, i) => `<tr data-i="${i}">
+      <td class="cid" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;word-break:normal" title="${esc(s.path)}">${esc(s.name)}</td>
+      ${shown.map((c) => { const x = val(s, c[0]); return `<td class="st" style="text-align:right;${bad(c[0], x) ? "color:var(--bad-text);font-weight:700" : ""}">${x}</td>`; }).join("")}
+      <td class="st">${rag(SV_DOT[s.verdict])}${esc(s.title)}</td></tr>`).join("");
+  const table = `<div class="card" style="padding:0"><table class="cktab" id="svtab" tabindex="0" style="outline:none">
+    <colgroup><col>${shown.map(() => `<col style="width:62px">`).join("")}<col style="width:128px"></colgroup>
+    <thead><tr><th>Skill</th>${shown.map((c) => `<th style="text-align:right" title="${esc(c[2])}">${esc(c[1].split(" ")[0])}</th>`).join("")}<th>Verdict</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+  const detail = (s) => `<div class="dhead"><span class="cid">${esc(s.path)}</span></div>
+    <h2>${rag(SV_DOT[s.verdict])} ${esc(s.title)}: ${esc(s.name)}</h2>
+    <table class="kv main"><tbody>
+      <tr><th>Proof</th><td><ul class="evl">${s.why.map((w) => `<li>${esc(w)}</li>`).join("")}</ul></td></tr>
+      <tr><th>Numbers</th><td><table class="kv"><tbody>${cols.map((c) => `<tr><th title="${esc(c[2])}">${esc(c[1])}</th><td>${val(s, c[0])} <span class="muted" style="font-size:11.5px">${esc(c[2])}</span></td></tr>`).join("")}</tbody></table></td></tr>
+      ${s.notes.length ? `<tr><th>Notes</th><td><ul class="evl">${s.notes.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></td></tr>` : ""}
+      <tr><th>What to do</th><td>${esc(s.do)}</td></tr>
+    </tbody></table>
+    <details class="more"><summary>How each verdict is given</summary><table class="kv"><tbody>
+      ${order.map((k) => `<tr><th>${rag(SV_DOT[k])} ${esc(v.titles[k])}</th><td>${esc(v.rules[k])}</td></tr>`).join("")}
+      <tr><th>Order</th><td>Checked top to bottom; the first that applies is the verdict, so each skill gets one. ${esc(v.shipped_note || "")}</td></tr>
+    </tbody></table></details>`;
+  const shipped = v.shipped && v.shipped.length ? ` ${v.shipped.length} more ship with the product and are not judged.` : "";
+  $("#assess-pane").innerHTML = aspectHead("Skills, one by one", `${n} skill${n === 1 ? "" : "s"} of the project. ${v.basis_note}${shipped}`,
+      `<div style="text-align:right;max-width:520px">${counts}</div>`)
+    + (n ? `<div class="dimgrid">${table}<div class="card detail" id="svdetail"></div></div>` : "");
+  if (n) bindRows("svtab", n, () => SV_SEL[run] || 0, (i) => SV_SEL[run] = i, (i) => $("#svdetail").innerHTML = detail(v.skills[i]));
+  if (!fromAgent && agentTab() && AG.run !== run) {   // the sessions, if this project has any, refine the verdicts
+    AG.run = run; AG.data = null;
+    api(`/api/agent?run=${encodeURIComponent(run)}`).then((d) => { if (AG.run !== run) return; AG.data = d;
+      if (CURRENT_RUN !== run) return;
+      if (state.sub === "agent" || state.sub === "timeline") agentView(); else if (d && d.skill_verdicts && state.sub === "skill-verdicts") skillVerdicts(); }).catch(() => {});
+  }
 }
 
 /* ---------- one card for a capability: the same in Assessment (verdict) and Capabilities (settings) ---------- */
@@ -692,12 +858,27 @@ function foundNote(c) {  // what qualifies the evidence; the status itself is th
   if (c.status === "review") return `<div class="muted xnote">Waiting for a reviewer: a person or an agent records the verdict in review.json.</div>`;
   return "";
 }
-function whatToDo(c) {  // always answers "what now?"; a row like Expected and Found
+function checkLink(id) {  // a check of any aspect, by id: opens it there
+  const d = (REPORT.dimensions || []).find((x) => x.checks.some((k) => k.id === id)), k = d && d.checks.find((x) => x.id === id);
+  return k ? `<a class="lnk" href="#" data-goto="${esc(id)}">${esc(k.title)}</a>` : `<code>${esc(id)}</code>`;
+}
+function gotoCheck(id) {
+  const d = REPORT.dimensions.find((x) => x.checks.some((k) => k.id === id));
+  if (d) { SEL[d.id] = d.checks.findIndex((k) => k.id === id); go("assessment", d.id); }
+}
+function whatToDo(c) {  // always answers "what now?": the habit in plain words, then where this project stands on it
+  const m = c.method || {}, habit = m.habit ? `<div class="todo-do">${esc(m.habit)}</div>` : "";
   let body = "";
-  if (c.status === "pass") body = `Nothing. ${esc(CHEER[c.priority] || CHEER.important)}`;
+  if (c.status === "pass") body = `<span class="todo-do">${esc(m.habit || CHEER[c.priority] || CHEER.important)}</span> <span class="met-mark">✓ Done</span>`;
   else if (c.status === "na") body = "Nothing: it does not apply to this project.";
   else if (c.status === "review") body = "Record the verdict with its evidence in <code>review.json</code>.";
-  else if (c.recommendation) body = linkify(c.recommendation);
+  else if (c.blocked_by) body = habit + `<div class="todo-step">Do this first: ${checkLink(c.blocked_by)} This one can be met only after it.</div>`;
+  else {
+    const step = c.recommendation ? `<div class="todo-step">${linkify(c.recommendation)}</div>` : "";
+    const todo = (c.todo || []).filter((x) => !c.evidence.includes(x));   // items already listed under Found are not repeated
+    const items = todo.length ? `<ul class="evl todo">${todo.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "";
+    body = habit + step + items;
+  }
   if (!body) return "";
   const gate = c.priority === "critical" && (c.status === "fail" || c.status === "partial")
     ? `<div class="muted xnote">Critical: until it is met, the aspect score is capped at ${c.status === "fail" ? 49 : 74}.</div>` : "";
@@ -1033,7 +1214,7 @@ function api(url, body) { return fetch(url, body ? { method: "POST", headers: { 
 function renderProjects() {
   $("#proj-list").innerHTML = PROJECTS.length ? PROJECTS.map((p, i) => { const r = p.runs[0];
     return `<div class="proj ${current && current.source === p.source ? "on" : ""}" data-i="${i}" title="Open ${esc(p.source)}">
-      <div style="min-width:0"><div class="n">${esc(p.name)}</div><div class="d">${esc(p.source.startsWith("github.com/") ? "GitHub" : "Local folder")} · assessed ${fdate(r.generated_at)}</div></div>
+      <div style="min-width:0"><div class="n">${esc(isLocal(p.source) || p.source.startsWith("github.com/") ? p.name : p.name.split("/").pop())}</div><div class="d">${esc(isLocal(p.source) || p.source.startsWith("github.com/") ? srcKind(p.source) : p.source.split("/").slice(0, -1).join("/"))} · assessed ${fdate(r.generated_at)}</div></div>
       <button class="ghost" type="button" data-rescan="${i}" title="Assess again at the latest commit">Re-assess</button><span class="s">${fmt(r.score)}</span></div>`; }).join("")
     : `<div class="muted" style="padding:4px 8px 8px">Nothing assessed yet — add a project below.</div>`;
   $("#proj-list").querySelectorAll(".proj").forEach((row) => row.onclick = (e) => {
@@ -1053,14 +1234,17 @@ function refreshProjects() {
     const p = (q && ps.find((x) => x.name.toLowerCase().includes(q.toLowerCase()))) || ps.find((x) => x.source === want) || ps[0];
     if (p) return loadProject(p); setProjectName(); render(); });
 }
+function srcKind(s) { return s.startsWith("github.com/") ? "GitHub" : /^([A-Za-z]:[\\/]|\/|~|\\\\)/.test(s) ? "Local folder" : s.split("/")[0]; }   // hoisted: the header renders early
 const isLocal = (t) => /^([A-Za-z]:[\\/]|\/|~|\\\\)/.test(t);
-const looksValid = (t) => isLocal(t) || (/^(https?:\/\/github\.com\/)?[\w.-]+\/[\w.-]+?(\.git)?\/?$/.test(t));
+const looksHosted = (t) => /^https?:\/\/[\w.-]+\/([\w.-]+\/)+[\w.-]+?(\.git)?\/?$/.test(t) && !/^https?:\/\/github\.com\//.test(t);   // https://<host>/group/.../repo: the server knows which hosts
+const looksValid = (t) => (isLocal(t) && !HOSTED) || looksHosted(t) || (/^(https?:\/\/github\.com\/)?[\w.-]+\/[\w.-]+?(\.git)?\/?$/.test(t));
+const hostedHint = () => `A repository URL on ${["GitHub", ...GIT_HOSTS].join(" or ")}.`;
 let scanning = false;
 function validate() {
   const t = $("#target").value.trim(), h = $("#hint"); $("#scan-btn").disabled = scanning || !looksValid(t); h.className = "hint";
-  h.textContent = !t ? "GitHub repository or a local folder that is a git repository."
-    : !looksValid(t) ? "Use https://github.com/owner/repo, owner/repo, or a full local path."
-    : isLocal(t) ? "Local folder — read in place, never modified." : "GitHub repository — cloned into the local cache.";
+  h.textContent = !t ? (HOSTED ? hostedHint() : "GitHub repository or a local folder that is a git repository.")
+    : !looksValid(t) ? (HOSTED ? `Use https://github.com/owner/repo, owner/repo${GIT_HOSTS.length ? `, or https://${GIT_HOSTS[0]}/group/repo` : ""}.` : "Use https://github.com/owner/repo, owner/repo, or a full local path.")
+    : isLocal(t) ? "Local folder — read in place, never modified." : looksHosted(t) ? "Git repository — cloned into the cache." : "GitHub repository — cloned into the local cache.";
 }
 const STEPS = ["Fetch the repository", "Check the latest commit against the capabilities", "Save the run"];
 function stepOf(m) { return !m || m.startsWith("resolving") ? 0 : m === "done" ? 3 : 1; }
@@ -1110,6 +1294,11 @@ if (MODE === "app") {
   $("#fsdlg").onclick = (e) => { if (e.target.id === "fsdlg") fsClose(); };
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("#fsdlg").classList.contains("on")) { e.stopPropagation(); fsClose(); } }, true);
 } else { $("#browse-btn")?.remove(); $("#scan-profile")?.remove(); }  // gone with the picker in a static report
+if (HOSTED) { $("#browse-btn").style.display = "none"; $("#target").placeholder = "https://github.com/owner/repo" + (GIT_HOSTS.length ? `   or   https://${GIT_HOSTS[0]}/group/repo` : ""); $("#hint").textContent = hostedHint();
+  $("#how").innerHTML = `<b>What happens when you press Assess</b><ol>
+    <li>The server clones the repository (${esc(["GitHub", ...GIT_HOSTS].join(", "))}) and reads it; nothing is written back.</li>
+    <li>About 70 automated checks run on the latest commit and are judged against the chosen profile of capabilities.</li></ol>
+    Takes a few seconds to a minute, no AI involved. Everyone who may open this page sees the result.`; }
 
 function showEmpty() {
   context();
@@ -1124,7 +1313,7 @@ function showEmpty() {
 
 let rz; new ResizeObserver(() => { clearTimeout(rz); rz = setTimeout(() => REPORT && render(), 120); }).observe(document.body);
 const OPEN = new URLSearchParams(location.search).get("open");
-if (MODE === "app" && OPEN) setTimeout(() => { panel.classList.add("on"); if (OPEN === "browse") fsOpen(); }, 300);
+if (MODE === "app" && OPEN) setTimeout(() => { panel.classList.add("on"); if (OPEN === "browse" && !HOSTED) fsOpen(); }, 300);
 if (MODE === "app") refreshProjects().catch((e) => { showEmpty(); $("#empty").textContent = "Cannot reach the SDLC 360 server: " + e.message; });
 else { setProjectName(); render(); }
 </script>

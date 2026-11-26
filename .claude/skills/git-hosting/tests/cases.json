@@ -1,0 +1,55 @@
+[
+  {
+    "id": "unit",
+    "title": "Offline logic: remotes and URLs, host choice, log tail, no token across redirects, no force-push",
+    "steps": ["python -m unittest discover -s tests -v"]
+  },
+  {
+    "id": "this-repo-from-remote",
+    "title": "Repository and host come from the git remote of the current folder",
+    "needs": ["network"],
+    "steps": ["python scripts/githost.py whoami", "python scripts/githost.py runs --top 3"],
+    "expect": {"contains": ["github.com"]}
+  },
+  {
+    "id": "github-ci-failure",
+    "title": "Latest failed GitHub Actions run of a busy public project is explained",
+    "needs": ["network"],
+    "steps": ["python scripts/githost.py run last-failed --repo cli/cli --log-lines 10"],
+    "expect": {"contains_any": ["FAILED job", "no job ran"]}
+  },
+  {
+    "id": "gitlab-pipeline-failure",
+    "title": "Latest failed GitLab pipeline of a public project is explained",
+    "needs": ["network"],
+    "steps": ["python scripts/githost.py run last-failed --repo gitlab-org/cli --host gitlab --log-lines 10"],
+    "expect": {"contains": ["FAILED job"]}
+  },
+  {
+    "id": "gitlab-mr-by-url",
+    "title": "A GitLab merge request by URL: approvals, checks; threads say a token is needed",
+    "needs": ["network"],
+    "env": {"GITLAB_TOKEN": ""},
+    "steps": ["python scripts/githost.py pr https://gitlab.com/gitlab-org/cli/-/merge_requests/4555"],
+    "expect": {"contains": ["Reviews:", "Checks:", "needs GITLAB_TOKEN"]}
+  },
+  {
+    "id": "pr-create-dry-run",
+    "title": "pr-create sends nothing without --apply, and refuses a missing branch",
+    "needs": ["network"],
+    "steps": [
+      "python scripts/githost.py pr-create --source main --target main --title T --body d",
+      "python scripts/githost.py pr-create --source no-such-branch-xyz --title T --body d"
+    ],
+    "expect": {"exit": 1, "contains": ["branch not found"]}
+  },
+  {
+    "id": "git-with-token-header",
+    "title": "git over HTTPS with the token as a header; .git/config is left unchanged",
+    "needs": ["network", "GH_TOKEN"],
+    "steps": [
+      "bash -c \"a=$(git config --local --list | md5sum); python scripts/githost.py git ls-remote origin HEAD; b=$(git config --local --list | md5sum); [ \\\"$a\\\" = \\\"$b\\\" ] && echo config-unchanged\""
+    ],
+    "expect": {"contains": ["HEAD", "config-unchanged"]}
+  }
+]

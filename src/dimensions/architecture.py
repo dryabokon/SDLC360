@@ -4,13 +4,19 @@ from __future__ import annotations
 
 from ..model import Checks, Dimension, short
 from ..repo import Repo
-from ._util import freshness_score, reach
+from ._util import for_language, freshness_score, in_tooling, reach
 
 
 def assess(repo: Repo):
     c = Checks()
     arch = repo.find("ARCHITECTURE*", "DESIGN.md", "docs/*architecture*", "docs/*design*", "doc/*architecture*", "docs/*overview*", "docs/arc42/*")
-    arch = [f for f in arch if f.lower().endswith((".md", ".mdx", ".rst", ".adoc", ".txt"))]
+    arch = [
+        f
+        for f in arch
+        if f.lower().endswith((".md", ".mdx", ".rst", ".adoc", ".txt"))
+        and (f.count("/") <= 1 or f.lower().startswith(("docs/", "doc/")))  # not a generated design.md deep in the tree
+        and not in_tooling(f)
+    ]
     c.add(
         "arch.doc",
         "Architecture document",
@@ -74,7 +80,15 @@ def assess(repo: Repo):
         if len(repo.source_files) > repo.param("arch.boundaries", "min_source_files")
         else None,
         short(boundaries) if boundaries else "no workspace/boundary tooling",
-        "Enforce layering with import-linter / dependency-cruiser / ArchUnit, or a workspace tool.",
+        for_language(
+            repo,
+            {
+                "py": "Write down which package may import which as an import-linter contract, and run `lint-imports` in CI.",
+                "js": "Write down which folder may import which as dependency-cruiser rules, and run it in CI.",
+                "java": "Write down which package may use which as ArchUnit tests.",
+                "": "Write down which module may use which, and let a tool check it in CI.",
+            },
+        ),
     )
 
     if arch:

@@ -7,6 +7,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** The code records LLM token usage and cost.
 
+**The habit.** Record the tokens and the cost of every LLM call.
+
 **How we check.** LLM detection looks at source files (first 4000, excluding root `scripts/`, `examples/` and `.github/`). It looks for line-start Python imports of anthropic, openai, langchain*, llama_index, litellm, google genai/generativeai, mistralai, cohere, groq, ollama or claude_agent_sdk. It also looks for JS `require`/`from` of `openai`, `@anthropic-ai/*`, `ai`, `@ai-sdk/*` or `langchain*`, and for the same packages declared in requirements, `pyproject.toml`, `package.json`, `go.mod`, `Cargo.toml` or `*.csproj`. If found, it searches source lines for `usage.input_tokens/output_tokens/prompt_tokens/completion_tokens/total_tokens`, `cost_usd`, `total_cost`, `token_count`, `count_tokens`, `track_cost`, `cost_tracker`, `get_openai_callback`, `langfuse`, `helicone`, `langsmith` or `openlit`.
 
 - **Met:** 2 or more matching lines (score = lines / 2).
@@ -33,6 +35,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## cost.llm_limits: LLM calls are bounded by max_tokens, budgets and retries.
 
 **Accepted when.** LLM calls are bounded: maximum tokens, budgets and retry limits.
+
+**The habit.** Cap every LLM call: max_tokens, a budget and a retry limit.
 
 **How we check.** Only when an LLM SDK is detected (see `cost.llm_tracking`). Source lines are searched for the words `max_tokens`, `max_output_tokens`, `max_completion_tokens`, `budget`, `max_cost`, `spend_limit`, `rate_limit` or `max_retries`.
 
@@ -61,6 +65,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **Accepted when.** Prompts are cached and models are configured in one place.
 
+**The habit.** Cache repeated prompts and set the model in one place.
+
 **How we check.** Only when an LLM SDK is detected. Source lines are searched for caching (`cache_control`, `prompt_cach`, `semantic_cache`, `lru_cache`, `@cache`, `diskcache`, `redis`) and for "model config": `MODEL`, `model_name`, `model_id` or `DEFAULT_MODEL` followed by `:` or `=`, case-insensitive.
 
 - **Met:** Both a caching match and a model-config match (0.5 + 0.5).
@@ -85,6 +91,8 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 ## cost.documented: Expected costs and budgets are documented.
 
 **Accepted when.** Expected costs or budgets are written down.
+
+**The habit.** Write down what the LLM and the cloud should cost per month.
 
 **How we check.** Text of the first 30 files matching `README*`, `CLAUDE.md` or `COST*.md` anywhere, or any `docs/**.md`, searched case-insensitively for words starting with `cost`, `budget`, `pricing` or `spend`, or for a `$` followed by a digit.
 
