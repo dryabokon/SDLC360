@@ -52,6 +52,8 @@ NOTE_HINT = (
 TITLES = {"broken": "Broken", "behind": "Behind the code", "idle": "Idle", "current": "Up to date", "unknown": "Procedure"}
 ADVICE = {
     "broken": "Fix the skill first: it sends the agent to files that are gone, which is worse than no skill.",
+    "broken_calls": "Fix the skill first: the calls right after it fail. Read what failed after it in the sessions (hosts, paths, "
+    "commands it gives) and correct those steps.",
     "behind": "Bring the skill up to date with its area: read the commits listed and change the steps that no longer hold.",
     "idle": "Delete the skill, or, if the work it covers still happens, rewrite its description in the words people use, so the agent picks it.",
     "current": "Keep it. Add a script or a check at the end, so the agent does the same steps every time.",
@@ -260,6 +262,7 @@ def _one(f: dict, fx: dict, u: dict | None) -> dict:
         v, why = "broken", ["points at what git deleted or moved: " + "; ".join(f["gone"][:3])]
     elif with_sessions and n >= MIN_USES and err / n >= ERRORS_PER_USE:
         v, why = "broken", [f"{calls}; {_n(err, 'tool call')} failed in the 10 calls after a use ({err / n:.1f} per use)"]
+        do = ADVICE["broken_calls"]
     elif f["moved_after_edit"] >= BEHIND_COMMITS:
         v = "behind"
         why = [f"{_n(f['moved_after_edit'], 'commit')} deleted or moved files of its area {since}", *f["moved_examples"]]

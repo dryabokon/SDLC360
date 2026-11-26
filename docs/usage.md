@@ -24,8 +24,16 @@ python sdlc.py scan owner/repo --history 8 --months 12       # also re-score 8 p
 python sdlc.py scan owner/repo --profile prototype          # another profile (assessment/profiles/)
 python sdlc.py list                                          # projects and their runs
 python sdlc.py render runs/<run-id> --profile <name>         # re-apply a profile / acceptance / review.json, no re-scan
+python sdlc.py handoff <run-id> --list                       # open findings in the order to fix them
+python sdlc.py handoff <run-id> --check hyg.lint             # the prompt for a coding agent to fix one (or skill:<name>)
 python sdlc.py serve --port 8360 --open                      # the web app in the foreground
 ```
+
+`handoff` prints a prompt for a coding agent working in the assessed repository, built from the run alone. It carries
+the finding's Expected, Found and What to do, asks the agent to check the finding against the code first (the scanner
+can be wrong), make one small change in one commit, and name the scan that re-checks it. The order is broken or
+behind skills first, then the ranked actions, then idle skills. Without `--check` it prints the first `--top` (5). In
+the app, every open check and every broken, behind or idle skill has **Copy prompt for an agent** under What to do.
 
 ## What a scan does
 

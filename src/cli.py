@@ -1,4 +1,4 @@
-"""Command line interface: `python sdlc.py scan|render|list|calibrate|attach-sessions|serve`."""
+"""Command line interface: `python sdlc.py scan|render|list|calibrate|attach-sessions|handoff|serve`."""
 
 from __future__ import annotations
 
@@ -93,6 +93,29 @@ def cmd_attach(a: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_handoff(a: argparse.Namespace) -> int:
+    """Print the prompt for a coding agent to fix one finding of a run, or the first --top ones."""
+    from .handoff import findings, handoff, skill_verdicts
+
+    run = Path(a.run) if Path(a.run).is_dir() else Path(a.runs_dir) / a.run
+    if not (run / "report.json").is_file():
+        print(f"no run {a.run}", file=sys.stderr)
+        return 2
+    if a.list:
+        import json
+
+        report = json.loads((run / "report.json").read_text(encoding="utf-8"))
+        for f in findings(report, skill_verdicts(run, report)):
+            print(f"{f['id']:32s} {f['status']:8s} {f['title']}")
+        return 0
+    try:
+        print(handoff(run, a.check, a.top))
+    except KeyError:
+        print(f"{a.check} is not an open finding of {run.name} (see --list)", file=sys.stderr)
+        return 2
+    return 0
+
+
 def cmd_serve(a: argparse.Namespace) -> int:
     from .serve import serve
 
@@ -146,6 +169,13 @@ def main(argv: list[str] | None = None) -> int:
     at.add_argument("--folder", required=True, help="the local working copy the sessions were made in")
     at.add_argument("--origin", default="seed", choices=["seed", "upload"], help="seed: a demo, not replaced from the app")
     at.set_defaults(func=cmd_attach)
+
+    ho = sub.add_parser("handoff", parents=[common], help="the prompt for a coding agent to fix a finding of a run")
+    ho.add_argument("run", help="a run folder, or its id under --runs-dir")
+    ho.add_argument("--check", help="one finding: a check id (hyg.lint) or skill:<name>; default: the first --top ones")
+    ho.add_argument("--top", type=int, default=5, help="how many findings, in the order to fix them (default 5)")
+    ho.add_argument("--list", action="store_true", help="list the open findings in that order instead")
+    ho.set_defaults(func=cmd_handoff)
 
     sv = sub.add_parser("serve", parents=[common], help="local web app: choose projects, scan, browse")
     sv.add_argument("--port", type=int, default=8360)

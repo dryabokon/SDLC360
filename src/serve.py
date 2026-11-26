@@ -13,7 +13,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from . import agent_usage, calibration, hosting, profiles
+from . import agent_usage, calibration, handoff, hosting, profiles
 from .acceptance import criteria, method_for, reference_cards
 from .dimensions import DIMENSIONS
 from .hosting import is_remote
@@ -234,6 +234,15 @@ def make_handler(runs_dir: Path, cache_dir: Path):
                         ),
                     }
                 )
+            if path == "/api/handoff":  # the prompt for a coding agent to fix one finding of a run
+                hq = parse_qs(urlparse(self.path).query)
+                run, fid = hq.get("run", [""])[0], hq.get("id", [""])[0]
+                if not RUN_ID_RE.match(run) or not (runs_dir / run / "report.json").is_file():
+                    return self._json({"error": "run not found"}, 404)
+                try:
+                    return self._json({"prompt": handoff.handoff(runs_dir / run, fid or None)})
+                except KeyError:
+                    return self._json({"error": f"{fid} is not an open finding of this run"}, 404)
             if path == "/api/agent":  # how a coding agent was used on the open project
                 run = parse_qs(urlparse(self.path).query).get("run", [""])[0]
                 f = runs_dir / run / "report.json"

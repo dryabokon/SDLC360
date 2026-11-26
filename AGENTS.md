@@ -19,6 +19,7 @@ Read `README.md` first, then `docs/architecture.md`.
   with git's credentials, or the git-hosting skill with `GH_TOKEN` in `.env` (see `.env.example`):
   `python .claude/skills/git-hosting/scripts/githost.py git push origin <branch>`. The `gcp` skill shows and checks the hosted service.
 - scan: `python sdlc.py scan <url|owner/repo|path> [--no-history]`
+- hand a finding to an agent in the assessed repository: `python sdlc.py handoff <run-id> [--list | --check <id>]` (`src/handoff.py`)
 - calibrate: `python sdlc.py calibrate [--latest]` (the app's refresh button is `--latest`: moves the pins; writes `runs/calibrations/<id>.json`)
 - tests: `.venv/Scripts/python -m pytest --cov` (Linux/macOS: `.venv/bin/...`)
 - lint, format, types: `.venv/Scripts/ruff check .`, `.venv/Scripts/ruff format .`, `.venv/Scripts/mypy`

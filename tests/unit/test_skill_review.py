@@ -219,6 +219,7 @@ def test_a_few_days_of_sessions_without_its_work_do_not_make_it_idle(live):
 def test_sessions_broken_when_calls_after_it_fail(live):
     s = one(live.verdicts(_sessions({"plugin:deploy": 3}, {"deploy": 4})))
     assert s["verdict"] == "broken" and "failed in the 10 calls after a use" in s["why"][0]
+    assert s["do"] == skill_review.ADVICE["broken_calls"]  # not "files that are gone": none are
 
 
 def test_sessions_confirm_a_working_skill(live):

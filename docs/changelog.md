@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Hand a finding to a coding agent** (`python sdlc.py handoff <run> [--list | --check <id>]`, and **Copy prompt
+  for an agent** under What to do in the app): a prompt built from the run alone with Expected, Found and What to do,
+  for the agent working in the assessed repository. It checks the finding against the code first, makes one change in one
+  commit and names the scan that re-checks it. Broken or behind skills come first. A skill broken by failing
+  calls now says so in What to do (it said "files that are gone").
 - **Three wrong verdicts fixed on Azure DevOps projects** (found on fly2-integration-tests and its neighbours):
   `rev.via_pr` now counts Azure's `Merged PR 123:` merges (control-center-backend: 88 of 100, was 0);
   `test.framework` accepts `unittest.TestCase` suites; an Azure pipeline under any name
