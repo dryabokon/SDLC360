@@ -1109,7 +1109,7 @@ function renderCalibration() {
 }
 function calSet() {
   const d = CAL.data;
-  const chips = d.set.map((r, i) => `<span class="rchip" title="${esc([r.why, r.pin ? "pinned at " + shortSha(r.pin) : isGithub(r.target) ? "not pinned yet" : "local folder: read as it is"].filter(Boolean).join(" · "))}">${esc(repoName(r.target))}${isGithub(r.target) ? "" : ` <span class="muted">local</span>`}${r.builtin ? ""
+  const chips = d.set.map((r, i) => `<span class="rchip" title="${esc([r.why, r.pin ? "pinned at " + shortSha(r.pin) : "not pinned yet"].filter(Boolean).join(" · "))}">${esc(repoName(r.target))}${isGithub(r.target) ? "" : ` <span class="muted">local</span>`}${r.builtin ? ""
     : `<button type="button" data-rm="${i}" title="Remove from the reference set" aria-label="Remove ${esc(r.target)}" ${CAL.busy ? "disabled" : ""}>×</button>`}</span>`).join("");
   return `<div class="chead" style="margin:0"><h3>Calibration · reference set of ${d.set.length} repositories</h3>
       <span class="muted" style="font-size:12px">each assessed with the Standard criteria at its latest commit, which is then pinned</span>

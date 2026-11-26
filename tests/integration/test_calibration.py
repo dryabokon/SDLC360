@@ -1,6 +1,7 @@
 """Calibration end to end on local throw-away repositories: snapshot, comparison, pins, the reference set, the API."""
 
 import json
+import subprocess
 import threading
 import time
 import urllib.request
@@ -20,6 +21,7 @@ def own_files(tmp_path, monkeypatch):
     """Never touch the real assessment/calibration files: the user's set and the pins live in tmp_path."""
     monkeypatch.setattr(calibration, "CUSTOM_SET", tmp_path / "custom.json")
     monkeypatch.setattr(calibration, "PINS", tmp_path / "pins.json")
+    monkeypatch.setattr(calibration, "LOCAL_PINS", tmp_path / "runs" / "calibrations" / "local-pins.json")
 
 
 def test_calibration_records_every_verdict_and_compares(make_repo, tmp_path):
@@ -186,3 +188,20 @@ def test_calibration_api(make_repo, tmp_path, monkeypatch):
     finally:
         httpd.shutdown()
         httpd.server_close()
+
+
+def test_a_local_folder_is_pinned_on_this_machine_only(make_repo, tmp_path):
+    from tests.conftest import _git
+
+    root = make_repo({"README.md": "# x\n"}, name="ours")
+    first = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True).stdout.strip()
+    repos, kw = [{"target": str(root), "kind": "application"}], {"runs_dir": tmp_path / "runs", "cache_dir": tmp_path / "c"}
+    calibration.run_calibration(repos, **kw)
+    (root / "more.md").write_text("more\n", encoding="utf-8")
+    _git(root, "add", "-A")
+    _git(root, "commit", "-q", "-m", "the project moved on")
+    snap = json.loads(calibration.run_calibration(repos, **kw).read_text(encoding="utf-8"))
+    assert snap["repos"][0]["commit"] == first and snap["repos"][0]["pinned"]  # the same commit as the first time
+    assert calibration.load_pins() == {}  # nothing in the pins kept in git
+    assert list(calibration.load_pins(tmp_path / "runs" / "calibrations" / "local-pins.json").values()) == [first]
+    assert calibration.reference_set(tmp_path / "none.json", tmp_path / "none.json") == []

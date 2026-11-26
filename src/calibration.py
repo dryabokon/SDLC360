@@ -3,7 +3,8 @@
 The reference set is a list of well-run repositories (assessment/calibration/reference-set.json, read-only) plus the
 ones a user adds in the app (assessment/calibration/custom.json). Each GitHub repository is pinned to a commit
 (assessment/calibration/pins.json): a calibration assesses the same commits until they are moved on on purpose, so
-two calibrations differ only where the rules changed. A local folder is read as it is and cannot be pinned.
+two calibrations differ only where the rules changed. A local folder is pinned too, but in
+runs/calibrations/local-pins.json, which stays on this machine: its path and commits are nobody else's business.
 
 A calibration writes one snapshot to runs/calibrations/<id>.json: every verdict of every check on every repository,
 with the commit it was made on and the version of the scanner that made it. Comparing two snapshots shows what a
@@ -29,6 +30,7 @@ CAL_DIR = CATALOG.parent / "calibration"
 DEFAULT_SET = CAL_DIR / "reference-set.json"
 CUSTOM_SET = CAL_DIR / "custom.json"
 PINS = CAL_DIR / "pins.json"
+LOCAL_PINS = DEFAULT_RUNS / "calibrations" / "local-pins.json"  # local folders: kept on this machine, never in git
 KINDS = {"agentic": "Agentic project", "library": "Library", "template": "Template", "application": "Application"}
 SNAPSHOT_ID_RE = re.compile(r"^\d{8}-\d{6}$")
 MAX_WHY = 200
@@ -57,7 +59,7 @@ def _read(path: Path) -> list[dict]:
 
 def reference_set(default: Path | None = None, custom: Path | None = None) -> list[dict]:
     """The default repositories first, then the user's own; each with `builtin` and its pinned commit."""
-    out, seen, pins = [], set(), load_pins()
+    out, seen, pins = [], set(), {**load_pins(LOCAL_PINS), **load_pins()}
     for builtin, path in ((True, default or DEFAULT_SET), (False, custom or CUSTOM_SET)):
         for r in _read(path):
             k = _key(r["target"])
@@ -156,6 +158,8 @@ def run_calibration(
     say = progress or (lambda i, status, msg: None)
     repos = reference_set() if repos is None else repos
     pins = load_pins(pins_path)
+    local_pins_path = Path(runs_dir) / "calibrations" / LOCAL_PINS.name
+    local_pins = load_pins(local_pins_path)
     started = datetime.now(UTC)
     out_dir = Path(runs_dir) / "calibrations"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -164,7 +168,7 @@ def run_calibration(
         say(i, "running", "")
         base = {k: ref[k] for k in ("target", "kind", "why", "builtin") if k in ref}
         key, local = _key(ref["target"]), _is_local(ref["target"])
-        pin = None if latest or local else pins.get(key)
+        pin = None if latest else (local_pins if local else pins).get(key)
         try:
             run_dir = scan(
                 ref["target"],
@@ -178,15 +182,17 @@ def run_calibration(
             )
             e = _entry(base, run_dir)
             checks.update(e.pop("_checks"))
-            e["pinned"] = not local
+            e["pinned"] = True
             entries.append(e)
-            if not local and e.get("commit"):
-                pins[key] = e["commit"]
+            if e.get("commit"):
+                (local_pins if local else pins)[key] = e["commit"]
             say(i, "done", "")
         except Exception as ex:  # an unreachable repository must not sink the calibration
             entries.append({**base, "status": "failed", "error": f"{type(ex).__name__}: {ex}"})
             say(i, "failed", str(ex))
     save_pins(pins, pins_path)
+    if local_pins:
+        save_pins(local_pins, local_pins_path)
     snap = {
         "schema": "sdlc360/calibration@1",
         "id": started.strftime("%Y%m%d-%H%M%S"),
@@ -209,6 +215,8 @@ def list_snapshots(runs_dir: Path = DEFAULT_RUNS) -> list[dict]:
         try:
             s = json.loads(f.read_text(encoding="utf-8"))
         except (OSError, ValueError):
+            continue
+        if s.get("schema") != "sdlc360/calibration@1":  # local-pins.json lives here too
             continue
         ok = [r for r in s.get("repos", []) if r.get("status") == "ok"]
         out.append({"id": s["id"], "started_at": s["started_at"], "repos": len(s.get("repos", [])), "ok": len(ok), "tool": s.get("tool", {})})

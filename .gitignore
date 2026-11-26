@@ -31,3 +31,6 @@ assessment/references/*/local/
 
 # gcloud login of the GCP harness (tokens)
 _ai_utils/
+
+# reference repositories added in the app: local paths of this machine
+assessment/calibration/custom.json

@@ -18,7 +18,9 @@ GitHub repositories are pinned: a calibration assesses the commits in `assessmen
 calibrations differ only where the rules changed. The refresh button in the app (`python sdlc.py calibrate --latest`)
 assesses the latest commits and moves the pins there; commit `pins.json` with it. To recheck a rule change on the
 same commits, run `python sdlc.py calibrate` without `--latest`. A repository added to the set is
-pinned at its first calibration. A local folder is read as it is and cannot be pinned. Calibration runs are opened
+pinned at its first calibration. A local folder (added in the app, for example a private project) is pinned too, at its
+main branch's commit, but in `runs/calibrations/local-pins.json`: its path and commits stay on this machine and out of
+git. Calibration runs are opened
 from the matrix and are not listed under the projects.
 
 ## Reference set (2026-11-09)
