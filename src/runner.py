@@ -82,6 +82,7 @@ def run_scan(
         report = scan(repo, only=only, checklist=cl)
         say("judging skills")
         report["skill_facts"] = skill_review.facts(repo)  # HEAD only: what the code and git say about each skill
+        report = finalize(report)  # scan() finalized before the facts existed: the skill verdicts need them
         for d in report["dimensions"]:
             log.info("  %-24s %6s  %s", d["name"], d["score"], d["grade"])
         say("computing velocity")

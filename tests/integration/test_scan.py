@@ -123,6 +123,15 @@ def test_run_folder_contract(make_repo, tmp_path):
     assert [p["name"] for p in list_projects(runs)] == ["mature"]
 
 
+def test_run_judges_the_skills(make_repo, tmp_path):
+    skill = "---\nname: deploy\ndescription: Deploy the app.\n---\nRun `app/cli.py`.\n"
+    root = make_repo({**MATURE, ".claude/skills/deploy/SKILL.md": skill}, name="skilled")
+    run_dir = run_scan(str(root), history_points=0, runs_dir=tmp_path / "runs", cache_dir=tmp_path / "cache")
+    rep = json.loads((run_dir / "report.json").read_text(encoding="utf-8"))
+    assert rep["skill_facts"]["skills"][0]["name"] == "deploy"
+    assert [s["name"] for s in rep["skill_verdicts"]["skills"]] == ["deploy"]
+
+
 def test_failed_scan_leaves_a_failed_manifest(make_repo, tmp_path, monkeypatch):
     root = make_repo({"a.py": ""}, name="boom")
 
