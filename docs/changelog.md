@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **One remote: GitHub.** GitLab is no longer used for SDLC360 itself: `.gitlab-ci.yml` is gone (`.github/workflows`
+  runs the same gates), AGENTS.md and `.env.example` name `origin` (github.com/dryabokon/sdlc360) only. Assessing
+  repositories on GitLab is unchanged.
+- **Skill verdicts are kept in `report.json`** (they were `null`), and plain notes `.agents/skills/<name>.md` are judged
+  like skills: reading one in a Claude Code session is a use.
 - **Claude Code efficiency in five areas**: Gather context, Take action, Verify work, Commit and Capture, each with the
   practice from Anthropic's Claude Code best practices and what is in place. The checks and the score are unchanged;
   related checks of other aspects are linked for reference and scored where they are.

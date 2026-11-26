@@ -14,9 +14,10 @@ Read `README.md` first, then `docs/architecture.md`.
 
 - run the app: `./start.sh` / `./stop.sh` (http://127.0.0.1:8360/)
 - hosted: `bash deploy/gcp/site.sh [deploy|remove]` (Cloud Run + IAP, `docs/deploy-gcp.md`)
-- git: `github` (github.com/dryabokon/SDLC360) is the public home, PRs go there; `origin` is a private GitLab. Push and PRs
-  through the git-hosting skill: `python .claude/skills/git-hosting/scripts/githost.py git push origin <branch>`
-  (tokens in `.env`, see `.env.example`). The `gcp` skill shows and checks the hosted service.
+- git: one remote, `origin` = github.com/dryabokon/sdlc360 (GitHub; GitLab is no longer used). The same repository is
+  worked on from more than one machine: `git pull` before you start, push to `origin`. Plain `git push origin <branch>`
+  with git's credentials, or the git-hosting skill with `GH_TOKEN` in `.env` (see `.env.example`):
+  `python .claude/skills/git-hosting/scripts/githost.py git push origin <branch>`. The `gcp` skill shows and checks the hosted service.
 - scan: `python sdlc.py scan <url|owner/repo|path> [--no-history]`
 - calibrate: `python sdlc.py calibrate [--latest]` (the app's refresh button is `--latest`: moves the pins; writes `runs/calibrations/<id>.json`)
 - tests: `.venv/Scripts/python -m pytest --cov` (Linux/macOS: `.venv/bin/...`)
