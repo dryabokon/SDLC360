@@ -8,6 +8,7 @@ from ..model import Checks, Dimension, ratio, short
 from ..repo import Repo
 from ._util import for_language, reach
 
+UNITTEST = re.compile(r"unittest\.(IsolatedAsyncio)?TestCase\b|^from unittest import [^\n]*\bTestCase\b", re.M)  # not unittest.mock
 TEST_CMD = r"pytest|python -m unittest|tox|nox|npm (run )?test|pnpm (run )?test|yarn test|jest|vitest|mocha|go test|cargo test|cargo nextest|mvn (-\S+ )*(test|verify)|gradlew? (test|check)|dotnet test|rspec|phpunit|make test|just test|uv run pytest|bun test|ctest"
 
 
@@ -66,6 +67,8 @@ def assess(repo: Repo):
         cfg.append("package.json scripts.test")
     if any(f.endswith("_test.go") for f in tests) or (repo.exists("Cargo.toml") and tests):
         cfg.append("built-in test runner")
+    if any(UNITTEST.search(repo.read(f)) for f in [t for t in tests if t.endswith(".py")][:200]):
+        cfg.append("unittest (standard library)")  # `python -m unittest discover` runs them all, no config needed
     c.add(
         "test.framework",
         "Test framework configured",
@@ -111,7 +114,7 @@ def assess(repo: Repo):
     )
 
     in_ci = [m.group(0) for m in re.finditer(TEST_CMD, repo.ci_text, re.I)]
-    other_ci = repo.find(".gitlab-ci.yml", "Jenkinsfile", "azure-pipelines.yml", ".circleci/config.yml")
+    other_ci = repo.other_ci
     c.add(
         "test.ci",
         "Tests run in CI",

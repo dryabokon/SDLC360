@@ -14,7 +14,7 @@ from ._util import headings, instruction_files, on
 
 RECENT = 100  # commits of the main line that are judged
 MIN_COMMITS = 10  # below this the history says too little: not applicable
-PR_MARK = re.compile(r"\(#\d+\)\s*$|^Merge pull request #\d+|^Merge branch '.+' into|See merge request [\w/.-]*!\d+", re.M)
+PR_MARK = re.compile(r"\(#\d+\)\s*$|^Merge pull request #\d+|^Merge branch '.+' into|See merge request [\w/.-]*!\d+|^Merged PR \d+:", re.M)
 AGENTS = r"claude|copilot|codex|cursor|gemini|aider|devin|jules|openai|anthropic|windsurf"
 AI_TRAILER = re.compile(rf"^Co-authored-by:.*({AGENTS})|Generated (with|by) .*({AGENTS})", re.I | re.M)
 POLICY_FILES = ("AI_POLICY*", "AI-POLICY*", "AI_USAGE*", "AI-USAGE*", "docs/*ai-polic*", "docs/*ai_polic*", "docs/*ai-usage*", ".github/AI*")

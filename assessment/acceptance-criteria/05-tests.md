@@ -37,13 +37,13 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **The habit.** Run all the tests on every push and pull request.
 
-**How we check.** It searches `ci_text` (GitHub workflow YAML and `.gitlab-ci.yml`, plus the scripts/Makefile/nox/tox/package.json/pyproject they delegate to) for a test command such as `pytest`, `tox`, `nox`, `npm test`, `jest`, `go test`, `cargo test`, `mvn test`, `dotnet test` or `make test`.
+**How we check.** It searches `ci_text` (GitHub workflow YAML, `.gitlab-ci.yml` and Azure pipelines `azure-pipelines*.yml`, plus the scripts/Makefile/nox/tox/package.json/pyproject they delegate to) for a test command such as `pytest`, `tox`, `nox`, `npm test`, `jest`, `go test`, `cargo test`, `mvn test`, `dotnet test` or `make test`.
 
 - **Met:** Any test command is found in that text.
-- **Partially met:** None is found, but `.gitlab-ci.yml`, `Jenkinsfile`, `azure-pipelines.yml` or `.circleci/config.yml` exists (scores 0.5, file not read).
+- **Partially met:** None is found, but another CI exists: `.gitlab-ci.yml`, `Jenkinsfile`, an Azure pipeline (`azure-pipelines*.yml`, any name), `.circleci/config.yml`, `bitbucket-pipelines.yml` or `.travis.yml` (scores 0.5; Jenkins, CircleCI, Bitbucket and Travis files are not read).
 - **Not met:** Neither.
 
-**What the check cannot see.** This is a plain substring match. `pip install pytest` in a lint job counts. A delegated `Makefile` or `pyproject.toml` is read whole, so `pytest` listed as a dependency or in an unused make target counts. Bitbucket and Travis configs are ignored here.
+**What the check cannot see.** This is a plain substring match. `pip install pytest` in a lint job counts. A delegated `Makefile` or `pyproject.toml` is read whole, so `pytest` listed as a dependency or in an unused make target counts. Bitbucket and Travis configs only make it partially met.
 
 **Known flaw.** The checklist says "on every push and pull request". Triggers are not checked, so a test step in a nightly-only or manual workflow is Met.
 
@@ -112,7 +112,7 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **The habit.** Configure the test runner in the repository, so everyone runs the tests the same way.
 
-**How we check.** Anywhere in the tree: `pytest.ini`, `conftest.py`, `tox.ini`, `noxfile.py`, `jest/vitest/playwright/cypress` configs, `karma.conf.*`, `.mocharc*`, `phpunit.xml*` or `*.runsettings`. Also `[tool.pytest` in the root `pyproject.toml`, a `"test":` key in the root `package.json`, a `*_test.go` test file, or a root `Cargo.toml` alongside test files.
+**How we check.** Anywhere in the tree: `pytest.ini`, `conftest.py`, `tox.ini`, `noxfile.py`, `jest/vitest/playwright/cypress` configs, `karma.conf.*`, `.mocharc*`, `phpunit.xml*` or `*.runsettings`. Also `[tool.pytest` in the root `pyproject.toml`, a `"test":` key in the root `package.json`, a `*_test.go` test file, a root `Cargo.toml` alongside test files, or a Python test file with a `unittest.TestCase` (`unittest (standard library)`: `python -m unittest discover` runs them with no config; `unittest.mock` alone does not count).
 
 - **Met:** Test files exist and at least one of these is found.
 - **Partially met:** Never.
@@ -120,7 +120,7 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **What the check cannot see.** Whether the config works is not checked. The npm-init placeholder `"test": "echo \"Error: no test specified\" && exit 1"` passes. A lone `conftest.py` passes.
 
-**Known flaw.** There is no detection for Maven/Gradle (JUnit in `pom.xml`/`build.gradle`), RSpec (`.rspec`, `spec_helper.rb`), .NET test projects without `.runsettings`, or plain `unittest`. Those repos are Not met even when the runner is configured.
+**Known flaw.** There is no detection for Maven/Gradle (JUnit in `pom.xml`/`build.gradle`), RSpec (`.rspec`, `spec_helper.rb`), or .NET test projects without `.runsettings`. Those repos are Not met even when the runner is configured.
 
 **Our convention.** An explicitly configured test runner gives humans and agents one unambiguous command and test discovery rule.
 

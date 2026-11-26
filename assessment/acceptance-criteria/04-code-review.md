@@ -9,7 +9,7 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **The habit.** Nothing reaches the main branch without a reviewed pull request, an agent's changes included.
 
-**How we check.** The last 100 commits of the main line (HEAD, first parent only) are read from git. A commit came through a pull request when its subject carries a mark that GitHub or GitLab leaves: `Merge pull request #12`, a squash subject ending in `(#12)`, `Merge branch 'x' into main` or `See merge request !12`.
+**How we check.** The last 100 commits of the main line (HEAD, first parent only) are read from git. A commit came through a pull request when its subject carries a mark that GitHub or GitLab leaves: `Merge pull request #12`, a squash subject ending in `(#12)`, `Merge branch 'x' into main`, `See merge request !12` or Azure DevOps' `Merged PR 12: ...`.
 
 - **Met:** At least {min_share}% of them.
 - **Partially met:** At least {min_share:partial}%.

@@ -244,3 +244,32 @@ def test_a_docs_folder_of_a_package_counts(make_repo):
     pages = {f"app/docs/p{i}.md": "# p" for i in range(6)} | {".claude/skills/x/docs/a.md": "", "README.md": "# x"}
     c = _ids(documentation, make_repo(pages))["doc.docs_dir"]
     assert c.evidence[0].startswith("6 doc pages") and c.score >= 0.85
+
+
+def test_azure_devops_pull_request_merges_count(make_repo):
+    from src.dimensions.review import assess
+
+    root = make_repo({"README.md": "x\n"}, name="azure-prs")
+    _commits(root, [(f"Merged PR {600 + i}: fix the camera assignment", 1) for i in range(12)] + [("direct push", 1)] * 2)
+    assert "12 of the last 15" in {c.id: c for c in assess(Repo(root))}["rev.via_pr"].evidence[0]
+
+
+def test_unittest_is_a_test_framework(make_repo):
+    from src.dimensions import tests
+
+    ut = "import unittest\n\n\nclass T(unittest.TestCase):\n    def test_x(self):\n        self.assertTrue(True)\n"
+    root = make_repo({"app.py": "", "tests/framework/test_app.py": ut}, name="ut")
+    c = _ids(tests, root)["test.framework"]
+    assert c.status == "pass" and "unittest" in c.evidence[0]
+    bare = make_repo({"app.py": "", "tests/test_app.py": "def test_x():\n    assert True\n"}, name="bare")
+    assert _ids(tests, bare)["test.framework"].status == "fail"  # pytest-style tests with no config: still not configured
+
+
+def test_azure_pipelines_with_any_name_are_read(make_repo):
+    from src.dimensions import cicd, tests
+
+    yml = "trigger: [main]\nsteps:\n  - script: python -m unittest discover -s tests\n"
+    root = make_repo({"app.py": "", "tests/test_app.py": "", "azure-pipelines-flight-smoke.yml": yml}, name="azure")
+    assert _ids(tests, root)["test.ci"].status == "pass"  # the pipeline runs the tests
+    present = _ids(cicd, root)["ci.present"]
+    assert present.score is None and "azure-pipelines-flight-smoke.yml" in present.evidence[0]  # another CI: not judged, not failed

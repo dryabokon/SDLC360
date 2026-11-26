@@ -18,7 +18,7 @@ def assess(repo: Repo):
     c = Checks()
     wf = repo.workflows
     txt = repo.workflow_text
-    other = repo.find(".gitlab-ci.yml", "Jenkinsfile", "azure-pipelines.yml", ".circleci/config.yml", "bitbucket-pipelines.yml", ".travis.yml")
+    other = repo.other_ci
     c.add(
         "ci.present",
         "GitHub Actions workflows present",

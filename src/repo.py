@@ -390,10 +390,25 @@ class Repo:
         return "\n".join(self.read(f) for f in self.workflows)
 
     @cached_property
+    def other_ci(self) -> list[str]:
+        """CI configuration besides GitHub Actions. An Azure pipeline may have any name (azure-pipelines-smoke.yml)."""
+        return self.find(
+            ".gitlab-ci.yml",
+            "Jenkinsfile",
+            "azure-pipelines*.yml",
+            "azure-pipelines*.yaml",
+            ".azure-pipelines/*.yml",
+            ".circleci/config.yml",
+            "bitbucket-pipelines.yml",
+            ".travis.yml",
+        )
+
+    @cached_property
     def ci_text(self) -> str:
         """Workflow YAML plus the task runners / scripts it delegates to (scripts/test, make test, nox, tox, npm run …),
         so `run: scripts/test` counts as running pytest."""
-        wf = "\n".join(x for x in (self.workflow_text, self.read(".gitlab-ci.yml")) if x)
+        azure = [f for f in self.other_ci if "azure-pipelines" in f.lower()]  # read like GitHub's and GitLab's
+        wf = "\n".join(x for x in (self.workflow_text, self.read(".gitlab-ci.yml"), *(self.read(f) for f in azure)) if x)
         if not wf:
             return ""
         extra = []

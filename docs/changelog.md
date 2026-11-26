@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Three wrong verdicts fixed on Azure DevOps projects** (found on fly2-integration-tests and its neighbours):
+  `rev.via_pr` now counts Azure's `Merged PR 123:` merges (control-center-backend: 88 of 100, was 0);
+  `test.framework` accepts `unittest.TestCase` suites; an Azure pipeline under any name
+  (`azure-pipelines-flight-smoke.yml`) counts as another CI and is read for test and security steps.
 - **One remote: GitHub.** GitLab is no longer used for SDLC360 itself: `.gitlab-ci.yml` is gone (`.github/workflows`
   runs the same gates), AGENTS.md and `.env.example` name `origin` (github.com/dryabokon/sdlc360) only. Assessing
   repositories on GitLab is unchanged.
