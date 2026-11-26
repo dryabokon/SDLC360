@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from datetime import datetime
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 
 from ..repo import Repo
 
@@ -139,24 +139,44 @@ def headings(text: str) -> list[str]:
     return [m.group(2).strip().lower() for m in re.finditer(r"^(#{1,4})\s+(.+)$", text, re.M)]
 
 
+FORGES = ("github", "gitlab", "azure")
+AZURE_HOSTS = ("dev.azure.com", "ssh.dev.azure.com", "vs-ssh.visualstudio.com")
+
+
 def forge(repo: Repo) -> str:
-    """Where the project lives, so a step names that platform's files: "gitlab" or "github" (the default)."""
+    """Where the project lives, so a step names that platform's settings and files: "github" (the default), "gitlab"
+    or "azure". The remote decides (a local folder's own remotes, not those of the copy a scan reads); without one,
+    the CI files; `--forge` (repo.forge) overrides both, for a mirror on two platforms."""
     from .. import hosting
+
+    if repo.forge in FORGES:
+        return repo.forge
 
     def host_of(s: str) -> str:
         m = re.match(r"^(?:\w+://)?(?:[^@/]+@)?([\w.-]+)[:/]", s.strip())
         return m.group(1).lower() if m else ""
 
     hosts = [host_of(repo.source)]
-    try:  # a local working copy: its remotes, read in place
-        cfg = (repo.root / ".git" / "config").read_text(encoding="utf-8", errors="replace")
-        hosts += [host_of(u) for u in re.findall(r"^\s*url\s*=\s*(\S+)", cfg, re.M)]
-    except OSError:
-        pass
-    if "github.com" in hosts or repo.workflows:
+    folders = [repo.root] if hosting.is_remote(repo.source) else [Path(repo.source), repo.root]  # the folder assessed, then the copy read
+    for folder in dict.fromkeys(folders):
+        try:
+            cfg = (folder / ".git" / "config").read_text(encoding="utf-8", errors="replace")
+            hosts += [host_of(u) for u in re.findall(r"^\s*url\s*=\s*(\S+)", cfg, re.M)]
+        except OSError:
+            pass
+    hosts = [h for h in hosts if h]
+    if any(h in AZURE_HOSTS or h.endswith(".visualstudio.com") for h in hosts):
+        return "azure"
+    if "github.com" in hosts:
         return "github"
-    if any(h and (h in hosting.git_hosts() or "gitlab" in h) for h in hosts) or ".gitlab-ci.yml" in repo.files:
+    if any(h in hosting.git_hosts() or "gitlab" in h for h in hosts):
         return "gitlab"
+    if repo.workflows:
+        return "github"
+    if ".gitlab-ci.yml" in repo.files:
+        return "gitlab"
+    if any("azure-pipelines" in f.lower() for f in repo.other_ci):
+        return "azure"
     return "github"
 
 
@@ -173,6 +193,6 @@ def for_language(repo: Repo, steps: dict[str, str]) -> str:
     return steps.get(main_language(repo)) or steps[""]
 
 
-def on(repo: Repo, github: str, gitlab: str) -> str:
-    """The step for the platform the project lives on."""
-    return gitlab if forge(repo) == "gitlab" else github
+def on(repo: Repo, github: str, gitlab: str, azure: str) -> str:
+    """The step for the platform the project lives on: its settings pages and file names, not another platform's."""
+    return {"github": github, "gitlab": gitlab, "azure": azure}[forge(repo)]

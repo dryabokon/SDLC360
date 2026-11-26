@@ -273,3 +273,58 @@ def test_azure_pipelines_with_any_name_are_read(make_repo):
     assert _ids(tests, root)["test.ci"].status == "pass"  # the pipeline runs the tests
     present = _ids(cicd, root)["ci.present"]
     assert present.score is None and "azure-pipelines-flight-smoke.yml" in present.evidence[0]  # another CI: not judged, not failed
+
+
+def test_steps_name_the_platform_the_project_lives_on(make_repo):
+    from src.dimensions import review
+    from src.dimensions._util import forge
+    from tests.conftest import _git
+
+    def steps(root, override=None):
+        repo = Repo(root)
+        repo.forge = override
+        return forge(repo), {c.id: c for c in review.assess(repo)}["rev.via_pr"].recommendation
+
+    azure = make_repo({"app.py": ""}, name="on-azure")
+    _git(azure, "remote", "add", "origin", "https://acme@dev.azure.com/acme/Proj/_git/app")
+    f, step = steps(azure)
+    assert f == "azure" and "Branch policies" in step and "Settings" not in step
+    gh = make_repo({"app.py": ""}, name="on-github")
+    _git(gh, "remote", "add", "origin", "git@github.com:acme/app.git")
+    assert steps(gh)[0] == "github" and "Settings → Branches" in steps(gh)[1]
+    pipelines = make_repo({"app.py": "", "azure-pipelines-smoke.yml": "steps: []\n"}, name="no-remote")
+    assert steps(pipelines)[0] == "azure"  # no remote: the CI files tell
+    assert steps(azure, "github")[0] == "github"  # --forge for a mirror on two platforms
+    assert steps(make_repo({"app.py": ""}, name="plain"))[0] == "github"
+
+
+def test_an_azure_pull_request_template_is_enough_there(make_repo):
+    from src.dimensions import hygiene
+    from tests.conftest import _git
+
+    root = make_repo({"app.py": "", ".azuredevops/pull_request_template.md": "- [ ] tests\n"}, name="azure-tmpl")
+    _git(root, "remote", "add", "origin", "https://dev.azure.com/acme/Proj/_git/app")
+    assert _ids(hygiene, root)["hyg.templates"].score == 1.0  # Azure Repos keeps no issue templates in the repository
+
+
+def test_credential_files_are_judged_by_what_they_hold(make_repo):
+    from src.dimensions import security
+
+    flight = "# flight parameters\nORIGIN_LAT=50.45\nPN_V_MAX=12\nCLS_NAMES=drone,plane\nAUTH_MODE=oauth\nMAX_TOKENS=4000\n"
+    cert = "-----BEGIN " + "CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----\n"
+    config = make_repo({"infra/.env": flight, "tools/emu/.env": "MEDIAMTX_RTSP_PORT=8554\n", "ca.pem": cert, ".env.example": "API_TOKEN=\n"})
+    c = _ids(security, config)["sec.no_sensitive_files"]
+    assert c.status == "pass" and "configuration" in c.evidence[0] and "infra/.env" in c.evidence[0]  # the Fly2-agent case
+
+    def verdict(files, name):
+        return _ids(security, make_repo(files, name=name))["sec.no_sensitive_files"]
+
+    assert verdict({".env": "DB_PASSWORD=admin1\n"}, "pw").status == "fail"
+    assert verdict({".env": f"GH={GH}\n"}, "token").status == "fail"  # a known token format under any name
+    assert verdict({".env": "DATABASE_URL=postgres://app:s3cr3t@db:5432/app\n"}, "url").status == "fail"
+    assert verdict({".env": "PASSWORD=changeme\nAPI_KEY=${API_KEY}\nSECRET=\n"}, "ph").status == "pass"  # placeholders
+    key = "-----BEGIN " + "RSA PRIVATE KEY-----\nMIIE\n-----END RSA PRIVATE KEY-----\n"
+    assert verdict({"deploy.key": key}, "key").status == "fail"
+    assert verdict({"prod.tfstate": "{}"}, "state").status == "fail"  # state holds secrets by its kind
+    fails = verdict({".env": "DB_PASSWORD=admin1\nPORT=80\n"}, "masked")
+    assert "DB_PASSWORD" in fails.evidence[0] and "admin1" not in " ".join(fails.evidence)  # names, never values

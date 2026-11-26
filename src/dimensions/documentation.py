@@ -121,6 +121,8 @@ def assess(repo: Repo):
             "add a 'docs updated' box to the pull request template.",
             "Bring the docs up to date with the code now, then update them in the same merge request as each change: "
             "add a 'docs updated' box to the merge request template.",
+            "Bring the docs up to date with the code now, then update them in the same pull request as each change: "
+            "add a 'docs updated' box to .azuredevops/pull_request_template.md.",
         ),
     )
 

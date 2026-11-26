@@ -23,6 +23,7 @@ body{background:var(--bg);color:var(--text);font:13px/1.45 ui-sans-serif,system-
 h1,h2,h3{margin:0;font-weight:600}h1{font-size:15px}
 h3{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
 code{font:11.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--fill);padding:0 4px;border-radius:4px}
+#proj-meta.stale::after{content:" · branches not fetched lately";color:var(--bad-text)}
 button,input{font:inherit;color:inherit}.muted{color:var(--muted)}.spacer{flex:1}
 /* header: a black brand bar in both themes (as in our other tools), then the context of what is open */
 .brand{background:#030303;color:#ececec;padding:0 16px;display:flex;align-items:center;gap:12px;white-space:nowrap;--bb:rgba(255,255,255,.16)}
@@ -322,6 +323,7 @@ select:focus,.txt:focus,.inl:focus{outline:2px solid var(--series-1);outline-off
       <div class="add"><h3>Assess a project</h3>
         <form id="add-form"><input id="target" placeholder="https://github.com/owner/repo   or   D:\path\to\git-folder" autocomplete="off" spellcheck="false">
           <button class="icon-btn" type="button" id="browse-btn" title="Choose a local folder">Browse…</button>
+          <select id="scan-ref" hidden title="Which branch to assess: the default branch as the folder last fetched it, another branch, or the working copy as it is now"></select>
           <select id="scan-profile" title="Profile: which capabilities count, their priorities and thresholds"></select>
           <button class="icon-btn pri" type="submit" id="scan-btn" disabled>Assess</button></form>
         <div class="hint" id="hint">GitHub repository or a local folder that is a git repository.</div>
@@ -417,8 +419,11 @@ function context() {  // the second header row: the open project (a selector), o
   if (!REPORT) { $("#proj-name").textContent = MODE === "app" ? "Open a project" : "No project open"; $("#proj-meta").textContent = ""; return; }
   const r = REPORT.repo, h = r.head || {};
   $("#proj-name").textContent = r.source.replace(/^github\.com\//, "").replace(/^.*[\\/](?=[^\\/]+$)/, "");
-  $("#proj-meta").textContent = [srcKind(r.source), h.sha ? "commit " + h.sha.slice(0, 8) : "",
+  const ref = r.ref || {}, at = ref.kind === "working-copy" ? `working copy of ${ref.name}` : ref.name || h.branch || "";
+  $("#proj-meta").textContent = [srcKind(r.source), [at, h.sha ? "commit " + h.sha.slice(0, 8) : ""].filter(Boolean).join(" @ "),
     "assessed " + fdate(REPORT.generated_at), "criteria: " + profileName(REPORT)].filter(Boolean).join(" · ");
+  $("#proj-meta").title = [ref.why ? `${ref.name}: ${ref.why}` : "", ref.stale ? `Branches ${ref.stale}.` : ""].filter(Boolean).join(" ");
+  $("#proj-meta").classList.toggle("stale", !!ref.stale);
 }
 
 const VIEWS = ["assessment", "capabilities", "empty"];
@@ -1206,7 +1211,7 @@ else {
   pickBtn.onclick = (e) => { e.stopPropagation(); const on = !panel.classList.contains("on"); panel.classList.toggle("on", on); pickBtn.setAttribute("aria-expanded", on); };
   document.addEventListener("click", (e) => { if (!$("#picker").contains(e.target)) panel.classList.remove("on"); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") panel.classList.remove("on"); });
-  $("#add-form").onsubmit = (e) => { e.preventDefault(); const t = $("#target").value.trim(); if (looksValid(t) && !scanning) startScan(t, $("#scan-profile").value || null); };
+  $("#add-form").onsubmit = (e) => { e.preventDefault(); const t = $("#target").value.trim(); if (looksValid(t) && !scanning) startScan(t, $("#scan-profile").value || null, $("#scan-ref").hidden ? null : $("#scan-ref").value || null); };
   $("#target").addEventListener("input", validate);
 }
 // a finding handed to a coding agent: the prompt is built by the server (src/handoff.py), the page only copies it
@@ -1250,9 +1255,20 @@ const isLocal = (t) => /^([A-Za-z]:[\\/]|\/|~|\\\\)/.test(t);
 const looksHosted = (t) => /^https?:\/\/[\w.-]+\/([\w.-]+\/)+[\w.-]+?(\.git)?\/?$/.test(t) && !/^https?:\/\/github\.com\//.test(t);   // https://<host>/group/.../repo: the server knows which hosts
 const looksValid = (t) => (isLocal(t) && !HOSTED) || looksHosted(t) || (/^(https?:\/\/github\.com\/)?[\w.-]+\/[\w.-]+?(\.git)?\/?$/.test(t));
 const hostedHint = () => `A repository URL on ${["GitHub", ...GIT_HOSTS].join(" or ")}.`;
-let scanning = false;
+let scanning = false, refFor = null, refTimer = null;
+function loadRefs(t) {  // a local folder: offer its branches; the default one is preselected, nothing is fetched
+  const sel = $("#scan-ref"); if (HOSTED || !isLocal(t)) { sel.hidden = true; refFor = null; return; }
+  if (refFor === t) return; refFor = t; clearTimeout(refTimer);
+  refTimer = setTimeout(() => api("/api/branches?path=" + encodeURIComponent(t)).then((d) => { if (refFor !== t) return;
+    const opt = (v, label) => `<option value="${esc(v)}">${esc(label)}</option>`;
+    sel.innerHTML = (d.default ? opt("", `${d.default} (default)`) : opt("working-copy", "working copy (no main branch)"))
+      + d.branches.filter((b) => b.name !== d.default).slice(0, 60).map((b) => opt(b.name, `${b.name} · ${(b.date || "").slice(0, 10)}`)).join("")
+      + (d.default ? opt("working-copy", "working copy, as it is now") : "");
+    sel.title = d.why ? `Default: ${d.why}` : sel.title; sel.hidden = false; }).catch(() => { sel.hidden = true; }), 300);
+}
 function validate() {
   const t = $("#target").value.trim(), h = $("#hint"); $("#scan-btn").disabled = scanning || !looksValid(t); h.className = "hint";
+  if (looksValid(t)) loadRefs(t); else { $("#scan-ref").hidden = true; refFor = null; }
   h.textContent = !t ? (HOSTED ? hostedHint() : "GitHub repository or a local folder that is a git repository.")
     : !looksValid(t) ? (HOSTED ? `Use https://github.com/owner/repo, owner/repo${GIT_HOSTS.length ? `, or https://${GIT_HOSTS[0]}/group/repo` : ""}.` : "Use https://github.com/owner/repo, owner/repo, or a full local path.")
     : isLocal(t) ? "Local folder — read in place, never modified." : looksHosted(t) ? "Git repository — cloned into the cache." : "GitHub repository — cloned into the local cache.";
@@ -1265,9 +1281,9 @@ function showSteps(target, msgs, history) {
     `<li class="${i < cur ? "done" : i === cur ? "run" : ""}"><span class="mk">${i < cur ? "✓" : i === cur ? "›" : "·"}</span>${s}</li>`).join("")}</ol>`;
 }
 function setBusy(b) { scanning = b; $("#target").disabled = b; $("#how").classList.toggle("hidden", b); validate(); }
-function startScan(target, profile) {
+function startScan(target, profile, ref) {
   $("#progress").innerHTML = ""; panel.classList.add("on");
-  api("/api/scan", { target, history: 0, profile: profile || undefined }).then(({ job: id, display }) => {
+  api("/api/scan", { target, history: 0, profile: profile || undefined, ref: ref || undefined }).then(({ job: id, display }) => {
     setBusy(true); showSteps(display || target, []);
     const poll = () => api(`/api/jobs/${id}`).then((j) => {
       if (j.status === "done") { setBusy(false); $("#progress").innerHTML = ""; $("#target").value = ""; validate();

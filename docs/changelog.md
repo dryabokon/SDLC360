@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- **A local folder is assessed at its main branch, not at what is checked out.** That is the most recently updated of
+  origin/HEAD, main, master and develop, as last fetched. It is read from a throw-away shared clone, and nothing is
+  fetched or written. `--ref <branch>` or `--ref working-copy` picks another. The app's scan form lists the branches,
+  and the report header names the branch and warns when the folder last fetched over 7 days ago. Before, Fly2 was
+  judged at a two-month-old feature branch, and origin/HEAD pointed control-center-backend at a main from March while
+  the work is on develop.
+- **Credential files are judged by what they hold.** A committed `.env` of flight parameters or a port is
+  configuration (Met, listed). A real password, token or private key fails, and the evidence names the keys, never
+  the values. Before, any `.env` failed by name.
+- **Steps for Azure DevOps.** Recommendations name branch policies, build validation,
+  `.azuredevops/pull_request_template.md` and the automatically included reviewers, when the remote is on
+  dev.azure.com. They no longer send people to GitHub's settings. `--forge` overrides the remote. An Azure PR template
+  alone meets `hyg.templates`.
 - **Hand a finding to a coding agent** (`python sdlc.py handoff <run> [--list | --check <id>]`, and **Copy prompt
   for an agent** under What to do in the app): a prompt built from the run alone with Expected, Found and What to do,
   for the agent working in the assessed repository. It checks the finding against the code first, makes one change in one

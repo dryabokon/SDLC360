@@ -18,7 +18,9 @@ Read `README.md` first, then `docs/architecture.md`.
   worked on from more than one machine: `git pull` before you start, push to `origin`. Plain `git push origin <branch>`
   with git's credentials, or the git-hosting skill with `GH_TOKEN` in `.env` (see `.env.example`):
   `python .claude/skills/git-hosting/scripts/githost.py git push origin <branch>`. The `gcp` skill shows and checks the hosted service.
-- scan: `python sdlc.py scan <url|owner/repo|path> [--no-history]`
+- scan: `python sdlc.py scan <url|owner/repo|path> [--no-history] [--ref <branch>|working-copy] [--forge github|gitlab|azure]`;
+  a local folder is assessed at its main branch (the most recently updated of origin/HEAD, main, master, develop) from a
+  throw-away shared clone, not at whatever is checked out
 - hand a finding to an agent in the assessed repository: `python sdlc.py handoff <run-id> [--list | --check <id>]` (`src/handoff.py`)
 - calibrate: `python sdlc.py calibrate [--latest]` (the app's refresh button is `--latest`: moves the pins; writes `runs/calibrations/<id>.json`)
 - tests: `.venv/Scripts/python -m pytest --cov` (Linux/macOS: `.venv/bin/...`)

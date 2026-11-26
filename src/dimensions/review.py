@@ -55,6 +55,8 @@ def assess(repo: Repo):
             "Protect the main branch (Settings → Branches): changes, an agent's too, land only through a pull request a person reviews.",
             "Protect the main branch (Settings → Repository → Protected branches, allowed to push: no one): changes, an agent's too, "
             "land only through a merge request a person approves.",
+            "Add branch policies to the main branch (Repos → Branches → Branch policies: minimum number of reviewers, build "
+            "validation): changes, an agent's too, land only through a pull request a person approves.",
         ),
     )
 

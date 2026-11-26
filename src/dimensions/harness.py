@@ -200,6 +200,8 @@ def assess(repo: Repo):
             repo,
             "Add anthropics/claude-code-action to a workflow, so Claude reviews every pull request and answers @claude.",
             "Add a merge request job to .gitlab-ci.yml that runs `claude -p` with your review prompt and posts the findings to the merge request.",
+            "Add a pipeline that runs `claude -p` with your review prompt as a build validation of the main branch, and posts the "
+            "findings to the pull request through the Azure DevOps REST API.",
         ),
     )
 

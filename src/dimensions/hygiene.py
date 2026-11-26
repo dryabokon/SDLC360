@@ -6,7 +6,7 @@ import re
 
 from ..model import Checks, Dimension, short
 from ..repo import Repo
-from ._util import for_language, in_tooling, on
+from ._util import for_language, forge, in_tooling, on
 
 
 def assess(repo: Repo):
@@ -149,18 +149,23 @@ def assess(repo: Repo):
         "docs/pull_request_template.md",
         ".gitlab/merge_request_templates/*",
         ".gitlab/issue_templates/*",
+        ".azuredevops/pull_request_template*",
+        ".azuredevops/pull_request_template/*",
+        ".vsts/pull_request_template*",
     )
+    need = 1 if forge(repo) == "azure" else 2  # Azure Repos has no issue templates in the repository: the PR one is all
     c.add(
         "hyg.templates",
         "PR / issue templates",
         0.5,
-        min(1.0, len(tmpl) / 2),
+        min(1.0, len(tmpl) / need),
         short(tmpl),
         on(
             repo,
             "Add .github/pull_request_template.md with a short checklist (tests, docs, changelog) and an issue template in .github/ISSUE_TEMPLATE/.",
             "Add .gitlab/merge_request_templates/Default.md with a short checklist (tests, docs, changelog) and an issue template "
             "in .gitlab/issue_templates/.",
+            "Add .azuredevops/pull_request_template.md with a short checklist (tests, docs, changelog).",
         ),
     )
 

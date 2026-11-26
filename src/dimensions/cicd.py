@@ -29,6 +29,8 @@ def assess(repo: Repo):
             repo,
             "Add .github/workflows/ci.yml that runs the linter and the tests on every push and pull request.",
             "Add a .gitlab-ci.yml that runs the linter and the tests on every push and merge request.",
+            "Add an azure-pipelines.yml that runs the linter and the tests, and make it a build validation policy of the main branch, "
+            "so it runs on every pull request.",
         ),
     )
     if not wf:

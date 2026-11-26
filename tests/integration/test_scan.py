@@ -1,8 +1,11 @@
 """Integration: full scans of small but real git repositories (golden fixtures) and the run-folder contract."""
 
 import json
+import os
+import subprocess
 import threading
 import urllib.error
+import urllib.parse
 import urllib.request
 from http.server import ThreadingHTTPServer
 
@@ -220,3 +223,72 @@ def test_an_older_run_lines_up_with_the_current_aspects(mature):
     assert where["sec.codeowners"] == "review"
     again = finalize(copy.deepcopy(once))
     assert {c["id"]: d["id"] for d in again["dimensions"] for c in d["checks"]} == where
+
+
+def _report_of(run_dir) -> dict:
+    return json.loads((run_dir / "report.json").read_text(encoding="utf-8"))
+
+
+def test_a_local_folder_is_assessed_at_its_default_branch_not_its_working_copy(make_repo, tmp_path):
+    from tests.conftest import _git
+
+    root = make_repo({"app.py": "x = 1\n"}, name="busy")
+    _git(root, "checkout", "-q", "-b", "feature")
+    (root / "feature.py").write_text("y = 2\n", encoding="utf-8")
+    _git(root, "add", "-A")
+    _git(root, "commit", "-q", "-m", "feature work")
+    (root / "draft.py").write_text("z = 3\n", encoding="utf-8")  # uncommitted
+    status = subprocess.run(["git", "status", "--porcelain"], cwd=root, capture_output=True, text=True).stdout
+    refs = subprocess.run(["git", "for-each-ref"], cwd=root, capture_output=True, text=True).stdout
+    kw = {"history_points": 0, "runs_dir": tmp_path / "runs", "cache_dir": tmp_path / "cache"}
+
+    rep = _report_of(run_scan(str(root), **kw))
+    assert rep["repo"]["ref"]["name"] == "main" and rep["repo"]["ref"]["kind"] == "default"
+    assert rep["repo"]["head"]["branch"] == "main" and rep["repo"]["source_files"] == 1  # app.py only
+    assert _report_of(run_scan(str(root), ref="feature", **kw))["repo"]["source_files"] == 2
+    wc = _report_of(run_scan(str(root), ref="working-copy", **kw))
+    assert wc["repo"]["ref"]["kind"] == "working-copy" and wc["repo"]["source_files"] == 2  # the current branch; untracked files are not counted
+    # the folder is as it was: same branch, same changes, no new refs
+    assert subprocess.run(["git", "status", "--porcelain"], cwd=root, capture_output=True, text=True).stdout == status
+    assert subprocess.run(["git", "for-each-ref"], cwd=root, capture_output=True, text=True).stdout == refs
+    with pytest.raises(ValueError):
+        run_scan(str(root), ref="no-such-branch", **kw)
+
+
+def test_the_most_recently_updated_main_branch_wins_over_a_stale_origin_head(make_repo, tmp_path):
+    from src.repo import default_ref
+    from tests.conftest import GIT, _git
+
+    upstream = make_repo({"app.py": ""}, name="upstream")
+    _git(upstream, "checkout", "-q", "-b", "develop")
+    (upstream / "new.py").write_text("", encoding="utf-8")
+    _git(upstream, "add", "-A")
+    later = {**os.environ, "GIT_AUTHOR_DATE": "2099-01-01T00:00:00", "GIT_COMMITTER_DATE": "2099-01-01T00:00:00"}
+    subprocess.run([*GIT, "commit", "-q", "-m", "newer work on develop"], cwd=upstream, check=True, capture_output=True, env=later)
+    _git(upstream, "checkout", "-q", "main")  # the clone's origin/HEAD: main, from March; the work goes on in develop
+    subprocess.run([*GIT, "clone", "-q", str(upstream), "clone"], cwd=tmp_path, check=True, capture_output=True)
+    clone = tmp_path / "clone"
+    name, why = default_ref(clone)
+    assert name == "origin/develop" and "most recently updated remote main branch" in why
+    _git(clone, "remote", "set-head", "origin", "--delete")  # no origin/HEAD at all
+    assert default_ref(clone)[0] == "origin/develop"
+    rep = _report_of(run_scan(str(clone), history_points=0, runs_dir=tmp_path / "runs", cache_dir=tmp_path / "cache"))
+    assert rep["repo"]["ref"]["name"] == "origin/develop" and rep["repo"]["ref"]["fetched_at"]
+
+
+def test_branches_endpoint_offers_the_default_branch_first(make_repo, tmp_path):
+    from tests.conftest import _git
+
+    root = make_repo({"app.py": ""}, name="pick")
+    _git(root, "branch", "feature")
+    httpd = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(tmp_path / "runs", tmp_path / "cache"))
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{httpd.server_address[1]}/api/branches?path="
+    try:
+        with urllib.request.urlopen(base + urllib.parse.quote(str(root)), timeout=20) as r:
+            d = json.loads(r.read())
+        assert d["default"] == "main" and {b["name"] for b in d["branches"]} == {"main", "feature"}
+        with pytest.raises(urllib.error.HTTPError):
+            urllib.request.urlopen(base + "owner/repo", timeout=20)  # only a local folder has branches to offer here
+    finally:
+        httpd.shutdown()

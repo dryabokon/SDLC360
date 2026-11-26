@@ -6,6 +6,7 @@ import contextlib
 import json
 import logging
 import os
+import re
 import string
 import threading
 import uuid
@@ -18,7 +19,7 @@ from .acceptance import criteria, method_for, reference_cards
 from .dimensions import DIMENSIONS
 from .hosting import is_remote
 from .render import render_app
-from .repo import check_target, resolve_target
+from .repo import branches, check_target, default_ref, resolve_target, run_git
 from .runner import DEFAULT_CACHE, DEFAULT_RUNS, PROJECT_ROOT, RUN_ID_RE, list_projects, rerender, run_scan
 from .scanner import finalize
 
@@ -28,7 +29,7 @@ JOBS: dict[str, dict] = {}
 SCAN_LOCK = threading.Lock()  # one scan at a time: shared clone cache + CPU bound
 
 
-def _start_job(target: str, history: int, runs_dir: Path, cache_dir: Path, profile: str | None = None) -> str:
+def _start_job(target: str, history: int, runs_dir: Path, cache_dir: Path, profile: str | None = None, ref: str | None = None) -> str:
     jid = uuid.uuid4().hex[:12]
     job: dict = {"id": jid, "target": target, "history": history, "profile": profile, "status": "queued", "messages": []}
     job.update(run_id=None, error=None)
@@ -40,6 +41,7 @@ def _start_job(target: str, history: int, runs_dir: Path, cache_dir: Path, profi
             try:
                 rd = run_scan(
                     target,
+                    ref=ref,
                     history_points=history,
                     refresh=True,
                     profile=profile,
@@ -157,7 +159,7 @@ def local_request(host: str | None, origin: str | None) -> bool:
 
 
 # Hosted (hosting.cloud()): what reads or stops this machine is not served.
-LOCAL_ONLY = {"/api/fs", "/api/shutdown", "/v1/metrics", "/v1/logs", "/v1/traces"}
+LOCAL_ONLY = {"/api/fs", "/api/branches", "/api/shutdown", "/v1/metrics", "/v1/logs", "/v1/traces"}
 MAX_BODY = 64 << 20  # the numbers of a few thousand sessions fit in a few MB
 IAP_USER = "X-Goog-Authenticated-User-Email"  # set by Identity-Aware Proxy on every request it lets through
 
@@ -214,6 +216,16 @@ def make_handler(runs_dir: Path, cache_dir: Path):
                 return self._send(200, render_app().encode("utf-8"), "text/html; charset=utf-8")
             if path == "/api/projects":
                 return self._json(list_projects(runs_dir))
+            if path == "/api/branches":  # what a local folder can be assessed at (read only, nothing fetched)
+                q = parse_qs(urlparse(self.path).query).get("path", [""])[0]
+                try:
+                    if check_target(q)["kind"] != "local":
+                        raise ValueError("not a local folder")
+                    top = Path(run_git(Path(q), "rev-parse", "--show-toplevel").strip())
+                    name, why = default_ref(top)
+                    return self._json({"default": name, "why": why, "branches": branches(top)})
+                except (ValueError, OSError, RuntimeError) as e:
+                    return self._json({"error": str(e)}, 400)
             if path == "/api/fs":
                 q = parse_qs(urlparse(self.path).query).get("path", [""])[0]
                 try:
@@ -363,6 +375,9 @@ def make_handler(runs_dir: Path, cache_dir: Path):
                 target = str(body.get("target", "")).strip()
                 history = max(0, min(24, int(body.get("history", 8))))
                 profile = str(body["profile"]) if body.get("profile") else None
+                ref = str(body["ref"]).strip() if body.get("ref") else None
+                if ref and not re.match(r"^[\w./@{}^~-]+$", ref):
+                    raise ValueError("bad branch name")
                 if profile:
                     profiles.load(profile)
             except (ValueError, TypeError) as e:
@@ -373,7 +388,7 @@ def make_handler(runs_dir: Path, cache_dir: Path):
                 return self._json({"error": str(e)}, 400)
             if _busy():
                 return self._json({"error": "Another scan is still running - wait for it to finish."}, 409)
-            self._json({"job": _start_job(target, history, runs_dir, cache_dir, profile), "kind": info["kind"], "display": info["display"]}, 202)
+            self._json({"job": _start_job(target, history, runs_dir, cache_dir, profile, ref), "kind": info["kind"], "display": info["display"]}, 202)
 
     return Handler
 

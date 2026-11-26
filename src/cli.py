@@ -23,6 +23,7 @@ def cmd_scan(a: argparse.Namespace) -> int:
         refresh=a.refresh,
         checklist=a.checklist,
         profile=a.profile,
+        forge=a.forge,
         runs_dir=Path(a.runs_dir),
         cache_dir=Path(a.cache_dir),
     )
@@ -137,7 +138,12 @@ def main(argv: list[str] | None = None) -> int:
 
     s = sub.add_parser("scan", parents=[common], help="scan a local git folder, GitHub URL or owner/repo")
     s.add_argument("target")
-    s.add_argument("--ref", help="branch / tag / sha to check out (GitHub targets)")
+    s.add_argument(
+        "--ref",
+        help="branch / tag / sha to assess (default: the remote's default branch, as a local folder last fetched it); "
+        "working-copy: a local folder as it is now, uncommitted changes included",
+    )
+    s.add_argument("--forge", choices=["github", "gitlab", "azure"], help="where the project lives, for the steps (default: from its remote)")
     s.add_argument("--name", help="run name suffix (default: repo name)")
     s.add_argument("--only", help="comma-separated dimension ids")
     s.add_argument("--history", type=int, default=0, help="past commits to re-score; stored in the run for a future trend view (default 0)")

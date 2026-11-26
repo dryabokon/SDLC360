@@ -39,11 +39,25 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **How we check.** Tracked files whose name (anywhere in the tree) matches `*.pem`, `*.key`, `*.p12`, `*.pfx`, `*.jks`, `*.keystore`, `id_rsa`, `id_ed25519`, `credentials.json`, `service-account*.json`, `*.tfstate`, `*.tfvars`, `.npmrc`, `.pypirc`, `.netrc`, `.env`, `.env.*`, `*.env`. Excludes paths containing `example`, ending in `.example/.sample/.template/.dist/.default(s)` or `.env.test`, and anything under `test(s)/`, `fixture(s)/`, `testdata/`, `example(s)/`, `sample(s)/`, `doc(s)/`.
 
-- **Met:** None of those files is committed.
-- **Partially met:** never.
-- **Not met:** At least one such file is committed.
+Each file found is then judged by what it holds:
+- **Secret by kind:** keystores (`*.p12`, `*.pfx`, `*.jks`, `*.keystore`), `id_rsa`, `id_ed25519`, `id_ecdsa` and `id_dsa` keys, and `*.tfstate`.
+- **`*.pem` and `*.key`:** a secret only with a `PRIVATE KEY` block in it. A certificate is not.
+- **`credentials.json` and `service-account*.json`:** a secret only with a `private_key`, `client_secret`, `refresh_token` or `password` value.
+- **Env-like files** (`.env`, `*.tfvars`, `.npmrc`, `.pypirc`, `.netrc`): a value is a secret when any one of these holds:
+  - it has a known token format;
+  - it is a URL with a password in it;
+  - its name is like `PASSWORD`, `SECRET`, `TOKEN` or `API_KEY`, and the value is real and four characters or more;
+  - its name is like `AUTH`, `KEY` or `DSN`, and the value looks random (12 or more characters, letters and digits).
 
-**What the check cannot see.** Judges by file name only, never contents: a `.npmrc` with just a registry URL, a public CA `*.pem` or a non-secret `*.tfvars` fails the check. `id_ecdsa`, `id_dsa`, `*.kdbx` are not looked for. A real secret file inside `docs/` or `examples/` passes. History is not checked.
+  Empty values, numbers, booleans, `${VAR}` and placeholders (`changeme`, `<...>`, `xxxx`) are not secrets.
+
+The evidence names the keys, never the values.
+
+- **Met:** None of those files is committed, or the committed ones hold no secret. Those are listed as configuration.
+- **Partially met:** never.
+- **Not met:** At least one committed file holds a secret.
+
+**What the check cannot see.** A secret under an innocent name with a value that does not look random (`DB=admin`) passes. A long random-looking value under a name like `KEY_ID` fails. `*.kdbx` is not looked for. A real secret file inside `docs/` or `examples/` passes. History is not checked.
 
 **Why we expect it.**
 

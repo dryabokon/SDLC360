@@ -44,6 +44,55 @@ SENSITIVE_FILES = [
     ".env.*",
     "*.env",
 ]
+# A credential file is judged by what it holds, not by its name: an .env of flight parameters is configuration.
+ALWAYS_SECRET = re.compile(r"(?i)(^|/)(id_rsa|id_ed25519|id_ecdsa|id_dsa)$|\.(p12|pfx|jks|keystore|tfstate)$")  # binary keys, state
+KEY_FILE = re.compile(r"(?i)\.(pem|key)$")
+JSON_CRED = re.compile(r"(?i)(^|/)(credentials|service-account[^/]*)\.json$")
+PRIVATE_KEY = re.compile(r"-----BEGIN ([A-Z]+ )*PRIVATE KEY( BLOCK)?-----")
+STRONG_KEY = re.compile(r"(?i)(passw(or)?d|pwd|secret|private_?key|api_?key|access_?key|token|_authtoken)")  # any real value is a secret
+WEAK_KEY = re.compile(r"(?i)(auth|key|credential|dsn|conn(ection)?_?str)")  # a secret only when the value looks random
+URL_CREDS = re.compile(r"://[^/\s:@]+:[^@\s/]+@")
+ASSIGN = re.compile(r"^\s*(?:export\s+)?([A-Za-z_][\w.:/-]*)\s*[=:]\s*(.*?)\s*$")
+NOT_A_SECRET = re.compile(r"(?i)^(|true|false|yes|no|on|off|none|null|nil|-?\d+(\.\d+)?|localhost|127\.0\.0\.1|0\.0\.0\.0)$")
+
+
+def secret_keys(text: str) -> list[str]:
+    """The names whose values in an env-like file (.env, *.tfvars, .npmrc, .pypirc, .netrc) are secrets. Never the values."""
+    found = []
+    for line in text.splitlines():
+        if line.lstrip().startswith(("#", ";", "//#")):
+            continue
+        netrc = re.findall(r"\b(password|passwd)\s+(\S+)", line)  # .netrc: machine x login y password z
+        m = ASSIGN.match(line)
+        pairs = [(k, v) for k, v in netrc] + ([(m.group(1), m.group(2))] if m else [])
+        for key, raw in pairs:
+            value = raw.strip().strip("'\"")
+            if NOT_A_SECRET.match(value) or PLACEHOLDER.search(value) or value.startswith("$"):
+                continue
+            random_like = len(value) >= 12 and bool(re.search(r"\d", value)) and bool(re.search(r"[A-Za-z]", value))
+            if (
+                any(re.search(p, value) for p in SECRET_PATTERNS.values())
+                or URL_CREDS.search(value)
+                or (STRONG_KEY.search(key) and len(value) >= 4)
+                or (WEAK_KEY.search(key) and random_like)
+            ):
+                found.append(key)
+    return list(dict.fromkeys(found))
+
+
+def judge_sensitive(repo: Repo, f: str) -> str | None:
+    """Why a committed credential-looking file is a problem, or None when what it holds is not secret."""
+    if ALWAYS_SECRET.search(f):
+        return "holds keys or state by its kind"
+    text = repo.read(f, 500_000)
+    if KEY_FILE.search(f):
+        return "a private key" if PRIVATE_KEY.search(text) else None  # a certificate or public key is not
+    if JSON_CRED.search(f):
+        return "a credential" if re.search(r'"(private_key|client_secret|refresh_token|password)"\s*:\s*"[^"]{4,}"', text) else None
+    keys = secret_keys(text)
+    return f"secret values in {', '.join(keys[:5])}" + (f" and {len(keys) - 5} more" if len(keys) > 5 else "") if keys else None
+
+
 SAFE_ENV = re.compile(r"(?i)\.(example|sample|template|dist|defaults?)$|example|\.env\.test$")
 SEC_TOOLS = r"sast\.gitlab-ci|secret-detection|dependency-scanning|codeql|gitleaks|trufflehog|detect-secrets|trivy|snyk|semgrep|bandit|pip-audit|npm audit|osv-scanner|dependency-review|grype|zizmor|checkov|tfsec|safety check|govulncheck|cargo audit|scorecard"
 
@@ -107,14 +156,19 @@ def assess(repo: Repo):
         and not f.lower().endswith(".pub")
         and not re.search(r"(^|/)(tests?|fixtures?|testdata|examples?|samples?|docs?)/", f.lower())
     ]
+    judged = {f: judge_sensitive(repo, f) for f in sens[:200]}
+    bad = [f"{f}: {why}" for f, why in judged.items() if why]
+    plain = [f for f, why in judged.items() if not why]
     c.add(
         "sec.no_sensitive_files",
         "No credential files committed (.env, *.pem, tfstate, …)",
         4,
-        1.0 if not sens else 0.0,
-        [f"committed: {short(sens)}"] if sens else ["none committed"],
-        "Remove these files from git (`git rm --cached`), replace any secret they held, and add their patterns to .gitignore.",
-        todo=sens[:5],
+        0.0 if bad else 1.0,
+        ([f"committed with secrets: {'; '.join(bad[:5])}"] if bad else [])
+        + ([f"committed, no secret values in them (configuration): {short(plain)}"] if plain else [])
+        + ([] if sens else ["none committed"]),
+        "Remove these files from git (`git rm --cached`), replace every secret they held, and add their patterns to .gitignore.",
+        todo=[b.split(":", 1)[0] for b in bad[:5]],
     )
 
     gi = "\n".join(repo.read(f) for f in repo.find(".gitignore"))
@@ -172,6 +226,7 @@ def assess(repo: Repo):
             repo,
             "Add `.github/dependabot.yml` covering every package manager here and github-actions.",
             "Add a `renovate.json` and run Renovate as a scheduled pipeline: it opens a merge request for each update.",
+            "Add a `renovate.json` and run Renovate as a scheduled Azure pipeline: it opens a pull request for each update.",
         ),
     )
 
@@ -187,6 +242,8 @@ def assess(repo: Repo):
             "Add to CI: CodeQL for the code, dependency-review or pip-audit / npm audit for the dependencies, gitleaks for secrets.",
             "In .gitlab-ci.yml include GitLab's `Security/SAST.gitlab-ci.yml` and `Security/Secret-Detection.gitlab-ci.yml` "
             "templates, and add a dependency audit job (pip-audit / npm audit).",
+            "Add to the pipeline: gitleaks for secrets, pip-audit / npm audit for the dependencies, and a code scanner "
+            "(Semgrep, or CodeQL through GitHub Advanced Security for Azure DevOps).",
         ),
     )
 
@@ -228,6 +285,8 @@ def assess(repo: Repo):
             "Add .github/CODEOWNERS naming an owner for the sensitive paths, and require their review in branch protection.",
             "Add CODEOWNERS (at the root or in .gitlab/) naming an owner for the sensitive paths; where your GitLab plan has it, "
             "require code owner approval on the protected main branch.",
+            "Azure Repos does not read CODEOWNERS: add an 'Automatically included reviewers' branch policy naming an owner for "
+            "each sensitive path, and keep the same list in CODEOWNERS for people.",
         ),
     )
     return c.items

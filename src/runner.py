@@ -6,19 +6,22 @@ import contextlib
 import json
 import logging
 import re
+import shutil
 import sys
+import tempfile
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
 from . import __version__, skill_review
-from .history import score_history, velocity
+from .dimensions._util import forge as forge_of
+from .history import _force_remove, score_history, velocity
 from .hosting import is_remote, short_name
 from .profiles import STANDARD, defaults
 from .profiles import checklist as profile_checklist
 from .profiles import resolve as resolve_checklist
 from .render import render_html
-from .repo import Repo, resolve_target, run_git
+from .repo import STALE_FETCH_DAYS, WORKING_COPY, Repo, checkout_ref, default_ref, fetched_at, resolve_target, run_git
 from .scanner import finalize, scan
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -48,6 +51,31 @@ def write_outputs(run_dir: Path, report: dict) -> Path:
     return html
 
 
+def pick_ref(root: Path, source: str, ref: str | None, tmp: Path) -> tuple[Path, dict]:
+    """What a scan reads, and the report's word on it. A local folder is assessed at its default branch as last fetched
+    (or at `ref`), from a throw-away shared clone: its own files and .git are never touched. `working-copy`: as it is now."""
+    if is_remote(source):  # our clone, already at `ref` or at the remote's default branch
+        branch = run_git(root, "rev-parse", "--abbrev-ref", "HEAD", check=False).strip()
+        return root, {"name": ref or branch, "kind": "given" if ref else "default", "why": "" if ref else "the remote's default branch"}
+    current = run_git(root, "rev-parse", "--abbrev-ref", "HEAD", check=False).strip()
+    if ref == WORKING_COPY:
+        return root, {"name": current, "kind": WORKING_COPY, "why": "the working copy as it is now, uncommitted changes included"}
+    name, why = (ref, "chosen") if ref else default_ref(root)
+    if name is None:
+        return root, {"name": current, "kind": WORKING_COPY, "why": why}
+    checkout_ref(root, name, tmp / "repo")
+    info: dict = {"name": name, "kind": "given" if ref else "default", "why": why, "working_copy_branch": current}
+    when = fetched_at(root, name)
+    if "/" in name and run_git(root, "rev-parse", "--verify", "--quiet", f"refs/remotes/{name}", check=False).strip():
+        info["fetched_at"] = when.isoformat(timespec="seconds") if when else None
+        age = (datetime.now(UTC) - when).days if when else None
+        if age is None or age > STALE_FETCH_DAYS:
+            info["stale"] = (
+                f"as last fetched {age} days ago: git fetch in the folder brings the newest commits" if age is not None else "never fetched"
+            )
+    return tmp / "repo", info
+
+
 def run_scan(
     target: str,
     *,
@@ -59,6 +87,7 @@ def run_scan(
     refresh: bool = False,
     checklist: str | None = None,
     profile: str | None = None,
+    forge: str | None = None,
     runs_dir: Path = DEFAULT_RUNS,
     cache_dir: Path = DEFAULT_CACHE,
     progress: Callable[[str], None] | None = None,
@@ -73,13 +102,21 @@ def run_scan(
     fh = logging.FileHandler(run_dir / "scan.log", encoding="utf-8")
     fh.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
     log.addHandler(fh)
+    tmp = Path(tempfile.mkdtemp(prefix="sdlc360-ref-"))
     try:
-        log.info("scanning %s (%s) -> %s", source, root, run_dir)
-        say("scanning HEAD")
+        folder = root
+        root, ref_info = pick_ref(root, source, ref, tmp)
+        log.info("scanning %s at %s (%s; %s) -> %s", source, ref_info["name"], ref_info["why"] or ref_info["kind"], root, run_dir)
+        say(f"scanning {ref_info['name']}")
         repo = Repo(root, source)
+        repo.forge = forge
         cl = resolve_checklist(root, checklist, profile)
         log.info("capabilities: %s (%s)", cl["path"], (cl.get("profile") or {}).get("name", cl["origin"]))
         report = scan(repo, only=only, checklist=cl)
+        report["repo"]["ref"] = ref_info
+        report["repo"]["forge"] = forge_of(repo)
+        if report["repo"].get("head") and ref_info["kind"] != WORKING_COPY:
+            report["repo"]["head"]["branch"] = ref_info["name"]
         say("judging skills")
         report["skill_facts"] = skill_review.facts(repo)  # HEAD only: what the code and git say about each skill
         report = finalize(report)  # scan() finalized before the facts existed: the skill verdicts need them
@@ -88,7 +125,12 @@ def run_scan(
         say("computing velocity")
         hist = {"velocity": velocity(repo), "scores": []}
         if history_points > 1 and repo.is_git:
-            pts = score_history(repo, lambda r: scan(r, only=only, checklist=cl), history_points, history_months, say)
+
+            def scan_past(r: Repo) -> dict:
+                r.forge = forge
+                return scan(r, only=only, checklist=cl)
+
+            pts = score_history(repo, scan_past, history_points, history_months, say)
             pts.append(
                 {
                     "sha": repo.head.get("sha"),
@@ -107,7 +149,8 @@ def run_scan(
             "command": ["python", "sdlc.py", *sys.argv[1:]],
             "target": target,
             "ref": ref,
-            "resolved_path": str(root),
+            "assessed_ref": ref_info,
+            "resolved_path": str(folder),
             "source": source,
             "target_head": repo.head,
             "options": {
@@ -123,7 +166,7 @@ def run_scan(
             "finished_at": datetime.now(UTC).isoformat(timespec="seconds"),
             "outputs": ["manifest.json", "report.json", "report.html", "scan.log"],
             "reproduce": f"python sdlc.py scan {target}"
-            + (f" --ref {repo.head['sha']}" if repo.head.get("sha") else "")
+            + (f" --ref {WORKING_COPY}" if ref_info["kind"] == WORKING_COPY else f" --ref {repo.head['sha']}" if repo.head.get("sha") else "")
             + (f" --profile {cl['profile']['id']}" if cl.get("profile") else ""),
         }
         (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
@@ -148,6 +191,7 @@ def run_scan(
     finally:
         log.removeHandler(fh)
         fh.close()
+        shutil.rmtree(tmp, onexc=_force_remove)
 
 
 def rerender(run_dir: Path, review_path: Path | None = None, checklist: str | None = None, profile: str | None = None) -> Path:

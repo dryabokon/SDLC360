@@ -173,6 +173,66 @@ def refresh_clone(dest: Path, ref: str | None = None, env: dict | None = None) -
         run_git(dest, "checkout", "--quiet", "--detach", "FETCH_HEAD")
 
 
+WORKING_COPY = "working-copy"  # --ref for a local folder: the files as they are now, uncommitted changes included
+STALE_FETCH_DAYS = 7  # a local folder's remote branches are as old as its last fetch; older than this is said in the report
+
+
+def _commit_time(root: Path, ref: str) -> int | None:
+    sha = run_git(root, "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}", check=False).strip()
+    if not sha:
+        return None
+    ts = run_git(root, "log", "-1", "--format=%ct", sha, check=False).strip()
+    return int(ts) if ts.isdigit() else None
+
+
+def default_ref(root: Path) -> tuple[str | None, str]:
+    """The branch a local folder's project integrates into, as the folder last fetched it, and why that one: the most
+    recent of origin/HEAD, origin/main, origin/master and origin/develop. origin/HEAD alone misleads: it is set when the
+    folder is cloned and never follows the server (a gitflow project on Azure DevOps: main from March, all work on
+    develop; a folder cloned from a feature branch). Without remote branches, the same among the local ones. Read only."""
+    head = run_git(root, "symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD", check=False).strip()
+    for group, where in (((head, "origin/main", "origin/master", "origin/develop"), "remote"), (("main", "master", "develop"), "local")):
+        found = {b: t for b in dict.fromkeys(x for x in group if x) if (t := _commit_time(root, b)) is not None}
+        if found:
+            best = max(found, key=lambda b: found[b])
+            if len(found) == 1:
+                return best, "origin/HEAD" if best == head else f"the only {where} main branch"
+            return best, f"the most recently updated {where} main branch of {', '.join(found)}"
+    return None, "no main branch: the working copy"
+
+
+def branches(root: Path, limit: int = 200) -> list[dict]:
+    """The branches of a local folder, newest first, remote ones as last fetched: what the app offers to assess."""
+    fmt = "--format=%(refname:short)%1f%(committerdate:iso-strict)"
+    out = run_git(root, "for-each-ref", "--sort=-committerdate", fmt, "refs/remotes", "refs/heads", check=False)
+    rows = [line.split("\x1f") for line in out.splitlines() if "\x1f" in line]
+    return [{"name": n, "date": d} for n, d in rows if not n.endswith("/HEAD") and n != "origin"][:limit]
+
+
+def fetched_at(root: Path, ref: str | None = None) -> datetime | None:
+    """When the local folder last brought `ref` from its remote: the newest of FETCH_HEAD, the ref's own file and
+    packed-refs (a fresh clone has no FETCH_HEAD). None when there is none of them."""
+    git_dir = run_git(root, "rev-parse", "--git-dir", check=False).strip()
+    if not git_dir:
+        return None
+    base = root / git_dir
+    files = [base / "FETCH_HEAD", base / "packed-refs"] + ([base / "refs" / "remotes" / ref] if ref else [])
+    times = [f.stat().st_mtime for f in files if f.is_file()]
+    return datetime.fromtimestamp(max(times), UTC) if times else None
+
+
+def checkout_ref(root: Path, ref: str, dest: Path) -> str:
+    """A throw-away copy of a local folder at `ref`, made with `clone --shared` so nothing is written into the folder's own
+    .git. Returns the commit. ValueError when the folder has no such branch, tag or commit."""
+    sha = run_git(root, "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}", check=False).strip()
+    if not sha:
+        raise ValueError(f"{root.name} has no branch, tag or commit {ref!r}")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    run_git(dest.parent, "clone", "--quiet", "--shared", "--no-checkout", str(root), dest.name)
+    run_git(dest, "checkout", "--quiet", "--force", "--detach", sha)
+    return sha
+
+
 def resolve_target(target: str, cache_dir: Path, ref: str | None = None, refresh: bool = False) -> tuple[Path, str]:
     """Return (local_path, display_source). Clones GitHub repos into cache_dir (blobless, full history)."""
     target = target.strip().strip('"')
@@ -216,6 +276,7 @@ class Repo:
         self.source = source or str(root)
         self.is_git = (root / ".git").exists()
         self.params: dict[str, dict] = {}  # thresholds in force (profiles.PARAMS), set by scanner.scan()
+        self.forge: str | None = None  # github / gitlab / azure when the run says so (--forge); else read from the remotes
 
     def param(self, check_id: str, key: str) -> float:
         from .profiles import PARAMS  # late import: profiles -> checklist only, keeps repo.py free of cycles
