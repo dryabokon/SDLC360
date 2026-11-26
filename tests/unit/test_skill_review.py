@@ -163,6 +163,28 @@ def test_copies_are_one_skill_and_shipped_skills_are_not_judged(hist):
     assert v["shipped"] == ["pkg/.agents/skills/tour/SKILL.md"]
 
 
+def test_a_plain_note_in_a_skills_folder_is_judged_like_a_skill(hist):
+    hist.commit(
+        "notes",
+        NOW - timedelta(days=30),
+        {
+            "src/app.py": "",
+            ".agents/skills/secrets.md": "# Secrets\n\nThey are read in `src/app.py`.\n",
+            ".agents/skills/known-issues.md": "# Known issues\n\nBe careful.\n",
+            ".agents/skills/README.md": "# Notes\n",
+            "docs/skills/guide.md": "# Not a project skills folder\n",
+        },
+    )
+    work(hist)
+    v = hist.verdicts()
+    assert sorted(s["name"] for s in v["skills"]) == ["known-issues", "secrets"]
+    s = one(v, "secrets")
+    assert s["verdict"] == "current" and s["notes"][0] == skill_review.NOTE_HINT and s["metrics"]["files"] == 1
+    assert one(v, "known-issues")["why"][0].startswith("the note names no file of the project")
+    used = one(hist.verdicts(_sessions({"known-issues": 2})), "known-issues")  # read in a session: a use
+    assert used["verdict"] == "current" and used["metrics"]["uses"] == 2
+
+
 def _sessions(uses: dict[str, int], errors: dict[str, int] | None = None, n: int = 3, step: int = 3) -> list[dict]:
     """n sessions, the newest today, one every `step` days."""
     out = [{"id": f"s{i}", "start": (NOW - timedelta(days=i * step)).isoformat(), "skills": {}, "skill_errors": {}} for i in range(n)]

@@ -42,6 +42,13 @@ TOOLING = re.compile(r"/(scripts|assets|templates?|references)/|\.(py|sh|js|ts|p
 # an example, a test fixture) and is not a procedure for working on this repository
 SKILLS_DIR = re.compile(r"(^|/)skills(/|$)")
 PROJECT_SKILL = re.compile(r"^\.(claude|agents|cursor|github|codex|gemini|windsurf)/")
+# a plain markdown file right in a project skills folder (.agents/skills/secrets.md): a note the agent reads when AGENTS.md
+# or a prompt sends it there. It has no SKILL.md, so no description picks it, but it is judged like a skill all the same
+NOTE = re.compile(r"^\.(claude|agents|cursor|github|codex|gemini|windsurf)/skills/(?!readme\.md$|skill\.md$)[^/]+\.md$", re.I)
+NOTE_HINT = (
+    "a plain note, not a SKILL.md: the agent reads it only when AGENTS.md or a prompt sends it there; "
+    "as <name>/SKILL.md with a description it is picked by itself"
+)
 TITLES = {"broken": "Broken", "behind": "Behind the code", "idle": "Idle", "current": "Up to date", "unknown": "Procedure"}
 ADVICE = {
     "broken": "Fix the skill first: it sends the agent to files that are gone, which is worse than no skill.",
@@ -70,7 +77,7 @@ COLUMNS = [  # (metric, header, what it counts): the table of the tab
     ("days", "Days since edit", "days from the skill's last edit to the repository's last commit"),
     ("scripts", "Scripts", "scripts, templates and references next to SKILL.md: steps the agent runs, not only reads"),
     ("lines", "Lines", "lines of SKILL.md"),
-    ("uses", "Uses", "times the agent used it in the sessions (the Skill tool, its scripts or its files)"),
+    ("uses", "Uses", "times the agent used it in the sessions (the Skill tool, its scripts or its files; a note: reading it)"),
     ("errors", "Errors after", "failed tool calls in the 10 calls after a use"),
 ]
 ORDER = {"broken": 0, "behind": 1, "idle": 2, "current": 3, "unknown": 4}
@@ -137,8 +144,8 @@ def facts(repo: Repo) -> dict | None:
     """What the code and git say about each skill (SKILL.md) of the repository. None when it has none. A skill kept in
     several places (.claude/skills, .agents/skills, .cursor/skills) is one skill: its copies are named."""
     every = sorted(repo.find("SKILL.md"), key=lambda f: (not f.startswith(".claude/"), not f.startswith(".agents/"), f))
-    files = [f for f in every if PROJECT_SKILL.match(f)]
-    if not every:
+    files = [f for f in every if PROJECT_SKILL.match(f)] + sorted(f for f in repo.files if NOTE.match(f))
+    if not files and not every:
         return None
     commits = _log(repo.root) if repo.is_git else []
     head = _when(commits[0]["date"]) if commits else None
@@ -148,8 +155,9 @@ def facts(repo: Repo) -> dict | None:
     out: list[dict] = []
     seen: dict[str, dict] = {}
     for f in files:
-        folder = str(PurePosixPath(f).parent)
-        key = PurePosixPath(folder).name
+        note = bool(NOTE.match(f))
+        folder = f if note else str(PurePosixPath(f).parent)  # a note is its own folder: the commits that touch it are its edits
+        key = PurePosixPath(f).stem if note else PurePosixPath(folder).name
         if key in seen:
             seen[key]["copies"].append(f)
             continue
@@ -170,6 +178,7 @@ def facts(repo: Repo) -> dict | None:
             "name": fm.get("name") or key,
             "folder": key,
             "path": f,
+            "note": note,
             "copies": [],
             "lines": len(text.splitlines()),
             "tooling": sorted(x for x in repo.files if _under(x, folder) and x != f and TOOLING.search(x))[:5],
@@ -273,11 +282,11 @@ def _one(f: dict, fx: dict, u: dict | None) -> dict:
         else:
             why = [f"{exist} today, unchanged {since}"]
     else:
-        why = ["its SKILL.md names no file of the project: a procedure, so only the sessions can check it"]
+        why = [f"{'the note' if f.get('note') else 'its SKILL.md'} names no file of the project: a procedure, so only the sessions can check it"]
         do = ADVICE["more_sessions"] if with_sessions else ADVICE["process"]
     if v == "current":
         do = ADVICE["current_tooled"] if f["tooling"] else ADVICE["current"]
-    notes = []
+    notes = [NOTE_HINT] if f.get("note") else []
     if wide:
         notes.append(f"broad area: {f['recent']} of the repository's {fx['repo_recent']} recent commits touch it")
     if f["area"]:

@@ -55,6 +55,12 @@ def _log(path: Path) -> Path:
             },
         ),
         _entry("user", T0 + timedelta(minutes=5), message={"content": [{"type": "tool_result", "is_error": True}]}),
+        _entry(  # a note in a skills folder (no SKILL.md) read: a use of the note
+            "assistant",
+            T0 + timedelta(minutes=6),
+            requestId="r3",
+            message={"content": [{"type": "tool_use", "name": "Read", "input": {"file_path": "D:/repo/.agents/skills/secrets.md"}}]},
+        ),
         _entry("user", T0 + timedelta(hours=2), message={"content": [{"type": "text", "text": "thanks"}]}),
         json.dumps({"type": "cost-state", "totalCostUSD": 2.5}),
         "not json",
@@ -88,7 +94,7 @@ def test_only_numbers_are_kept(tmp_path):
     s = agent_usage.parse_session(_log(tmp_path / "s1.jsonl"))
     assert "secret-looking" not in json.dumps(s)
     (clean,) = agent_usage.clean_sessions([{**s, "prompt": "add a secret", "reads": [list(r) for r in s["reads"]]}])
-    assert "prompt" not in clean and clean["api_calls"] == 3 and clean["skills"] == {"ship": 1, "review": 1}
+    assert "prompt" not in clean and clean["api_calls"] == 3 and clean["skills"] == {"ship": 1, "review": 1, "secrets": 1}
     assert clean["skill_errors"] == {"ship": 1, "review": 1}  # the failed call came within 10 calls of both uses
 
 

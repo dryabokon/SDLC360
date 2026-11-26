@@ -49,7 +49,7 @@ _CACHE: dict[tuple[str, float, int], dict] = {}
 SESSIONS_FILE = "agent_sessions.json"  # in a run folder: {origin, attached, sessions, commits, skills}
 MAX_SESSIONS = 2000
 # a skill is also used when the agent runs its script or reads its files: .claude/skills/<name>/...
-SKILL_PATH = re.compile(r"[\\/]skills[\\/]([A-Za-z0-9_.-]+)[\\/]")
+SKILL_PATH = re.compile(r"[\\/]skills[\\/]([A-Za-z0-9_.-]+?)(?:[\\/]|\.md\b)")  # a skill's folder, or a note: skills/<name>.md
 AFTER_SKILL = 10  # the tool calls after a use of a skill whose failures are counted against it
 
 
@@ -659,7 +659,10 @@ def timeline(sessions: list[dict], commits: list[dict], repo: Path | None = None
 
 
 def repo_skills(repo: Path) -> list[str]:
-    return sorted({p.parent.name for base in (".claude/skills", ".agents/skills") for p in (repo / base).glob("*/SKILL.md")})
+    bases = [repo / ".claude/skills", repo / ".agents/skills"]
+    folders = {p.parent.name for b in bases for p in b.glob("*/SKILL.md")}
+    notes = {p.stem for b in bases for p in b.glob("*.md") if p.name.lower() not in ("readme.md", "skill.md")}  # skills/<name>.md
+    return sorted(folders | notes)
 
 
 def report(source: str, root: Path | None = None, skill_facts: dict | None = None) -> dict:

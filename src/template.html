@@ -569,7 +569,7 @@ async function* logLines(file) {
   if (buf) yield buf;
 }
 async function parseSession(file) {
-  const IDLE = 5 * 60 * 1000, AFTER_SKILL = 10, SKILL_PATH = /[\\/]skills[\\/]([A-Za-z0-9_.-]+)[\\/]/, times = [], requests = new Set(), skills = {}, reads = [], days = {};
+  const IDLE = 5 * 60 * 1000, AFTER_SKILL = 10, SKILL_PATH = /[\\/]skills[\\/]([A-Za-z0-9_.-]+?)(?:[\\/]|\.md\b)/, times = [], requests = new Set(), skills = {}, reads = [], days = {};
   const skill_errors = {}, watch = {}, bare = (k) => k.split(":").pop();
   const tok = { input: 0, output: 0, cache_read: 0, cache_write: 0 }, at = { prompts: [], calls: [], errors: [] };
   const n = { prompts: 0, api_calls: 0, tool_calls: 0, tool_errors: 0, denied: 0, subagents: 0 }; let cost = null;
