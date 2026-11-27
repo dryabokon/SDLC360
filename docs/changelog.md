@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- **Azure pipelines in a folder, and the templates they include, are read.** Before, only files named
+  `azure-pipelines*` were read. In Control Center and FireFly the tests, Gitleaks and the vulnerable-package check run
+  in `.azure/pipelines/templates/*.yml`, so they looked absent. Now every YAML under `.azure/pipelines/`,
+  `.azure-pipelines/` and `.azuredevops/pipelines/` is read, and so is each `template:` it includes. The Azure test tasks
+  (`DotNetCoreCLI@2` with `command: test`, `VSTest@2`), `cargo deny` and `dotnet list package --vulnerable` are
+  recognised. `ai.ci_agents` reads every CI, not only GitHub's, and counts an AI review job and `claude -p`.
+  This was found by the blind cross-check of 2026-11-27. It moved 8 verdicts on 4 Fly repos (test.ci, sec.ci_scanning,
+  ai.ci_agents), all to Met.
+- **A feature spec is not the architecture document.** Dated specs and plans (`docs/superpowers/specs/2026-09-03-...-design.md`,
+  `docs/plans/`) were accepted as the architecture document in three Fly repos, and its freshness was measured on them.
+  `documentation/` is now searched like `docs/`, which finds control-center-backend's real
+  `documentation/architecture/overview.md`. 5 verdicts moved: arch.doc and arch.fresh to Not met in firefly-runtime and
+  control-center-app, and arch.fresh to Met in control-center-backend.
+
 - **A local folder is assessed at its main branch, not at what is checked out.** That is the most recently updated of
   origin/HEAD, main, master and develop, as last fetched. It is read from a throw-away shared clone, and nothing is
   fetched or written. `--ref <branch>` or `--ref working-copy` picks another. The app's scan form lists the branches,

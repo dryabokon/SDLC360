@@ -175,7 +175,7 @@ def forge(repo: Repo) -> str:
         return "github"
     if ".gitlab-ci.yml" in repo.files:
         return "gitlab"
-    if any("azure-pipelines" in f.lower() for f in repo.other_ci):
+    if repo.azure_pipelines:
         return "azure"
     return "github"
 

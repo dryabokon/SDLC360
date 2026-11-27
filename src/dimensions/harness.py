@@ -189,7 +189,11 @@ def assess(repo: Repo):
         "Remove personal settings from git and add them to .gitignore.",
     )
 
-    ai_ci = re.findall(r"anthropics/claude-code-action|claude-code-base-action|openai/codex-action|coderabbit|copilot", repo.workflow_text, re.I)
+    ai_ci = re.findall(  # any CI, Azure and GitLab too; an AI reviewer run from a script counts (`claude -p`, `codex exec`, an "AI review" job)
+        r"anthropics/claude-code-action|claude-code-base-action|openai/codex-action|coderabbit|copilot|\bclaude (?:-p|--print)\b|\bcodex exec\b|\bai[ -]review(?:er)?\b",
+        repo.ci_text,
+        re.I,
+    )
     c.add(
         "ai.ci_agents",
         "AI agents wired into CI (review / triage)",

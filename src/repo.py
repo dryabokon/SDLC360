@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import fnmatch
 import os
+import posixpath
 import re
 import subprocess
 from datetime import UTC, datetime
@@ -453,23 +454,36 @@ class Repo:
     @cached_property
     def other_ci(self) -> list[str]:
         """CI configuration besides GitHub Actions. An Azure pipeline may have any name (azure-pipelines-smoke.yml)."""
-        return self.find(
-            ".gitlab-ci.yml",
-            "Jenkinsfile",
+        other = self.find(".gitlab-ci.yml", "Jenkinsfile", ".circleci/config.yml", "bitbucket-pipelines.yml", ".travis.yml")
+        return other + self.azure_pipelines
+
+    @cached_property
+    def azure_pipelines(self) -> list[str]:
+        """Azure Pipelines YAML: `azure-pipelines*.yml` anywhere, every YAML in a pipelines folder (`.azure/pipelines/`,
+        `.azure-pipelines/`, `.azuredevops/pipelines/`, templates/ inside them too), and the templates those files include.
+        Tests and scanners often run only in a template (`- template: templates/build-test.yml`)."""
+        found = self.find(
             "azure-pipelines*.yml",
             "azure-pipelines*.yaml",
-            ".azure-pipelines/*.yml",
-            ".circleci/config.yml",
-            "bitbucket-pipelines.yml",
-            ".travis.yml",
+            *(f"{d}/*.{x}" for d in (".azure/pipelines", ".azure-pipelines", ".azuredevops/pipelines") for x in ("yml", "yaml")),
         )
+        files = set(self.files)
+        todo = list(found)
+        while todo:  # follow `template:` relative to the including file, or to the root with a leading /
+            f = todo.pop()
+            for m in re.finditer(r"^\s*-?\s*template:\s*['\"]?([^'\"@\s$]+\.ya?ml)", self.read(f, 200_000), re.M):
+                ref = m.group(1)
+                path = ref.lstrip("/") if ref.startswith("/") else posixpath.normpath(posixpath.join(posixpath.dirname(f), ref))
+                if path in files and path not in found:
+                    found.append(path)
+                    todo.append(path)
+        return found
 
     @cached_property
     def ci_text(self) -> str:
         """Workflow YAML plus the task runners / scripts it delegates to (scripts/test, make test, nox, tox, npm run …),
         so `run: scripts/test` counts as running pytest."""
-        azure = [f for f in self.other_ci if "azure-pipelines" in f.lower()]  # read like GitHub's and GitLab's
-        wf = "\n".join(x for x in (self.workflow_text, self.read(".gitlab-ci.yml"), *(self.read(f) for f in azure)) if x)
+        wf = "\n".join(x for x in (self.workflow_text, self.read(".gitlab-ci.yml"), *(self.read(f) for f in self.azure_pipelines)) if x)
         if not wf:
             return ""
         extra = []

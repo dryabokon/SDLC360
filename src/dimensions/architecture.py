@@ -2,20 +2,36 @@
 
 from __future__ import annotations
 
+import re
+
 from ..model import Checks, Dimension, short
 from ..repo import Repo
 from ._util import for_language, freshness_score, in_tooling, reach
 
 
+def feature_spec(path: str) -> bool:
+    """A dated spec or plan for one feature (`docs/superpowers/specs/2026-09-03-pipeline-design.md`, `docs/plans/...`):
+    it designs a change, it is not the architecture of the system."""
+    low = path.lower()
+    name = low.rsplit("/", 1)[-1]
+    return bool(re.match(r"\d{4}-\d{2}-\d{2}", name)) or any(f"/{d}/" in f"/{low}" for d in ("specs", "plans", "superpowers"))
+
+
 def assess(repo: Repo):
     c = Checks()
-    arch = repo.find("ARCHITECTURE*", "DESIGN.md", "docs/*architecture*", "docs/*design*", "doc/*architecture*", "docs/*overview*", "docs/arc42/*")
+    arch = repo.find(
+        "ARCHITECTURE*",
+        "DESIGN.md",
+        *(f"{d}/*{w}*" for d in ("docs", "doc", "documentation") for w in ("architecture", "design", "overview")),
+        "docs/arc42/*",
+    )
     arch = [
         f
         for f in arch
         if f.lower().endswith((".md", ".mdx", ".rst", ".adoc", ".txt"))
-        and (f.count("/") <= 1 or f.lower().startswith(("docs/", "doc/")))  # not a generated design.md deep in the tree
+        and (f.count("/") <= 1 or f.lower().startswith(("docs/", "doc/", "documentation/")))  # not a generated design.md deep in the tree
         and not in_tooling(f)
+        and not feature_spec(f)
     ]
     c.add(
         "arch.doc",

@@ -9,7 +9,7 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **The habit.** Let a machine check every change before it reaches the main branch.
 
-**How we check.** `.yml`/`.yaml` files under `.github/workflows/`, subfolders included. With none, it looks for `.gitlab-ci.yml`, `Jenkinsfile`, an Azure pipeline (`azure-pipelines*.yml` or `.yaml` under any name, `.azure-pipelines/*.yml`), `.circleci/config.yml`, `bitbucket-pipelines.yml` or `.travis.yml`.
+**How we check.** `.yml`/`.yaml` files under `.github/workflows/`, subfolders included. With none, it looks for `.gitlab-ci.yml`, `Jenkinsfile`, an Azure pipeline (`azure-pipelines*.yml` or `.yaml` under any name, any YAML under `.azure/pipelines/`, `.azure-pipelines/` or `.azuredevops/pipelines/`, and the templates they include), `.circleci/config.yml`, `bitbucket-pipelines.yml` or `.travis.yml`.
 
 - **Met:** At least one workflow file.
 - **Partially met:** never.

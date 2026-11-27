@@ -37,10 +37,10 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **The habit.** Run all the tests on every push and pull request.
 
-**How we check.** It searches `ci_text` (GitHub workflow YAML, `.gitlab-ci.yml` and Azure pipelines `azure-pipelines*.yml`, plus the scripts/Makefile/nox/tox/package.json/pyproject they delegate to) for a test command such as `pytest`, `tox`, `nox`, `npm test`, `jest`, `go test`, `cargo test`, `mvn test`, `dotnet test` or `make test`.
+**How we check.** It searches `ci_text` (GitHub workflow YAML, `.gitlab-ci.yml` and Azure pipelines (`azure-pipelines*.yml` under any name, every YAML under `.azure/pipelines/`, `.azure-pipelines/` or `.azuredevops/pipelines/`, and the `template:` files they include), plus the scripts/Makefile/nox/tox/package.json/pyproject they delegate to) for a test command such as `pytest`, `tox`, `nox`, `npm test`, `jest`, `go test`, `cargo test`, `mvn test`, `dotnet test`, the Azure tasks `DotNetCoreCLI@2` with `command: test` and `VSTest@2`, or `make test`.
 
 - **Met:** Any test command is found in that text.
-- **Partially met:** None is found, but another CI exists: `.gitlab-ci.yml`, `Jenkinsfile`, an Azure pipeline (`azure-pipelines*.yml`, any name), `.circleci/config.yml`, `bitbucket-pipelines.yml` or `.travis.yml` (scores 0.5; Jenkins, CircleCI, Bitbucket and Travis files are not read).
+- **Partially met:** None is found, but another CI exists: `.gitlab-ci.yml`, `Jenkinsfile`, an Azure pipeline (as above), `.circleci/config.yml`, `bitbucket-pipelines.yml` or `.travis.yml` (scores 0.5; Jenkins, CircleCI, Bitbucket and Travis files are not read).
 - **Not met:** Neither.
 
 **What the check cannot see.** This is a plain substring match. `pip install pytest` in a lint job counts. A delegated `Makefile` or `pyproject.toml` is read whole, so `pytest` listed as a dependency or in an unused make target counts. Bitbucket and Travis configs only make it partially met.

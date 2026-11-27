@@ -10,6 +10,7 @@ from ._util import for_language, reach
 
 UNITTEST = re.compile(r"unittest\.(IsolatedAsyncio)?TestCase\b|^from unittest import [^\n]*\bTestCase\b", re.M)  # not unittest.mock
 TEST_CMD = r"pytest|python -m unittest|tox|nox|npm (run )?test|pnpm (run )?test|yarn test|jest|vitest|mocha|go test|cargo test|cargo nextest|mvn (-\S+ )*(test|verify)|gradlew? (test|check)|dotnet test|rspec|phpunit|make test|just test|uv run pytest|bun test|ctest"
+TEST_CMD += r"|DotNetCoreCLI@\d+(?:(?!task:)[\s\S]){0,300}?command:\s*['\"]?test\b|VSTest@\d+"  # Azure Pipelines test tasks
 
 
 def untested(repo: Repo, tests: list[str], src: list[str], n: int = 5) -> list[str]:

@@ -9,7 +9,7 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **The habit.** Keep one page that shows the parts of the system, how data moves between them and where the borders are.
 
-**How we check.** Files matching `ARCHITECTURE*` or `DESIGN.md` at the root or one folder down (a generated `design.md` deep in the tree is not the project's architecture), or `docs/*architecture*`, `docs/*design*`, `docs/*overview*`, `doc/*architecture*` or `docs/arc42/*` at any depth. The extension must be `.md`, `.mdx`, `.rst`, `.adoc` or `.txt`. Files inside agent tooling or a vendored package (a folder starting with a dot, other than `.github`, or a `skills/` folder) are not the project's own and do not count.
+**How we check.** Files matching `ARCHITECTURE*` or `DESIGN.md` at the root or one folder down (a generated `design.md` deep in the tree is not the project's architecture), or a file whose path has `architecture`, `design` or `overview` under `docs/`, `doc/` or `documentation/` at any depth, or `docs/arc42/*`. A dated spec or plan for one feature (a file name starting with a date, or a `specs/`, `plans/` or `superpowers/` folder) designs a change, not the system, and does not count. The extension must be `.md`, `.mdx`, `.rst`, `.adoc` or `.txt`. Files inside agent tooling or a vendored package (a folder starting with a dot, other than `.github`, or a `skills/` folder) are not the project's own and do not count.
 
 - **Met:** At least one such file exists.
 - **Partially met:** Never.

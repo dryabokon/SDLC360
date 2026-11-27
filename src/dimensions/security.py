@@ -94,7 +94,7 @@ def judge_sensitive(repo: Repo, f: str) -> str | None:
 
 
 SAFE_ENV = re.compile(r"(?i)\.(example|sample|template|dist|defaults?)$|example|\.env\.test$")
-SEC_TOOLS = r"sast\.gitlab-ci|secret-detection|dependency-scanning|codeql|gitleaks|trufflehog|detect-secrets|trivy|snyk|semgrep|bandit|pip-audit|npm audit|osv-scanner|dependency-review|grype|zizmor|checkov|tfsec|safety check|govulncheck|cargo audit|scorecard"
+SEC_TOOLS = r"sast\.gitlab-ci|secret-detection|dependency-scanning|codeql|gitleaks|trufflehog|detect-secrets|trivy|snyk|semgrep|bandit|pip-audit|npm audit|osv-scanner|dependency-review|grype|zizmor|checkov|tfsec|safety check|govulncheck|cargo audit|cargo deny|package --vulnerable|scorecard"
 
 
 def scan_secrets(repo: Repo) -> list[dict]:

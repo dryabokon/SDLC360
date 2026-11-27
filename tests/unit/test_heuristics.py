@@ -275,6 +275,57 @@ def test_azure_pipelines_with_any_name_are_read(make_repo):
     assert present.score is None and "azure-pipelines-flight-smoke.yml" in present.evidence[0]  # another CI: not judged, not failed
 
 
+def test_azure_pipelines_in_a_folder_and_their_templates_are_read(make_repo):
+    # Control Center / FireFly layout: no file named azure-pipelines*, tests and scanners run only in an included template.
+    from src.dimensions import harness, security, tests
+    from src.dimensions._util import forge
+
+    pr = "pr:\n  branches:\n    include: [main]\nstages:\n  - template: templates/dotnet-build-test.yml\n"
+    tmpl = (
+        "steps:\n  - task: DotNetCoreCLI@2\n    inputs:\n      command: 'restore'\n"
+        "  - script: dotnet list src/App.csproj package --vulnerable --include-transitive\n"
+        "  - task: DotNetCoreCLI@2\n    displayName: Test\n    inputs:\n      command: 'test'\n      projects: tests/**/*.csproj\n"
+        "  - task: Gitleaks@3\n"
+    )
+    review = "trigger: none\npr: none\nsteps:\n  - script: echo '##vso[build.updatebuildnumber]AI Review'\n"
+    files = {
+        "src/App.cs": "",
+        "tests/AppTests.cs": "",
+        ".azure/pipelines/pr-review-linux.yml": pr,
+        ".azure/pipelines/templates/dotnet-build-test.yml": tmpl,
+        ".azure/pipelines/ai-reviewer.yml": review,
+    }
+    root = make_repo(files, name="azure-folder")
+    repo = Repo(root)
+    assert forge(repo) == "azure" and ".azure/pipelines/templates/dotnet-build-test.yml" in repo.other_ci
+    assert _ids(tests, root)["test.ci"].status == "pass"  # DotNetCoreCLI test task in the template
+    scan = _ids(security, root)["sec.ci_scanning"]
+    assert scan.status == "pass" and "gitleaks" in scan.evidence[0] and "package --vulnerable" in scan.evidence[0]
+    assert _ids(harness, root)["ai.ci_agents"].status == "pass"  # an AI review pipeline, not only claude-code-action
+
+    # a restore task followed by an unrelated "command: test" elsewhere is not a test run
+    restore = "steps:\n  - task: DotNetCoreCLI@2\n    inputs:\n      command: 'restore'\n  - task: Bash@3\n"
+    bare = make_repo({"src/App.cs": "", "tests/AppTests.cs": "", ".azure/pipelines/ci.yml": restore}, name="azure-restore")
+    assert _ids(tests, bare)["test.ci"].status != "pass"
+
+
+def test_a_feature_spec_is_not_the_architecture_document(make_repo):
+    # Fly repos: superpowers specs named *-design.md were taken as THE architecture doc; the real one in documentation/ was missed.
+    from src.dimensions import architecture
+
+    specs = {
+        "app.py": "",
+        "docs/superpowers/specs/2026-09-03-runtime-amd64-pipeline-design.md": "# Pipeline design\n",
+        "docs/plans/2026-10-01-main-viewmodel-design.md": "# Plan\n",
+    }
+    checks = _ids(architecture, make_repo(specs, name="specs-only"))
+    assert checks["arch.doc"].status == "fail" and checks["arch.fresh"].status == "fail"
+
+    real = make_repo({**specs, "documentation/architecture/overview.md": "# Architecture\n"}, name="documentation-dir")
+    doc = _ids(architecture, real)["arch.doc"]
+    assert doc.status == "pass" and doc.evidence == ["documentation/architecture/overview.md"]
+
+
 def test_steps_name_the_platform_the_project_lives_on(make_repo):
     from src.dimensions import review
     from src.dimensions._util import forge

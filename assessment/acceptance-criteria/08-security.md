@@ -106,7 +106,7 @@ The evidence names the keys, never the values.
 
 **The habit.** Let CI scan the code, the dependencies and the secrets on every change.
 
-**How we check.** The CI text: `.github/workflows/*.yml|yaml` and `.gitlab-ci.yml`, plus scripts, `Makefile`, `noxfile.py`, `tox.ini`, `package.json`, `pyproject.toml` they call. Counts distinct tool names found anywhere in it: GitLab's SAST, Secret-Detection and Dependency-Scanning templates, codeql, gitleaks, trufflehog, detect-secrets, trivy, snyk, semgrep, bandit, pip-audit, npm audit, osv-scanner, dependency-review, grype, zizmor, checkov, tfsec, safety check, govulncheck, cargo audit, scorecard.
+**How we check.** The CI text: `.github/workflows/*.yml|yaml`, `.gitlab-ci.yml` and Azure pipelines (`azure-pipelines*.yml` under any name, every YAML under `.azure/pipelines/`, `.azure-pipelines/` or `.azuredevops/pipelines/`, and the `template:` files they include), plus scripts, `Makefile`, `noxfile.py`, `tox.ini`, `package.json`, `pyproject.toml` they call. Counts distinct tool names found anywhere in it: GitLab's SAST, Secret-Detection and Dependency-Scanning templates, codeql, gitleaks, trufflehog, detect-secrets, trivy, snyk, semgrep, bandit, pip-audit, npm audit, osv-scanner, dependency-review, grype, zizmor, checkov, tfsec, safety check, govulncheck, cargo audit, cargo deny, `dotnet list package --vulnerable`, scorecard.
 
 - **Met:** Two or more different tool names appear.
 - **Partially met:** Exactly one tool name appears.

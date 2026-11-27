@@ -205,13 +205,13 @@ How to edit this file: [assessment/README.md](../README.md#acceptance-criteria).
 
 **The habit.** Let an agent review every change in CI, so a second pair of eyes is always there.
 
-**How we check.** Text of `.github/workflows/*` (not delegated scripts) for `anthropics/claude-code-action`, `claude-code-base-action`, `openai/codex-action`, `coderabbit` or `copilot`, case-insensitive.
+**How we check.** The CI text (GitHub workflows, `.gitlab-ci.yml`, Azure pipelines (`azure-pipelines*.yml` under any name, every YAML under `.azure/pipelines/`, `.azure-pipelines/` or `.azuredevops/pipelines/`, and the `template:` files they include), plus the scripts they call) for `anthropics/claude-code-action`, `claude-code-base-action`, `openai/codex-action`, `coderabbit`, `copilot`, `claude -p` / `claude --print`, `codex exec` or an "AI review" / "AI reviewer" job, case-insensitive.
 
 - **Met:** Any of those strings appears.
 - **Partially met:** never.
 - **Not met:** None appears.
 
-**What the check cannot see.** "copilot" anywhere (a comment, job name, branch filter) counts. AI reviewers installed as GitHub Apps or repo settings (Copilot review, CodeRabbit app, `.coderabbit.yaml`) are invisible. Other actions (Gemini, custom LLM scripts) are missed.
+**What the check cannot see.** "copilot" anywhere (a comment, job name, branch filter) counts. AI reviewers installed as GitHub Apps or repo settings (Copilot review, CodeRabbit app, `.coderabbit.yaml`) are invisible. Other actions (Gemini) and custom LLM scripts without those words are missed; an LLM that only analyses test results is not counted.
 
 **Why we expect it.**
 
